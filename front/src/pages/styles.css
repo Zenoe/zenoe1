@@ -1,0 +1,23 @@
+ul {
+    display: block;
+    list-style-type: none;
+    margin: 20px;
+    cursor: pointer;
+    text-decoration: underline;
+    color: blue;
+}
+.thiscontainer{
+    border: 1px solid gray;
+    height: 90vh;
+    overflow-y: scroll;
+}
+
+.flexDiv{
+    display: flex;
+}
+
+.flexDiv > div {
+  /* flex: 1 1 auto; */
+  text-align: center;
+  margin: 5px;  /* and that, will result in a 10px gap */
+}

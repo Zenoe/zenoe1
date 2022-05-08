@@ -1,0 +1,33 @@
+{
+  "name": "zenoe1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "cross-env NODE_PATH=. NODE_ENV=dev node app.js",
+    "dev": "cross-env NODE_PATH=. NODE_ENV=dev nodemon app.js",
+    "prod": "cross-env NODE_PATH=. NODE_ENV=prod node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/jsonwebtoken": "^8.5.8",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "express": "^4.18.0",
+    "express-jwt": "^7.6.2",
+    "joi": "^17.6.0",
+    "lodash": "^4.17.21",
+    "morgan": "^1.10.0",
+    "mysql": "^2.18.1",
+    "mysql2": "^2.3.3",
+    "pino": "^7.11.0",
+    "rotating-file-stream": "^3.0.3",
+    "sequelize": "^6.19.0"
+  },
+  "devDependencies": {
+    "pino-pretty": "^7.6.1"
+  }
+}
