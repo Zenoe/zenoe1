@@ -1,4 +1,11 @@
-const env = process.env.NODE_ENV || 'development'
-  , cfg = require('./config.'+env + '.js');
+const env = process.env.NODE_ENV || 'dev'
+const cfg = require('./config.'+env + '.js');
 
-module.exports = cfg;
+const dbConfig = cfg.db
+const authConfig = cfg.auth
+const appConfig = cfg.appcfg
+module.exports ={
+  appConfig,
+  dbConfig,
+  authConfig
+}

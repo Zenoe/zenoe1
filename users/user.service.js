@@ -1,6 +1,6 @@
 ﻿// const config = require('config.json');
 
-const cfg = require('config')
+const {authConfig} = require('config')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('helpers/db');
@@ -21,7 +21,7 @@ async function authenticate({ username, password }) {
         throw 'Username or password is incorrect';
 
     // authentication successful
-    const token = jwt.sign({ sub: user.id }, cfg.secret, { expiresIn: '7d' });
+    const token = jwt.sign({ sub: user.id }, authConfig.secret, { expiresIn: '7d' });
     return { ...omitHash(user.get()), token };
 }
 

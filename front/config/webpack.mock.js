@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-const utils = require('./utils')
+const utils = require('@/utils/jsutils')
 
 /* 通过require获取js文件中导出的函数，执行并传递app参数 */
 const mockServer = (mockFolder, app) => {

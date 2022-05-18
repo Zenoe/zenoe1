@@ -1,9 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import FlexBox from '@/components/FlexBox';
-import List from '@material-ui/core/List';
-import {makeStyles } from '@material-ui/core/styles';
-
 import styles from './svg.css';
 import './chart-style.css'
 
@@ -16,31 +13,8 @@ import {
   axisLeft,
   axisBottom,
   format,
+  selectAll,
 } from 'd3';
-
-const useStyles = makeStyles((theme)=>({
-  root: {
-    // fill: 'orange'
-      "&>.bar":{
-      fill: '#4f009e'
-    },
-    "&>.label":{
-      fill: '#4f009e'
-    }
-  },
-  List: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: theme.palette.background.paper,
-    '&>li':{
-      border: '1px solid',
-      borderRadius: '4px',
-      marginBottom: '4px',
-      padding: '4px',
-    }
-  },
-
-}));
 
 const MARGINS = { top: 20, bottom: 40 }
 let x
@@ -71,11 +45,17 @@ const renderChart = (containerid, data, width, height)=>{
 }
 
 
+let g = null
+let xAxisG = null
+let yAxisG = null
 const margin = {top:40, right: 20, bottom: 50, left: 100}
 const renderChartI = (data) => {
   const svg = select("svg")
-  // const width = svg.attr('width')
-  // const height = svg.attr('height')
+  // if xAxisG and yAxisG are appeneded every time, we need to remove it before updating
+  // need to separate one-time logic (draw axes, append container elements, set height/width/etc)
+  // from logic you want to run each time.
+  // selectAll('.axis').remove();
+  // selectAll('.bars').remove();
   const yValue = d => d.word
   const xValue = d => d.count
 
@@ -84,9 +64,6 @@ const renderChartI = (data) => {
   const innerHeight = height - margin.bottom - margin.top
   const innerWidth = width - margin.left - margin.right
   console.log('w,h', width, height, innerWidth, innerHeight);
-
-  const g = svg.append('g')
-               .attr('transform', `translate(${margin.left}, ${margin.top})`)
   const xScale = scaleLinear()
         .domain([0, max(data, xValue)])
         .range([0, innerWidth])
@@ -96,18 +73,32 @@ const renderChartI = (data) => {
         .range([0, innerHeight])
         .padding(0.1)
 
+  if(g === null){
+    g = svg.append('g')
+                 .attr('transform', `translate(${margin.left}, ${margin.top})`)
+  }
+
   const yAxis = axisLeft(yScale);
-  // yAxis(g.append('g'))
-  g.append('g').call(yAxis)
+
+  if (yAxisG === null){
+    yAxisG = g.append('g')
+  }
+
+  yAxisG.call(yAxis)
+   .attr('class', 'axis')
    .selectAll('.domain, tick line')
    .remove()
 
   const xAxis = axisBottom(xScale)
         .tickSize(-innerHeight)
 
-  const xAxisG = g.append('g').call(xAxis)
-                  .attr('transform', `translate(0, ${innerHeight})`)
+  if(xAxisG === null){
+     xAxisG = g.append('g')
+  }
 
+  xAxisG.call(xAxis)
+        .attr('class', 'axis')
+        .attr('transform', `translate(0, ${innerHeight})`)
   xAxisG
     .select('.domain')
     .remove()
@@ -122,21 +113,27 @@ const renderChartI = (data) => {
 
   // svg.selectAll('rect').data(data)
 
-  const bars = g.selectAll('rect').data(data)
-  bars
-   .enter()
+  console.log('datachanged');
+
+  const bars = g.selectAll('rect').data(data, d=>d.word)
+  const barsEnter = bars.enter()
+  barsEnter
    .append('rect')
+   .merge(bars)
+   .attr('class', 'bars')
    .attr('y', d => yScale(yValue(d)))
    .attr('width', d => xScale(xValue(d)))
    .attr('height', yScale.bandwidth())
 
-  g.append('text')
+  bars.exit().remove()
+
+  g.selectAll('.toptext').data([null]).enter().append('g').attr('class', 'toptext')
+   .append('text')
    .text('Top x')
 }
+
 const renderChartII = (data) => {
   const svg = select("svg")
-  // const width = svg.attr('width')
-  // const height = svg.attr('height')
   const yValue = d => d.word
   const xValue = d => d.count
 
@@ -154,11 +151,14 @@ const renderChartII = (data) => {
         .range([0, innerHeight])
         .padding(0.1)
 
+  const yAxis = axisLeft(yScale);
+  const xAxis = axisBottom(xScale).tickSize(-innerHeight)
+
   const g = svg.selectAll('.container').data([null]);
   const gEnter = g
-    .enter()
-    .append('g')
-    .attr('class', 'container');
+        .enter()
+        .append('g')
+        .attr('class', 'container');
   gEnter
     .merge(g)
     .attr(
@@ -166,8 +166,6 @@ const renderChartII = (data) => {
       `translate(${margin.left},${margin.top})`
     );
 
-  const yAxis = axisLeft(yScale);
-  const xAxis = axisBottom(xScale).tickSize(-innerHeight)
   // const g = svg.append('g')
   //              .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
@@ -232,61 +230,22 @@ const renderChartII = (data) => {
   // g.append('text').text('Top x')
 }
 
-
-var DUMMY_DATA = [
-    {id: 'd1' , region: 'usa', value: 40},
-    {id: 'd2' , region: 'india', value: 30},
-    {id: 'd3' , region: 'china', value: 50},
-    {id: 'd4' , region: 'germany', value: 60},
-  ];
-
-let selectedData = DUMMY_DATA
-let unselectedIds = []
-const renderDataItem = (containerid, chartContainerid,  data, width, height )=>{
-  const listItems = d3.select(containerid)
-                      .selectAll('li')
-                      .data(data)
-                      .enter()
-                      .append('li')
-  listItems.append('span').text(d=>d.region)
-  listItems.append('input').attr('type', 'checkbox').attr('checked', true)
-           .on('change', ( e, d )=>{
-             if(unselectedIds.indexOf(d.id) === -1){
-               unselectedIds.push(d.id)
-             }else{
-               unselectedIds = unselectedIds.filter(id=>id !== d.id)
-             }
-             selectedData = DUMMY_DATA.filter(dd=>unselectedIds.indexOf(dd.id) === -1)
-             renderChart(chartContainerid, selectedData, width, height)
-           })
-}
-
 const BasicChart=(props)=>{
   const d3ContainRef = useRef(null)
   const {width, height, data} = props
   // console.log('basicchart:', width, height);
 
-  const cs = useStyles();
+  // const cs = useStyles();
 
   useEffect(()=>{
-    renderChartII(data)
-    // render(d3ContainRef.current, DUMMY_DATA, ( width-40 ) / 2, height)
+    renderChartI(data)
   }, [data])
-
-  // useEffect(()=>{
-  //   renderDataItem(d3ContainRef1.current, d3ContainRef.current, DUMMY_DATA, width, height)
-  // }, [width, height])
-
 
   return(
     <svg className={styles.svgContainer} >
-        <g ref={d3ContainRef} className={cs.root} />
-      </svg>
-    // <FlexBox>
-    //   <div width='50%' height='100%'>
-    //     <List ref={d3ContainRef1} className={cs.List} />
-    //   </div>
-    // </FlexBox>
+      {/* <g ref={d3ContainRef} className={cs.root} /> */}
+      <g ref={d3ContainRef} />
+    </svg>
   )
 }
 

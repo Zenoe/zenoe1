@@ -2,22 +2,23 @@ const express = require('express')
 const rfs = require('rotating-file-stream')
 const morgan = require('morgan')
 const path = require('path')
-const cfg = require('./config')
-const dbConn = require('./database')
-const logger = require('services/logger')
+const {appConfig} = require('./config')
+// require('./database')
+
+const {logger} = require('./init')
 // const people = require('./routes/people')
 const auth = require('./routes/auth')
 
 const cors = require('cors');
 const errorHandler = require('middleware/error-handler');
+const { log } = require('util')
 
 const app = express()
 
 logger.info('start app server');
 // logger.crit('xx')
-dbConn.connect(cfg.db);
 
-const accessLogStream = rfs.createStream(`${cfg.logdir}/access.log`, {
+const accessLogStream = rfs.createStream(`${appConfig.logdir}/access.log`, {
   interval: '1d', // rotate daily
   path: path.join(__dirname, 'log')
 })
@@ -46,9 +47,17 @@ app.use(cors({
 // loging
 app.use('/users', require('./users/users.controller'));
 app.use('/wordcount', require('./users/wordcount.controller'));
-app.get('/', (req, res) => res.send('Hellooooo'))
+
 app.use(errorHandler);
 
-const port = process.env.NODE_ENV === 'pro' ? (process.env.PORT || 80) : cfg.port;
+process.on('unhandledRejection', error => {
+ throw error
+})
+
+process.on('uncaughtException', error => {
+  logger.crit(`uncaughtException: ${error}\n ${error.stack}`)
+  process.exit(1)
+})
+const port = process.env.NODE_ENV === 'pro' ? (process.env.PORT || 80) : appConfig.port;
 app.listen(port, () => console.log('Server listening on port ' + port));
 

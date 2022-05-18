@@ -1,7 +1,7 @@
 // const jwt = require('express-jwt');
 const { expressjwt: jwt } = require("express-jwt");
 // const { secret } = require('config.json');
-const { secret } = require('config');
+const { authConfig } = require('config');
 const db = require('helpers/db');
 
 module.exports = authorize;
@@ -9,7 +9,7 @@ module.exports = authorize;
 function authorize() {
     return [
         // authenticate JWT token and attach decoded token to request as req.user
-        jwt({ secret, algorithms: ['HS256'] }),
+      jwt({ secret: authConfig.secret, algorithms: ['HS256'] }),
 
         // attach full user record to request object
         async (req, res, next) => {

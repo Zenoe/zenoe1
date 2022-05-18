@@ -1,3 +1,5 @@
+
+/* 读取mock下的所有js文件 */
 const fs = require('fs');
 const path = require('path')
 

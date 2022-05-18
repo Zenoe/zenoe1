@@ -1,16 +1,19 @@
 // Override the defaults
 const config = require('./config.global');
 
-config.env = 'dev';
-
 // db config
 config.db = {
-  hostname : 'localhost',
+  host : 'localhost',
   port: 3306,
   database : 'zenoe',
   user : 'root',
   password : '123456',
 }
 
-config.secret = "this is secret for dev use"
+config.appcfg = {
+  port : 5000,
+  logdir : '/var/log/zenoe',
+  env : 'dev',
+  hostname : '172.28.57.108',
+}
 module.exports = config;

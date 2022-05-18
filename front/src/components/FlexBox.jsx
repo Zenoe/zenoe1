@@ -1,11 +1,12 @@
-import Box from '@material-ui/core/Box';
+import Box from '@mui/material/Box';
 
-import {withStyles} from '@material-ui/core/styles';
-
-const FlexBox = withStyles((theme) => ({
-  root: {
-    display: 'flex',
-  },
-}))(Box);
+const FlexBox = ()=>{
+  <Box
+    sx={{
+      display: 'flex',
+    }}
+  >
+  </Box>
+}
 
 export default FlexBox;

@@ -1,10 +1,6 @@
 import {useEffect, useState, useRef} from 'react';
 import { requestGet } from '@/utils/request';
 import { Link, useParams } from 'react-router-dom';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
-import { makeStyles } from '@material-ui/core/styles';
-
 
 import InputNumber from '@/components/InputNumber'
 import BasicChart from '@/components/d3/chart'
@@ -12,21 +8,8 @@ import {csvParse} from 'd3'
 
 import styles from "./styles.css";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-    borderWidth: "1px",
-    color: "red",
-    // height: "100vh"
-  },
-  paper: {
-    padding: theme.spacing(1),
-    textAlign: 'center',
-  },
-}));
-
 const WordCountChart = (props) => {
-  const cs = useStyles();
+  // const cs = useStyles();
 
   const containerRef = useRef(null)
   // const [gridH, setGridH] = useState(undefined)
@@ -72,7 +55,7 @@ const WordCountChart = (props) => {
                    )
   }, [minicount, miniCharCount])
 
-    return (
+  return (
     <div className={styles.thiscontainer} ref={containerRef} >
       <div className={styles.flexDiv}>
         <div>最小出现次数</div>
@@ -81,6 +64,7 @@ const WordCountChart = (props) => {
         <InputNumber numberValue={miniCharCount} setNumberValue={setMiniCharCount}/>
       </div>
       <BasicChart data={filteredData}/>
+
       <h3>
         <Link to='/wordcount'>Back</Link>
       </h3>

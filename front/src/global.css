@@ -1,9 +1,14 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Roboto";
+}
+
 html
 {
     /* height: 100vh; */
     /* width: 100%; */
     height: calc(100vh - 2px);
     /* border: 1px solid orange; */
-    padding: 0px;
-    margin: 0px;
 }
