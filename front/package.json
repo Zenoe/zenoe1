@@ -1,0 +1,53 @@
+{
+  "name": "alpha",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack-dev-server --env env=dev",
+    "mock": "nodemon --exec webpack-dev-server --env.env=dev --env.mock",
+    "prebuild": "rimraf dist",
+    "build": "cross-env NODE_ENV=production webpack --mode production --env env=pro",
+    "start:test": "cross-env BROWSER=none NODE_ENV=test",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "node-env-run server --exec nodemon | pino-colada"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.17.10",
+    "@babel/plugin-transform-runtime": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
+    "@babel/preset-react": "^7.16.7",
+    "axios": "^0.27.2",
+    "babel": "^6.23.0",
+    "babel-loader": "^8.2.5",
+    "css-loader": "^5.2.7",
+    "eslint": "^8.14.0",
+    "html-loader": "^3.1.0",
+    "html-webpack-plugin": "^5.5.0",
+    "mini-css-extract-plugin": "^2.6.0",
+    "style-loader": "^3.3.1",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.8.1"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.17.9",
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@mui/core": "^5.0.0-alpha.54",
+    "@mui/icons-material": "^5.6.2",
+    "@mui/material": "^5.6.4",
+    "d3": "^7.4.4",
+    "formik": "^2.2.9",
+    "moment": "^2.29.3",
+    "proptypes": "^1.1.0",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-intl": "^5.25.1",
+    "react-router-dom": "^6.3.0",
+    "styled-components": "^5.3.5",
+    "yup": "^0.32.11"
+  }
+}

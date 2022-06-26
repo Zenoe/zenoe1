@@ -1,0 +1,19 @@
+
+.svgContainer{
+    /* width: 800px; */
+    /* height: 600px; */
+    width: 100%;
+    height: 100%;
+    /* stroke: red; */
+}
+
+.axis-label {
+  font-size: 5em;
+  fill: #838883;
+}
+/* svg { */
+
+/*     width: 100%; */
+/*     height: 100%; */
+/*     stroke: orange; */
+/* } */

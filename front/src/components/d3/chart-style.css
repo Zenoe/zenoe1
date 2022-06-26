@@ -1,0 +1,12 @@
+rect {
+  fill: steelblue;
+}
+
+.axis-label {
+  font-size: 4em;
+  fill: #838883;
+}
+
+text {
+  font-family: sans-serif;
+}
