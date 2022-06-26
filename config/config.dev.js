@@ -11,7 +11,7 @@ config.db = {
 }
 
 config.appcfg = {
-  port : 5000,
+  port : 7007,
   logdir : '/var/log/zenoe',
   env : 'dev',
   hostname : '172.28.57.108',

@@ -1,7 +1,7 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const validateRequest = require('middleware/validate-request');
-const wordCountService = require('./wordcount.service');
+const wordCountService = require('./wc-service');
 
 // routes
 router.get('/', getAll);

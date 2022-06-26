@@ -46,7 +46,7 @@ app.use(cors({
 
 // loging
 app.use('/users', require('./users/users.controller'));
-app.use('/wordcount', require('./users/wordcount.controller'));
+app.use('/wordcount', require('./components/wc/wc-controller'));
 
 app.use(errorHandler);
 

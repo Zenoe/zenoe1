@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "eslint": "^8.15.0",
+    "nodemon": "^2.0.18",
     "pino-pretty": "^7.6.1"
   }
 }
