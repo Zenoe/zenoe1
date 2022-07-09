@@ -3,6 +3,7 @@ const config = require('./config.global');
 
 // db config
 config.db = {
+  MONGO_URI: 'mongodb://172.28.57.108:27017/note',
   host : 'localhost',
   port: 3306,
   database : 'zenoe',

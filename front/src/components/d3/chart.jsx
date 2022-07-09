@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'propTypes';
 import FlexBox from '@/components/FlexBox';
 import styles from './svg.css';
 import './chart-style.css'
@@ -49,21 +49,27 @@ let g = null
 let xAxisG = null
 let yAxisG = null
 const margin = {top:40, right: 20, bottom: 50, left: 100}
+const yValue = d => d.word
+const xValue = d => d.count
+
 const renderChartI = (data) => {
+
+  console.log('renderChartI');
   const svg = select("svg")
   // if xAxisG and yAxisG are appeneded every time, we need to remove it before updating
   // need to separate one-time logic (draw axes, append container elements, set height/width/etc)
   // from logic you want to run each time.
-  // selectAll('.axis').remove();
+
+  // remove what left last rendering
+  selectAll('.axis').remove();
   // selectAll('.bars').remove();
-  const yValue = d => d.word
-  const xValue = d => d.count
+  // selectAll('.container').remove();
 
   const width = +svg.style('width').replace("px", "")
   const height = +svg.style('height').replace("px", "")
   const innerHeight = height - margin.bottom - margin.top
   const innerWidth = width - margin.left - margin.right
-  console.log('w,h', width, height, innerWidth, innerHeight);
+  // console.log('w,h', width, height, innerWidth, innerHeight);
   const xScale = scaleLinear()
         .domain([0, max(data, xValue)])
         .range([0, innerWidth])
@@ -75,14 +81,14 @@ const renderChartI = (data) => {
 
   if(g === null){
     g = svg.append('g')
-                 .attr('transform', `translate(${margin.left}, ${margin.top})`)
+    .attr('transform', `translate(${margin.left}, ${margin.top})`)
+    .attr('class', 'container')
   }
 
   const yAxis = axisLeft(yScale);
 
-  if (yAxisG === null){
+  // if (yAxisG === null)
     yAxisG = g.append('g')
-  }
 
   yAxisG.call(yAxis)
    .attr('class', 'axis')
@@ -92,9 +98,8 @@ const renderChartI = (data) => {
   const xAxis = axisBottom(xScale)
         .tickSize(-innerHeight)
 
-  if(xAxisG === null){
-     xAxisG = g.append('g')
-  }
+  // if(xAxisG === null)
+    xAxisG = g.append('g')
 
   xAxisG.call(xAxis)
         .attr('class', 'axis')
@@ -158,9 +163,9 @@ const renderChartII = (data) => {
   const gEnter = g
         .enter()
         .append('g')
-        .attr('class', 'container');
-  gEnter
-    .merge(g)
+        .attr('class', 'container')
+  // gEnter
+    // .merge(g)
     .attr(
       'transform',
       `translate(${margin.left},${margin.top})`
@@ -231,7 +236,6 @@ const renderChartII = (data) => {
 }
 
 const BasicChart=(props)=>{
-  const d3ContainRef = useRef(null)
   const {width, height, data} = props
   // console.log('basicchart:', width, height);
 
@@ -243,16 +247,14 @@ const BasicChart=(props)=>{
 
   return(
     <svg className={styles.svgContainer} >
-      {/* <g ref={d3ContainRef} className={cs.root} /> */}
-      <g ref={d3ContainRef} />
     </svg>
   )
 }
 
-BasicChart.propTypes={
-  width: PropTypes.number,
-  height: PropTypes.number,
-}
+// BasicChart.propTypes={
+//   width: PropTypes.number,
+//   height: PropTypes.number,
+// }
 
 // BasicChart.defaultProps = {
 //   width: 600,

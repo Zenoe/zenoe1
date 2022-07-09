@@ -1,4 +1,5 @@
 // const cfg = require('config')
+const {logger} = require('init')
 
 const {readFile, writeFile} = require('fs').promises
 
@@ -8,6 +9,7 @@ module.exports = {
 };
 
 async function getAll(res) {
+
     return await readFile(__dirname  + '/../../local-data/my-directory-list.txt', 'utf8')
     // return await db.User.findAll();
     // return {"a": 1}
@@ -21,7 +23,10 @@ async function getAll(res) {
 }
 
 async function getByFileName(in_fileName) {
-    console.log('getByFileName');
-    return await readFile(__dirname  + `/../../local-data/wcresult/${in_fileName}.pdf.txt_result.txt`, 'utf8')
-    // return {"b": in_fileName}
+    try{
+        const result = await readFile(__dirname  + `/../../local-data/wcresult/${in_fileName}.txt`, 'utf8')
+        return result
+    }catch(err){
+        logger.error(`${err} in ${arguments.callee.name}, param: ${in_fileName}`)
+    }
 }

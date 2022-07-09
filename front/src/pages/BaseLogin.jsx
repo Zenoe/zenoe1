@@ -20,7 +20,7 @@ import Checkbox from '@/components/FormsUI/Checkbox';
 import Button from '@/components/FormsUI/Button';
 import countries from '@/../data/countries.json';
 
-import PropTypes from 'prop-types';
+import PropTypes from 'proptypes';
 const PasswordInput = styled(Textfield)`
 // Removing the clear and reveal password icons from Internet Explorer
   ::-ms-reveal {

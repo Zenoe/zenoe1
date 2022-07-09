@@ -1,7 +1,11 @@
-const {DBManager} = require('database');
+
+const {connectDB} = require('database')
+const {DBManager} = require('database/mysql');
 const {LogManager} = require('services/logger')
 const { dbConfig } = require('config')
 const {appConfig} = require('config')
+
+connectDB();
 const dbManager = new DBManager(dbConfig)
 const logManager = new LogManager(appConfig)
 const logger = logManager.getLogger()
