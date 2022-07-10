@@ -54,11 +54,11 @@ mysqlconn = (in_config) => {
 // }
 // callFunction ()
 
-mysqlconn(dbConfig).then(res => {
-  console.log('connect ok', res);
-}).catch(err => {
-  console.log('catchcat', err);
-})
+// mysqlconn(dbConfig).then(res => {
+//   console.log('connect ok', res);
+// }).catch(err => {
+//   console.log('catchcat', err);
+// })
 
 module.exports = {
   DBManager,

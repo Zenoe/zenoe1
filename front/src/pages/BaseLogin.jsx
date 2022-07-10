@@ -87,12 +87,14 @@ const BaseLogin = (/* { onSubmit, schema  } */) => {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Link to="/auth/forgot-password">
-                      {formatMessage({
-                        id: 'Auth.link.forgot-password',
-                        defaultMessage: 'Forgot your password?',
-                      })}
-                    </Link>
+                    <Link to="/register">Register Here</Link>
+
+                    {/* <Link to="/auth/forgot-password"> */}
+                    {/*   {formatMessage({ */}
+                    {/*     id: 'Auth.link.forgot-password', */}
+                    {/*     defaultMessage: 'Forgot your password?', */}
+                    {/*   })} */}
+                    {/* </Link> */}
                   </Grid>
                 </Grid>
               </Form>

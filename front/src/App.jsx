@@ -53,10 +53,11 @@ const App=()=>{
                     </ProtectedRoute>
                   }
                 />
+
+                <Route path='/login' element={<BaseLogin />} />
+                <Route path='/register' element={<Register />} />
                 <Route path='*' element={<Error />} />
               </Route>
-              <Route path='/login' element={<BaseLogin />} />
-              <Route path='/register' element={<Register />} />
 
             </Routes>
           </BrowserRouter>

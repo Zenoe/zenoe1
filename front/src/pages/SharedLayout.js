@@ -1,9 +1,11 @@
 import { Link, Outlet } from 'react-router-dom';
 import StyledNavbar from '../components/StyledNavbar';
+import AppBar from '../components/AppBar';
 const Home = () => {
   return (
     <>
-      <StyledNavbar />
+      {/* <StyledNavbar /> */}
+      <AppBar />
       <Outlet />
     </>
   );

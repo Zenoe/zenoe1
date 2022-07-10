@@ -10,11 +10,12 @@ const dbManager = new DBManager(dbConfig)
 const logManager = new LogManager(appConfig)
 const logger = logManager.getLogger()
 
-dbManager.query('select 1 * 1').then((res)=>{
-  console.log(res);
-}).catch(err=>{
-  console.log('err', err);
-})
+// todo mv to test
+// dbManager.query('select 1 * 1').then((res)=>{
+//   console.log(res);
+// }).catch(err=>{
+//   console.log('err', err);
+// })
 
 
 module.exports = {
