@@ -55,7 +55,7 @@ const xValue = d => d.count
 const renderChartI = (data) => {
 
   console.log('renderChartI');
-  const svg = select("svg")
+  const svg = select("#wordcount")
   // if xAxisG and yAxisG are appeneded every time, we need to remove it before updating
   // need to separate one-time logic (draw axes, append container elements, set height/width/etc)
   // from logic you want to run each time.
@@ -138,7 +138,7 @@ const renderChartI = (data) => {
 }
 
 const renderChartII = (data) => {
-  const svg = select("svg")
+  const svg = select("#wordcount")
   const yValue = d => d.word
   const xValue = d => d.count
 
@@ -242,11 +242,11 @@ const BasicChart=(props)=>{
   // const cs = useStyles();
 
   useEffect(()=>{
-    renderChartI(data)
+    renderChartII(data)
   }, [data])
 
   return(
-    <svg className={styles.svgContainer} >
+    <svg id='wordcount' className={styles.svgContainer} >
     </svg>
   )
 }
