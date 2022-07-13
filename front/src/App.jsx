@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from "react-dom/client";
 import CssBaseline from '@mui/material/CssBaseline'
-import Store from '@/store'
 
 import { ThemeProvider } from '@mui/material/styles';
 
@@ -14,7 +13,7 @@ import Error from './pages/Error';
 import SharedLayout from './pages/SharedLayout';
 import SingleProduct from './pages/SingleProduct';
 import Dashboard from './pages/Dashboard';
-import BaseLogin from './pages/BaseLogin';
+import Login from './pages/Login';
 import Register from './pages/Register';
 import WordCount from './pages/WordCount';
 import WordCountChart from './pages/WordCountChart';
@@ -29,41 +28,37 @@ const App=()=>{
   const [user, setUser] = useState(null);
 
   return (
-    <Store>
-      <ThemeProvider theme={muiTheme}>
-        <IntlProvider locale="en" messages={{}}>
-          <BrowserRouter>
-            <Routes>
-              <Route path='/' element={<SharedLayout />}>
-                <Route index element={<Home />} />
-                <Route path='about' element={<About />} />
-
-                <Route path='products' element={<SharedProductLayout />}>
-                  <Route index element={<Products />} />
-                  <Route path=':productId' element={<SingleProduct />} />
-                </Route>
-
-                <Route path='wordcount' element={<WordCount />} />
-                <Route path='wordcount/:fileName' element={<WordCountChart />} />
-                <Route
-                  path='dashboard'
-                  element={
-                    <ProtectedRoute user={user}>
-                      <Dashboard user={user} />
-                    </ProtectedRoute>
-                  }
-                />
-
-                <Route path='/login' element={<BaseLogin />} />
-                <Route path='/register' element={<Register />} />
-                <Route path='*' element={<Error />} />
+    <ThemeProvider theme={muiTheme}>
+      <IntlProvider locale="en" messages={{}}>
+        <BrowserRouter>
+          <Routes>
+            <Route path='/' element={<SharedLayout />}>
+              <Route index element={<Home />} />
+              <Route path='about' element={<About />} />
+              <Route path='products' element={<SharedProductLayout />}>
+                <Route index element={<Products />} />
+                <Route path=':productId' element={<SingleProduct />} />
               </Route>
 
-            </Routes>
-          </BrowserRouter>
-        </IntlProvider>
-      </ThemeProvider>
-    </Store>
+              <Route path='wordcount' element={<WordCount />} />
+              <Route path='wordcount/:fileName' element={<WordCountChart />} />
+              <Route
+                path='dashboard'
+                element={
+                  <ProtectedRoute user={user}>
+                    <Dashboard user={user} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path='/login' element={<Login />} />
+              <Route path='/register' element={<Register />} />
+              <Route path='*' element={<Error />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </IntlProvider>
+    </ThemeProvider>
   )
 }
 

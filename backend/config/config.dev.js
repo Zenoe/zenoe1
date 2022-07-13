@@ -16,5 +16,7 @@ config.appcfg = {
   logdir : '/var/log/zenoe',
   env : 'dev',
   hostname : '172.28.57.108',
+  JWT_SECRET: '123asdjkl',
 }
+
 module.exports = config;

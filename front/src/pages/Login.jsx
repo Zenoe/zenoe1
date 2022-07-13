@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 
 import FlexBox from '@/components/FlexBox';
 import { useIntl } from 'react-intl';
-// import { styled } from '@mui/material/styles';
-import styled from 'styled-components';
 
 import * as Yup from 'yup';
 
 // import FieldActionWrapper from '../FieldActionWrapper';
 
 import { Container, Grid, Typography } from "@mui/material";
-import Link from '@mui/material/Link';
-
+import { Link } from 'react-router-dom';
 import { Formik, Form } from 'formik';
 import Textfield from '@/components/FormsUI/Textfield';
 import Select from '@/components/FormsUI/Select';
@@ -21,12 +18,6 @@ import Button from '@/components/FormsUI/Button';
 import countries from '@/../data/countries.json';
 
 import PropTypes from 'proptypes';
-const PasswordInput = styled(Textfield)`
-// Removing the clear and reveal password icons from Internet Explorer
-  ::-ms-reveal {
-    display: none;
-  }
-`;
 
 const INITIAL_FORM_STATE = {
   username: '',
@@ -40,12 +31,11 @@ const FORM_VALIDATION = Yup.object().shape({
     .required('Required'),
 });
 
-const BaseLogin = (/* { onSubmit, schema  } */) => {
+const Login = (/* { onSubmit, schema  } */) => {
   const [passwordShown, setPasswordShown] = useState(false);
   const { formatMessage } = useIntl();
 
   return (
-    <Container maxWidth="sm" >
       <Grid container>
         <Grid item xs={12}>
           <Container maxWidth="md">
@@ -62,7 +52,7 @@ const BaseLogin = (/* { onSubmit, schema  } */) => {
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <Typography>
-                      Please Login!
+                      LOGIN
                     </Typography>
                   </Grid>
 
@@ -73,7 +63,7 @@ const BaseLogin = (/* { onSubmit, schema  } */) => {
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <PasswordInput
+                    <Textfield
                       name="password"
                       label="Password"
                       type={passwordShown ? 'text' : 'password'}
@@ -87,7 +77,7 @@ const BaseLogin = (/* { onSubmit, schema  } */) => {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Link to="/register">Register Here</Link>
+                    Don't have an account ? <Link to="/register">Register Here</Link>
 
                     {/* <Link to="/auth/forgot-password"> */}
                     {/*   {formatMessage({ */}
@@ -102,15 +92,14 @@ const BaseLogin = (/* { onSubmit, schema  } */) => {
           </Container>
         </Grid>
       </Grid>
-    </Container>
   );
 };
 
-// BaseLogin.defaultProps = {
+// Login.defaultProps = {
 //   onSubmit: () => {},
 // };
 
-BaseLogin.propTypes = {
+Login.propTypes = {
   // children: PropTypes.node,
   onSubmit: PropTypes.func,
   // schema: PropTypes.shape({
@@ -118,4 +107,4 @@ BaseLogin.propTypes = {
   // }).isRequired,
 };
 
-export default BaseLogin;
+export default Login;

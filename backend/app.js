@@ -8,9 +8,10 @@ const {appConfig} = require('./config')
 const {logger} = require('./init')
 // const people = require('./routes/people')
 const auth = require('./routes/auth')
+const userRoutes = require( "./routes/userRoutes");
 
 const cors = require('cors');
-const errorHandler = require('middleware/error-handler');
+const errorHandler = require('middleware/errorHandler');
 const { log } = require('util')
 
 const app = express()
@@ -45,6 +46,8 @@ app.use(cors({
 // app.use('/database', dbConn)
 
 // loging
+app.use("/api/users", userRoutes);
+
 app.use('/users', require('./users/users.controller'));
 app.use('/wordcount', require('./components/wc/wc-controller'));
 
