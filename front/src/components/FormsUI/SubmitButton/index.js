@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@mui/material';
 import { useFormikContext } from 'formik';
 
-const ButtonWrapper = ({
+const SubmitButton = ({
   children,
   ...otherProps
 }) => {
@@ -28,4 +28,4 @@ const ButtonWrapper = ({
   );
 };
 
-export default ButtonWrapper;
+export default SubmitButton;

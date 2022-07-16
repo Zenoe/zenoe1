@@ -8,14 +8,16 @@ import {
   Grid,
   Typography
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import Loading from "@/components/Loading";
 import Textfield from '@/components/FormsUI/Textfield';
 import Select from '@/components/FormsUI/Select';
 import DateTimePicker from '@/components/FormsUI/DataTimePicker';
 import Checkbox from '@/components/FormsUI/Checkbox';
-import Button from '@/components/FormsUI/Button';
+import SubmitButton from '@/components/FormsUI/SubmitButton';
 import countries from '@/../data/countries.json';
 
+import { Button } from '@mui/material';
 import Alert from '@mui/material/Alert';
 
 import { Link } from 'react-router-dom';
@@ -24,7 +26,7 @@ import { Link } from 'react-router-dom';
 import { register } from "@/actions/userActions";
 
 const INITIAL_FORM_STATE = {
-  name: 's',
+  name: '',
   country: 'CN',
   email: '',
   password: '',
@@ -36,15 +38,17 @@ const FORM_VALIDATION = Yup.object().shape({
   name: Yup.string()
     .required('Required'),
   email: Yup.string()
-    .email('Invalid email.'),
-    // .required('Required'),
+    .email('Invalid email.')
+    .required('Required'),
+  password: Yup.string()
+    .required(),
   termsOfService: Yup.boolean()
     .oneOf([true], 'The terms and conditions must be accepted.')
     .required('The terms and conditions must be accepted.'),
 });
 
-const Register = ({ history }) => {
-
+const Register = () => {
+  const navigate = useNavigate();
   const [message, setMessage] = useState(null);
 
   const userRegister = useSelector((state) => state.userRegister);
@@ -53,9 +57,9 @@ const Register = ({ history }) => {
 
   useEffect(() => {
     if (userInfo) {
-      history.push("/");
+      navigate("/");
     }
-  }, [history, userInfo]);
+  }, [navigate, userInfo]);
 
   return (
     <Grid container>
@@ -73,7 +77,6 @@ const Register = ({ history }) => {
               validationSchema={FORM_VALIDATION}
               onSubmit={values => {
                 const { name, email, password, pic } = values
-                console.log(values);
                 if (values.password !== values.confirmpassword) {
                   setMessage("Passwords do not match");
                 } else {
@@ -120,6 +123,21 @@ const Register = ({ history }) => {
                   </Grid>
 
                   <Grid item xs={12}>
+                    <Button
+                      component='label'
+                      variant="contained" component="label"
+                      type="image/png"
+                      name="avatar"
+                      label="Profile Picture"
+                    >
+                      Upload
+                    <input hidden accept="image/*" multiple type="file"
+                      onChange={e=> {console.log(e)}}
+                    />
+                    </Button>
+                  </Grid>
+
+                  <Grid item xs={12}>
                     <Select
                       name="country"
                       label="Country"
@@ -144,9 +162,9 @@ const Register = ({ history }) => {
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Button>
+                    <SubmitButton>
                       Register
-                    </Button>
+                    </SubmitButton>
                   </Grid>
                 <Grid item xs={12}>
                   Have an Account ? <Link to="/login">Login</Link>

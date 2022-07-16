@@ -17,9 +17,9 @@ import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
 const pages = [[ 'Home', '/' ], ['Products', '/products'], ['Wordcount', '/wordcount'], ['Login', '/login']];
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const settings = [['Profile', '/profile'], ['Dashboard','/dashboard'], ['Logout', '/logout']];
 
-const ResponsiveAppBar = () => {
+const ResponsiveAppBar = ({userInfo}) => {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
 
@@ -133,7 +133,7 @@ const ResponsiveAppBar = () => {
             ))}
           </Box>
 
-          <Box sx={{ flexGrow: 0 }}>
+          <Box sx={{ flexGrow: 0, display: userInfo ? 'block' : 'none' }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
@@ -156,8 +156,10 @@ const ResponsiveAppBar = () => {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
+                <MenuItem key={setting[0]} onClick={handleCloseUserMenu}
+                          component={Link} to={setting[1]}
+                >
+                  <Typography textAlign="center">{setting[0]}</Typography>
                 </MenuItem>
               ))}
             </Menu>

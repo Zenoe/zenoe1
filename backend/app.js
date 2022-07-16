@@ -41,14 +41,10 @@ app.use(cors({
   // credentials is confilct with "*" origin, so we need specify origins
   origin: ['http://172.28.57.108:3009', ]
 }));
-// app.use('/api/people', people)
-// app.use('/login', auth)
-// app.use('/database', dbConn)
 
 // loging
 app.use("/api/users", userRoutes);
 
-app.use('/users', require('./users/users.controller'));
 app.use('/wordcount', require('./components/wc/wc-controller'));
 
 app.use(errorHandler);

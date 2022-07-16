@@ -13,13 +13,15 @@ import Error from './pages/Error';
 import SharedLayout from './pages/SharedLayout';
 import SingleProduct from './pages/SingleProduct';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Login from './pages/users/Login';
+import Logout from './pages/users/Logout';
+import Register from './pages/users/Register';
 import WordCount from './pages/WordCount';
 import WordCountChart from './pages/WordCountChart';
 import ProtectedRoute from './pages/ProtectedRoute';
 import SharedProductLayout from './pages/SharedProductLayout';
 
+import MyNotes from './pages/notes/MyNotes';
 import { IntlProvider } from 'react-intl';
 
 import muiTheme from './theme'
@@ -52,7 +54,10 @@ const App=()=>{
               />
 
               <Route path='/login' element={<Login />} />
+              <Route path='/logout' element={<Logout />} />
               <Route path='/register' element={<Register />} />
+
+              <Route path='/mynotes' element={<MyNotes />} />
               <Route path='*' element={<Error />} />
             </Route>
           </Routes>
