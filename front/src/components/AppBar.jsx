@@ -16,6 +16,8 @@ import AdbIcon from '@mui/icons-material/Adb';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
+import defaultAvatar from '@/static/images/avatar/default.png'
+
 const pages = [[ 'Home', '/' ], ['Products', '/products'], ['Wordcount', '/wordcount'], ['Login', '/login']];
 const settings = [['Profile', '/profile'], ['Dashboard','/dashboard'], ['Logout', '/logout']];
 
@@ -136,7 +138,7 @@ const ResponsiveAppBar = ({userInfo}) => {
           <Box sx={{ flexGrow: 0, display: userInfo ? 'block' : 'none' }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                <Avatar alt="Remy Sharp" src={defaultAvatar} />
               </IconButton>
             </Tooltip>
             <Menu

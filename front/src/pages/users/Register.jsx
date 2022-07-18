@@ -17,12 +17,10 @@ import Checkbox from '@/components/FormsUI/Checkbox';
 import SubmitButton from '@/components/FormsUI/SubmitButton';
 import countries from '@/../data/countries.json';
 
-import { Button } from '@mui/material';
 import Alert from '@mui/material/Alert';
 
 import { Link } from 'react-router-dom';
 
-// import {Context} from '@/store'
 import { register } from "@/actions/userActions";
 
 const INITIAL_FORM_STATE = {
@@ -122,20 +120,20 @@ const Register = () => {
                     />
                   </Grid>
 
-                  <Grid item xs={12}>
-                    <Button
-                      component='label'
-                      variant="contained" component="label"
-                      type="image/png"
-                      name="avatar"
-                      label="Profile Picture"
-                    >
-                      Upload
-                    <input hidden accept="image/*" multiple type="file"
-                      onChange={e=> {console.log(e)}}
-                    />
-                    </Button>
-                  </Grid>
+                  {/* <Grid item xs={12}> */}
+                  {/*   <Button */}
+                  {/*     component='label' */}
+                  {/*     variant="contained" component="label" */}
+                  {/*     type="image/png" */}
+                  {/*     name="avatar" */}
+                  {/*     label="Profile Picture" */}
+                  {/*   > */}
+                  {/*     Upload */}
+                  {/*   <input hidden accept="image/\*" multiple type="file" */}
+                  {/*     onChange={e=> {console.log(e)}} */}
+                  {/*   /> */}
+                  {/*   </Button> */}
+                  {/* </Grid> */}
 
                   <Grid item xs={12}>
                     <Select
@@ -157,7 +155,6 @@ const Register = () => {
                       name="termsOfService"
                       legend="Terms Of Service"
                       label="I agree"
-
                     />
                   </Grid>
 

@@ -42,7 +42,7 @@ const config = {
       {
         test: /\.(png|jpe?g|gif)$/i,
         exclude: /node_modules/,
-        use: ['file-loader?name=h5/assets/[name].[ext]'],
+        use: ['file-loader?name=./static/images/avatar/[name].[ext]'],
       },
       {
         test: /\.(woff|woff2|eot|ttf|svg)$/,
