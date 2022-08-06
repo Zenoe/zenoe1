@@ -53,7 +53,7 @@ const Login = () => {
     }
   }, [navigate, userInfo]);
 
-  return (
+    return (
       <Grid container>
         {error && <Alert severity="error">{error}</Alert>}
         {loading && <Loading />}

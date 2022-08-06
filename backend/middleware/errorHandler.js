@@ -1,6 +1,9 @@
 module.exports = errorHandler;
 
+const {logger} = require('init')
 function errorHandler(err, req, res, next) {
+    logger.error(err)
+
     switch (true) {
     case typeof err === 'string':
         // custom application error

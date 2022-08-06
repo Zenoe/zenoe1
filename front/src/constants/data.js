@@ -34,4 +34,19 @@ const products = [
   },
 ];
 
+const DEFAULT_EVENTS = [
+  'mousemove',
+  'keydown',
+  'wheel',
+  'DOMMouseScroll',
+  'mousewheel',
+  'mousedown',
+  'touchstart',
+  'touchmove',
+  'MSPointerDown',
+  'MSPointerMove',
+  'visibilitychange'
+]
+
+export { DEFAULT_EVENTS }
 export default products;

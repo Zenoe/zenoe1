@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import ReactDOM from "react-dom/client";
 import CssBaseline from '@mui/material/CssBaseline'
 
@@ -25,9 +25,25 @@ import MyNotes from './pages/notes/MyNotes';
 import { IntlProvider } from 'react-intl';
 
 import muiTheme from './theme'
+import IdleTimer from  '@/components/logic/IdleTimer'
 
 const App=()=>{
   const [user, setUser] = useState(null);
+  const [isTimeout, setIsTimeout] = useState(false);
+  useEffect(() => {
+    const timer = new IdleTimer({
+      timeout: 3,
+      // timeout: 10, //expire after x seconds
+      onTimeout: () => {
+        setIsTimeout(true);
+        window.location.href='/logout'
+      }
+    });
+
+    return () => {
+      timer.cleanUp();
+    };
+  }, []);
 
   return (
     <ThemeProvider theme={muiTheme}>
