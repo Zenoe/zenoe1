@@ -9,6 +9,7 @@ const {logger} = require('./init')
 // const people = require('./routes/people')
 const auth = require('./routes/auth')
 const userRoutes = require( "./routes/userRoutes");
+const vizRoute = require("./routes/vizRoute");
 
 const cors = require('cors');
 const errorHandler = require('middleware/errorHandler');
@@ -17,7 +18,6 @@ const { log } = require('util')
 const app = express()
 
 logger.info('start app server');
-// logger.crit('xx')
 
 const accessLogStream = rfs.createStream(`${appConfig.logdir}/access.log`, {
   interval: '1d', // rotate daily
@@ -29,7 +29,7 @@ app.use(morgan('dev', {
   skip: function (req, res) { return res.statusCode < 400 }
 }))
 // static assets
-app.use(express.static('./public'))
+// app.use(express.static('./public'))
 // parse form data
 app.use(express.urlencoded({ extended: false }))
 // parse json
@@ -42,10 +42,9 @@ app.use(cors({
   origin: ['http://172.28.57.108:3009', ]
 }));
 
-// loging
+// routes
 app.use("/api/users", userRoutes);
-
-app.use('/wordcount', require('./components/wc/wc-controller'));
+app.use("/wordcount", vizRoute)
 
 app.use(errorHandler);
 

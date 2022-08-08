@@ -1,6 +1,8 @@
 const asyncHandler = require( "express-async-handler" );
+const Joi = require('joi');
 const User = require ( "./model.js" );
 const generateToken = require ( "utils/generateToken.js" );
+const validateRequest = require('middleware/validate-request');
 
 const {ApplicationError} = require('error/appErrors');
 //@description     Auth the user
@@ -25,6 +27,16 @@ const userLogin = asyncHandler(async (req, res) => {
     throw new Error("Invalid Email or Password");
   }
 });
+
+const registerUserSchema = (req, res, next) => {
+    const schema = Joi.object({
+        name: Joi.string().required(),
+        email: Joi.string().email().required(),
+        password: Joi.string().min(8).required(),
+        confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
+    });
+    validateRequest(req, next, schema);
+}
 
 //@description     Register new user
 //@route           POST /api/users/
@@ -92,4 +104,4 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  userLogin, updateUserProfile, registerUser };
+  userLogin, updateUserProfile, registerUser, registerUserSchema };

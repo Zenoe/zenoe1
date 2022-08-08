@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const validateRequest = require('middleware/validate-request');
-const wordCountService = require('./wc-service');
-
-// routes
-router.get('/', getAll);
-router.get('/:fileName', getByFileName);
+const wordCountService = require('./service');
 
 function getAll(req, res, next) {
     wordCountService.getAll(res)
@@ -17,4 +13,7 @@ function getByFileName(req, res, next) {
         .then(fileContent => res.json(fileContent))
 }
 
-module.exports = router;
+module.exports = {
+    getAll,
+    getByFileName,
+}
