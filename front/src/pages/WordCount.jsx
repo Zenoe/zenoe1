@@ -24,7 +24,7 @@ const WordCount = (props) => {
   ))
   useEffect(() => {
 
-    requestGet('wordcount').then((response) => {
+    requestGet('api/viz/wordcount').then((response) => {
       // console.log(response.data);
       const _fileList = []
       response.data.split('\n').forEach(line => {

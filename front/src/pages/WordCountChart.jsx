@@ -35,7 +35,7 @@ const WordCountChart = (props) => {
   }, [containerRef])
 
   useEffect(() => {
-    requestGet(`wordcount/${fileName}`).then((response) => {
+    requestGet(`api/viz/wordcount/${fileName}`).then((response) => {
       const parseResult = csvParse(response.data);
       // setData(parseResult.filter(d=>d.count>10).map(d=>({word: d.word, count: d.count})))
       setData(parseResult.map(d=>({word: d.word, count: +d.count})))

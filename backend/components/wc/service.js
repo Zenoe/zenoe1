@@ -3,10 +3,6 @@ const {logger} = require('init')
 
 const {readFile, writeFile} = require('fs').promises
 
-module.exports = {
-    getAll,
-    getByFileName,
-};
 
 async function getAll(res) {
 
@@ -30,3 +26,18 @@ async function getByFileName(in_fileName) {
         logger.error(`${err} in ${arguments.callee.name}, param: ${in_fileName}`)
     }
 }
+
+async function getTimeStampData() {
+    try{
+        const result = await readFile(__dirname  + `/../../local-data/timestamp.txt`, 'utf8')
+        return result
+    }catch(err){
+        logger.error(`${err} in ${arguments.callee.name}, param: ${in_fileName}`)
+    }
+}
+
+module.exports = {
+    getAll,
+    getByFileName,
+    getTimeStampData,
+};

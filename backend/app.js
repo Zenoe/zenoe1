@@ -44,7 +44,7 @@ app.use(cors({
 
 // routes
 app.use("/api/users", userRoutes);
-app.use("/wordcount", vizRoute)
+app.use("/api/viz", vizRoute)
 
 app.use(errorHandler);
 

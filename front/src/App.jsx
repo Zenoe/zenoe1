@@ -19,6 +19,7 @@ import Logout from './pages/users/Logout';
 import Register from './pages/users/Register';
 import WordCount from './pages/WordCount';
 import WordCountChart from './pages/WordCountChart';
+import TimeStampTrend from './pages/viz/TimeStampTrend'
 import ProtectedRoute from './pages/ProtectedRoute';
 import SharedProductLayout from './pages/SharedProductLayout';
 
@@ -66,6 +67,7 @@ const App=()=>{
                 <Route path=':productId' element={<SingleProduct />} />
               </Route>
 
+              <Route path='timestamp' element={<TimeStampTrend />} />
               <Route path='wordcount' element={<WordCount />} />
               <Route path='wordcount/:fileName' element={<WordCountChart />} />
               <Route
