@@ -24,13 +24,15 @@
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
+    "moment": "^2.29.4",
     "mongoose": "^6.4.4",
     "morgan": "^1.10.0",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
     "pino": "^7.11.0",
     "rotating-file-stream": "^3.0.3",
-    "sequelize": "^6.19.0"
+    "sequelize": "^6.19.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "eslint": "^8.15.0",
