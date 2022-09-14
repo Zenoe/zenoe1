@@ -1,5 +1,13 @@
 import axios from 'axios'
 
+function append2Url(url){
+  let fullUrl = url;
+  if(!url.startsWith('http')){
+    fullUrl = `${SERVER_URL}/${url}`
+  }
+  return fullUrl
+}
+
 function request(url, data, method='POST', timeout=6000){
   let fullUrl = url;
   if(!url.startsWith('http')){
@@ -53,4 +61,30 @@ function requestGet(url, data, timeout=6000){
   })
 }
 
-export { requestGet, request }
+function requestUpload(file, onUploadProgress) {
+  const options = {
+    onUploadProgress,
+  }
+  let _url = append2Url('api/utils/upload')
+  let data = new FormData();
+  data.append("file", file);
+
+  // axios.post('https://httpbin.org/post', data)
+  //      .then(res => console.log(res))
+  //      .catch(err => console.log(err))
+
+  const http = axios.create({
+    baseURL: SERVER_URL,
+    timeout: 1000,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
+      //'Authorization': 'token'
+    }
+  });
+
+  return http.post('api/utils/upload', data, options)
+
+}
+
+export { requestGet, request, requestUpload }

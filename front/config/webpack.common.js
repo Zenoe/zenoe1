@@ -16,6 +16,12 @@ const config = {
     path: commonPaths.outputPath,
     publicPath: '/'
   },
+  // resolve: {
+  //   modules: [
+  //     path.resolve(__dirname, 'node_modules'),
+  //     path.resolve(__dirname, './'),
+  //   ],
+  // },
   module: {
     rules: [
       {

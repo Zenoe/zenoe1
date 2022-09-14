@@ -1,0 +1,44 @@
+*** Settings ***
+<%=header%>
+*** Test Cases ***
+<%=caseNo%>
+    [Documentation]    用例编号：<%=caseNo%>
+    ...
+    ...    用例名称：<%=caseName%>
+    ...    用例描述：<%=caseDesc%>
+    ...
+    ...    对应工厂标准拓扑文件名：<%=topName%>
+    ...
+    ...    编写人员：<%=author%>
+    ...
+    ...    编写日期：<%=curDate%>
+    ...
+    ...    测试描述：
+    ...
+
+<% for(let i = 1; i <= len; i++) { %>
+    ...    <%=steps[i-1]%>
+<% } %>
+    ...
+    ...
+    ...
+
+    ...    预期结果：
+<% for(let i = 1; i <= len; i++) { %>
+    ...    <%=exps[i-1]%>
+<% } %>
+    ...
+    ...
+    ...
+    ...
+    ...    脚本正文：
+    [Tags]    <%=tag%>
+    [Setup]    Run Keywords    fw_case_setup
+<% for(let i = 1; i <= len; i++) { %>
+    Comment    step <%=i%>
+    fw_step    测试描述<%=i%>：<%=steps[i-1]%>
+
+    fw_expect    预期结果<%=i%>：<%=exps[i-1]%>
+<% } %>
+
+    [Teardown]    Run Keywords    fw_case_teardown

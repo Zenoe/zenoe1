@@ -4,7 +4,7 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const globalVar = {
-  SERVER_URL:'https://wis.ruijie.com.cn',
+  SERVER_URL:'http://10.110.198.52:81',
 }
 const config = {
   mode: 'production',

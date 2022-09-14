@@ -8,7 +8,7 @@ const connectDB = async () => {
       // without auth section, connection return 'Authentication failed'
       "auth": {
         "username": "admin",
-        "password": "admin",
+        "password": "password",
       },
       authSource:"admin",
       // useUnifiedTopology: true,

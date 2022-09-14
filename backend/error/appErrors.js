@@ -7,6 +7,16 @@ class ApplicationError extends Error {
   }
 }
 
+class AsyncError extends Error {
+  constructor(res, message, details = {}) {
+    super();
+    this.name = 'AsyncError';
+    this.res = res;
+    this.message = message;
+    this.details = details;
+  }
+}
+
 class UnauthorizedError extends ApplicationError {
   constructor(message, details) {
     super(message, details);
@@ -18,6 +28,7 @@ class UnauthorizedError extends ApplicationError {
 module.exports = {
   ApplicationError,
   UnauthorizedError,
+  AsyncError,
 };
 // catch (err) {
 //   if (err instanceof Errors.BadRequest)

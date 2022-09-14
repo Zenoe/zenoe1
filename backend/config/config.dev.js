@@ -3,7 +3,7 @@ const config = require('./config.global');
 
 // db config
 config.db = {
-  MONGO_URI: 'mongodb://172.28.57.108:27017/note',
+  MONGO_URI: 'mongodb://10.110.198.50:27017/note',
   host : 'localhost',
   port: 3306,
   database : 'zenoe',
@@ -15,7 +15,7 @@ config.appcfg = {
   port : 7007,
   logdir : '/var/log/zenoe',
   env : 'dev',
-  hostname : '172.28.57.108',
+  hostname : '10.110.198.50',
   JWT_SECRET: '123asdjkl',
 }
 
