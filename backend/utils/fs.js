@@ -1,25 +1,53 @@
 const fs = require('fs');
 const path = require('path')
+const archiver = require('archiver');
+
+const {logger} = require('init')
 
 /* 读取dir下的所有文件 */
-const findFileRecursivelySync = function(dir, excludes=[]) {
+const findFileRecursivelySync = function(dir, recursive=true, excludes=[]) {
   let result = [];
-  let files = fs.readdirSync(dir);
+  try{
+    const files = fs.readdirSync(dir);
+    files.forEach(val => {
+      let file = path.join(dir, val);
+      let stats = fs.statSync(file);
 
-  files.forEach(val => {
-    let file = path.join(dir, val);
-    let stats = fs.statSync(file);
-
-    if(stats.isDirectory() && !excludes.includes(val)) {
-      result.push(...findFileRecursivelySync(file));
-    } else if(stats.isFile()) {
-      result.push(file);
+      if(recursive && stats.isDirectory() && !excludes.includes(val)) {
+        result.push(...findFileRecursivelySync(file));
+      } else if(stats.isFile()) {
+        result.push(file);
+      }
+    });
+    return result;
+  }catch(e){
+    if(e.message.includes('no such file or directory')){
+      logger.info(`no such file or directory in ${dir}`)
+      return []
     }
-  });
+    else{
+      throw e
+    }
+  }
+}
 
-  return result;
+function zipDirectory(sourceDir, outPath) {
+  const archive = archiver('zip', { zlib: { level: 9 }});
+  const stream = fs.createWriteStream(outPath);
+
+  return new Promise((resolve, reject) => {
+    archive
+      .directory(sourceDir, false)
+      .on('error', err => reject(err))
+      .pipe(stream)
+    ;
+
+    stream.on('close', () => resolve());
+    archive.finalize();
+  });
 }
 
 module.exports = {
-    findFileRecursivelySync,
+  findFileRecursivelySync,
+  zipDirectory,
 }

@@ -20,7 +20,7 @@ const DrawerHeader = ({ open }) => {
                 {/* <Logo /> */}
                 <Chip
                     /* label={process.env.REACT_APP_VERSION} */
-                  label={'v0.1'}
+                  label={'网络测试管理系统-v0.1'}
                     size="small"
                     sx={{ height: 16, '& .MuiChip-label': { fontSize: '0.625rem', py: 0.25 } }}
                     component="a"

@@ -40,7 +40,7 @@ function request(url, data, method='POST', timeout=6000){
 /*
  * get request. support object paramater
  */
-function requestGet(url, data, timeout=6000){
+function requestGet(url, data, timeout=30000){
   let fullUrl = url;
   if(!url.startsWith('http')){
     fullUrl = `${SERVER_URL}/${url}`
@@ -75,7 +75,7 @@ function requestUpload(file, onUploadProgress) {
 
   const http = axios.create({
     baseURL: SERVER_URL,
-    timeout: 1000,
+    timeout: 10000,
     headers: {
       Accept: "application/json",
       "Content-Type": "multipart/form-data",

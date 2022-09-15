@@ -28,7 +28,7 @@ const accessLogStream = rfs.createStream(`${appConfig.logdir}/access.log`, {
 app.use(fileUpload({
   createParentPath: true,
   limits: {
-        fileSize: 4 * 1024 * 1024 * 1024 //4MB max file(s) size
+        fileSize: 6 * 1024 * 1024 * 1024 //4MB max file(s) size
     },
 }));
 app.use(morgan('combined', { stream: accessLogStream }))
@@ -36,8 +36,9 @@ app.use(morgan('dev', {
   skip: function (req, res) { return res.statusCode < 400 }
 }))
 // static assets
-// app.use(express.static('./public'))
+app.use('/static', express.static(path.join(__dirname, './static')))
 app.use('/upload', express.static(path.join(__dirname, './upload')))
+
 // parse form data
 app.use(express.urlencoded({ extended: false }))
 // parse json

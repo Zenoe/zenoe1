@@ -41,7 +41,6 @@ const UploadFiles = ({title, id, setFileList })=> {
       setProgress(Math.round((100 * event.loaded) / event.total))
     })
       .then((response) => {
-        console.log('upload completed', response);
         setMessage(response.data.message)
         setIsError(false)
         return requestGet('api/utils/filelist')
@@ -49,9 +48,10 @@ const UploadFiles = ({title, id, setFileList })=> {
       .then((res) => {
         setFileList(res.data.fileList)
       })
-      .catch(() => {
+      .catch((e) => {
         setProgress(0)
         setMessage('could not upload the file')
+        console.log(e);
         setCurrentFile(undefined)
         setIsError(true)
       });
