@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
 import { Button, Box, Divider, Grid, Link, ListItem, Stack, Typography } from '@mui/material';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
+
+import { mybasename } from '@/utils/jsutils';
+import MenuItem from '@mui/material/MenuItem';
 import SendIcon from '@mui/icons-material/Send';
 import UploadFiles from '@/components/UploadFiles'
 import { LoadingButton } from '@mui/lab';
@@ -10,10 +16,12 @@ const TestCase2RF = ()=>{
   const [fileList, setFileList] = useState([])
   const [rfFileList, setRfFileList] = useState([])
   const [loading, setLoading] = useState(false);
+  const [pkgNameList, setPkgNameList] = useState([])
+  const [curPkgName, setCurPkgName] = useState('')
 
   const convert2Rf = ()=>{
     setLoading(true)
-    requestGet('api/utils/convert2rf')
+    requestGet('api/utils/convert2rf', {pkgName:curPkgName})
       .then(res=>{
         console.log('convert ok');
         setLoading(false)
@@ -32,6 +40,22 @@ const TestCase2RF = ()=>{
       setRfFileList(res.data.fileList.filter(i=>i.endsWith('.zip')))
     })
   }, [])
+
+  useEffect(()=>{
+    setPkgNameList(fileList.filter(i=> i.includes('TP.xls')).map( i=> mybasename(i) ))
+  },[fileList])
+
+  useEffect(()=>{
+    if(pkgNameList.length > 0)
+      setCurPkgName(pkgNameList[0])
+    else
+      setCurPkgName('')
+  }, [pkgNameList])
+
+  const handleChange = (event) => {
+    setCurPkgName(event.target.value);
+  };
+
   return (
     <Box>
     <Grid container spacing={2}>
@@ -49,6 +73,7 @@ const TestCase2RF = ()=>{
 
       </Grid>
       <Grid item xs={3}>
+        <Stack direction="row" spacing={2}>
         <LoadingButton
           onClick={convert2Rf}
           loading={loading}
@@ -58,7 +83,22 @@ const TestCase2RF = ()=>{
         >
           转换
         </LoadingButton>
-
+          <FormControl sx={{ m: 1, minWidth: 200}}>
+            <InputLabel id="pkgNameId" sx={{fontSize: 16}}>选择工作包</InputLabel>
+          <Select
+            labelId="pkgNameId"
+            // value is the default value for controlled select
+            value={curPkgName}
+            /* SelectProps={{ */
+            /*   renderValue: (value) => value, */
+            /* }} */
+            /* defaultValue={curPkgName} */
+            onChange={handleChange}
+          >
+            {pkgNameList.map( i=> (<MenuItem value={i} key={i}>{i}</MenuItem>) )}
+          </Select>
+        </FormControl>
+        </Stack>
       </Grid>
     </Grid>
       <Grid container spacing={2}>
@@ -72,7 +112,7 @@ const TestCase2RF = ()=>{
                 <ListItem
                   divider
                   key={index}>
-                  <a href={`${SERVER_URL}${file}`}>{file.substring(file.lastIndexOf('/')+1)}</a>
+                  <a href={`${SERVER_URL}${file}`}>{mybasename(file)}</a>
                   {/* { file } */}
                 </ListItem>
               ))}

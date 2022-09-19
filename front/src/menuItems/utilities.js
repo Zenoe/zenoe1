@@ -41,13 +41,13 @@ const utilities = {
       url: '/deviceparamconverter',
       icon: icons.SnippetsOutlined
     },
-    {
-      id: 'util-typography',
-      title: 'Typography',
-      type: 'item',
-      url: '/typography',
-      icon: icons.FontSizeOutlined
-    },
+    // {
+    //   id: 'util-typography',
+    //   title: 'Typography',
+    //   type: 'item',
+    //   url: '/typography',
+    //   icon: icons.FontSizeOutlined
+    // },
     // {
     //     id: 'util-shadow',
     //     title: 'Shadow',

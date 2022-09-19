@@ -1,4 +1,15 @@
 
+// strip extension
+const stripExt = (_filePath) => ( _filePath.substring(0, _filePath.lastIndexOf('.')) )
+
+const mybasename = (_filePath, _stripExt=false) => {
+  let _ret = _filePath.substring(_filePath.lastIndexOf('/')+1)
+  if(_stripExt){
+    return stripExt(_ret)
+  }
+  return _ret
+}
+
 const removeFromArray = (arr, ele)=>{
   const idx = arr.indexOf(ele);
   if(idx > -1){
@@ -64,4 +75,5 @@ module.exports = {
   debounceFn,
   throttleFn,
   removeFromArray,
+  mybasename,
 }

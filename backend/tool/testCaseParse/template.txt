@@ -41,4 +41,4 @@
     fw_expect    预期结果<%=i%>：<%=exps[i-1]%>
 <% } %>
 
-    [Teardown]    Run Keywords    fw_case_teardown
+    [Teardown]    Run Keywords    <%for (let i=0; i<tail.length; i++){%><%=tail[i]%>    <%}%>

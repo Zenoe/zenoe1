@@ -2,17 +2,13 @@
 const asyncHandler = require( "express-async-handler" );
 const path = require('path')
 const {findFileRecursivelySync} = require('utils/fs');
-
 const {AsyncError} = require('error/appErrors');
 const {logger} = require('init')
+const { generateRf } = require('tool/testCaseParse/xlsReader');
+
 const { PROJECT_DIR } = require('config')
 
-const { generateRf } = require('tool/testCaseParse/xlsReader');
-const { log } = require("console");
-
 const uploadFile = asyncHandler( async (req, res, next)=>{
-
-  console.log('begin to uploadFile');
   let uploadPath;
   if (!req.files || Object.keys(req.files).length === 0) {
     throw new Error("No files were uploaded.");
@@ -50,10 +46,10 @@ const uploadFile = asyncHandler( async (req, res, next)=>{
 const getUploadFileList = async (clientIp, query) =>{
   const uploadPath = PROJECT_DIR + 'upload/' + clientIp
   // return findFileRecursivelySync(uploadPath).map(i=>path.basename(i))
-  const _list = await findFileRecursivelySync(uploadPath).map(i=>i.substring(i.indexOf('/upload')))
-  console.log('get list', _list);
+  let _list = await findFileRecursivelySync(uploadPath).map(i=>i.substring(i.indexOf('/upload')))
+  const condition = i=>(i.endsWith('.xls') || i.endsWith('.xlsx') || i.endsWith('.zip'))
+  _list = _list.filter( i=> condition(i) )
   if(query && query.ext){
-    console.log('get fliter list', _list);
     return _list.filter(i=>i.endsWith(query.ext))
   }
   return _list
@@ -70,17 +66,18 @@ const getFileList = asyncHandler( async (req, res) =>{
 
 const convert2Rf = asyncHandler( async (req, res, next) =>{
   const uploadPath = PROJECT_DIR + 'upload/' + req.ip
+  console.log(req.query);
+  const { pkgName } = req.query
   try{
-    await generateRf(uploadPath)
+    await generateRf(uploadPath, pkgName)
     res.json({
       status: 1,
     })
-
   }catch(e){
-    res.json({
-      status: 0,
-      message: e.message
-    })
+    // res.status(500).json({
+    //   status: 0,
+    //   message: e.message
+    // })
 
     // we process errors in the central error hander
     throw e

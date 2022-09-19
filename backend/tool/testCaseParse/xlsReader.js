@@ -83,26 +83,11 @@ function getUserName(p_caseNo){
   return ''
 }
 
-async function generateTxt(caseData, topMap){
+async function generateTxt(caseData, topMap, cfgMap){
   const [steps, exps] = generateStepExpList(caseData)
   let ejs = require('ejs');
   const len = steps.length
   const caseNo = caseData['用例编号']
-  //   let tpl = `    ...    脚本正文：
-  // <% for(let i = 1; i <= len; i++) { %>
-  //     Comment    step <%=i%>
-  //     fw_step    测试描述<%=i%>：<%=steps[i-1]%>
-  //     fw_expect    预期结果<%=i%>：<%=exps[i-1]%>
-  // <% } %>
-  // `
-  // const data = {
-  //   len,
-  //   steps: steps,
-  //   exps: exps,
-  // }
-  // let html = ejs.render(tpl, data);
-  // console.log(html);
-
   const templateFillData = {
     caseNo,
     tag:caseNo,
@@ -114,36 +99,56 @@ async function generateTxt(caseData, topMap){
     steps,
     exps,
     // get from config file
-    header: getHeader(caseNo),
-    tail: getTail(caseNo),
-    author: getAuthor(caseNo)
+    header: cfgMap.get(caseNo).header || getHeader(caseNo),
+    tail: cfgMap.get(caseNo).tail.split('\n') || getTail(caseNo),
+    author: cfgMap.get(caseNo).author || getAuthor(caseNo)
   }
   const resultTxt = await ejs.renderFile(`${PROJECT_DIR}/tool/testCaseParse/template.txt`, templateFillData, {async: true})
+  // console.log(resultTxt);
   return resultTxt
-
-  // ejs.renderFile(`${PROJECT_DIR}/tool/testCaseParse/template.txt`, templateFillData, (err, str)=>{
-  //   // console.log(str);
-  //   if(err){
-  //     throw err
-  //   }
-  // })
 }
 
-async function generateRf(folder){
-  const condition = i=>(i.endsWith('.xls') || i.endsWith('.xlsx') || i.endsWith('.zip'))
-  const fileList = findFileRecursivelySync(folder ).filter(i=>(condition(i)))
-  let tpFilePath = fileList[0]
-  let cfgFilePath = ''
-  if(fileList.length > 1){
-    if(fileList[1].includes('_config')){
-      cfgFilePath = fileList[1]
-    }
-  }
-  // console.log(tpFilePath);
-  // console.log(cfgFilePath);
+async function generateRf(folder, pkgName){
+  // const condition = i=>(i.endsWith('.xls') || i.endsWith('.xlsx') || i.endsWith('.zip'))
+  // const fileList = findFileRecursivelySync(folder ).filter(i=>(condition(i)))
+  // let tpFilePath = fileList[0]
+  // let cfgFilePath = ''
+  // if(fileList.length > 1){
+  //   if(fileList[1].includes('_config')){
+  //     cfgFilePath = fileList[1]
+  //   }
+  // }
+  const tpFilePath = path.join(folder, pkgName)
   logger.info(`read ${path.basename(tpFilePath)}`)
+
+  if(fs.statSync(tpFilePath).isFile()){
+    logger.info(`find relative config file ${tpFilePath}`)
+  }else{
+    // error thrown by xlsReader does not include stack info
+    throw new Error('no tpFile found')
+  }
   const tpFile = xlsReader.read(await readFileP(tpFilePath), {type: 'buffer'});
-  // const tpFile = xlsReader.readFile(tpFilePath)
+
+  const _dotIdx = pkgName.lastIndexOf('.')
+  const pkgMainName = pkgName.substring(0, _dotIdx)
+  const pkgDotExt = pkgName.substring(_dotIdx)
+  const cfgFileName = pkgMainName + '_config' + pkgDotExt
+  const cfgFilePath = path.join(folder, cfgFileName)
+
+  const cfgMap = new Map()
+  if(fs.statSync(cfgFilePath).isFile()){
+    logger.info(`find relative config file ${cfgFilePath}`)
+    const cfgFile = xlsReader.read(await readFileP(cfgFilePath), {type: 'buffer'});
+    const cfgList = await getSheetData(cfgFile, 0)
+    for( let cfg of cfgList ){
+      cfgMap.set(cfg['用例编号'], {
+        author: cfg['编写人员'],
+        header: cfg['脚本头部'],
+        tail: cfg['脚本尾部'],
+      })
+    }
+    // console.log(cfgMap);
+  }
 
   const topMap = getTopData(tpFile, TOPINDEX)
   const caseList = await getSheetData(tpFile, CASEDATAINDEX)
@@ -153,7 +158,7 @@ async function generateRf(folder){
     const testCasePkgName = caseData['用例包名称']
     pkgNameSet.add(testCasePkgName)
 
-    const rfTxt = await generateTxt(caseData, topMap)
+    const rfTxt = await generateTxt(caseData, topMap, cfgMap)
     const caseNo = caseData['用例编号']
     logger.info(`convert ${testCasePkgName}/${caseNo}`)
 
@@ -176,20 +181,14 @@ async function generateRf(folder){
   }
 }
 
-function testmain(){
-  // Reading our test file
-  const file = xlsReader.readFile('./12.8PL30.xls')
-
-  const topMap = getTopData(file, TOPINDEX)
-  const caseList = getSheetData(file, CASEDATAINDEX)
-  const testCasePkgName = caseList[0]['用例包名称']
-  console.log('用例包名称', testCasePkgName);
-  generateTxt(caseList[0], topMap)
-
-}
-
-// ejsTest()
-// main()
+// function testmain(){
+//   const file = xlsReader.readFile('./12.8PL30.xls')
+//   const topMap = getTopData(file, TOPINDEX)
+//   const caseList = getSheetData(file, CASEDATAINDEX)
+//   const testCasePkgName = caseList[0]['用例包名称']
+//   console.log('用例包名称', testCasePkgName);
+//   generateTxt(caseList[0], topMap)
+// }
 
 module.exports={
   generateRf
