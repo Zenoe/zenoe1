@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
-import { Button, Box, Divider, Grid, Stack, Typography, MenuItem, Autocomplete, TextField, TextareaAutosize } from '@mui/material';
+import { Button, Box, Divider, Grid, Stack, Typography, MenuItem, Autocomplete, TextField, Checkbox, TextareaAutosize } from '@mui/material';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
 import { mybasename } from '@/utils/jsutils';
+import {json2list} from '@/utils/projutils';
 import { LoadingButton } from '@mui/lab';
 import allCliList from './cliData';
 
@@ -17,20 +21,23 @@ const DCParamConverter = ()=>{
   const [informMsg, setInformMsg] = useState('')
   const [guessRFStr, setGuessRFStr] = useState('')
 
-  // const [showInfo, setShowInfo] = useState('')
-  const [showInfo, setShowInfo] = useState(`HundredGigabitEthernet 1/1    [administratively down/down]
-        1002::2
-        FE80::20D:F8FF:FEE9:66B0
-HundredGigabitEthernet 1/2    [administratively down/down]
-        1005::2
-        FE80::20D:F8FF:FEE9:66B0
-HundredGigabitEthernet 1/3    [administratively down/down]
-        1003::2
-        FE80::20D:F8FF:FEE9:66B0
-Loopback 0                    [up/up]
-        2::2
-        FE80::20D:F8FF:FEE9:66B0
-        4::4`)
+  const [rawResult, setRawResult] = useState('')
+  const [showInfo, setShowInfo] = useState('')
+//   const [showInfo, setShowInfo] = useState(`HundredGigabitEthernet 1/1    [administratively down/down]
+//         1002::2
+//         FE80::20D:F8FF:FEE9:66B0
+// HundredGigabitEthernet 1/2    [administratively down/down]
+//         1005::2
+//         FE80::20D:F8FF:FEE9:66B0
+// HundredGigabitEthernet 1/3    [administratively down/down]
+//         1003::2
+//         FE80::20D:F8FF:FEE9:66B0
+// Loopback 0                    [up/up]
+//         2::2
+//         FE80::20D:F8FF:FEE9:66B0
+//         4::4`)
+  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+  const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
   const handleChange = (event, value) => {
     // console.log(value);
@@ -67,13 +74,23 @@ Loopback 0                    [up/up]
   }
   const processConvertParamResult = (result) => {
     // remove prefix({) and suffix (}\n)
-    const _result = result.replace(/^{/, '').replace(/}\n$/,'')
-    console.log(_result);
-    setResultKVList(_result.split(','))
+    setRawResult(result)
+    const _result = result.replace(/\n$/,'').replace(/\'/g, '\"')
+    // console.log(_result);
+    try{
+      const jsonResult = JSON.parse(_result)
+      setResultKVList(json2list(jsonResult))
+    }catch (e){
+      console.error('parse json failed', e);
+    }
+
+    // setResultKVList(_result.split(','))
   }
   const convertParam = ()=>{
     setInformMsg('')
     setGuessRFStr('')
+    setResultKVList([])
+    setRawResult('')
     if(curCli.length === 0){
       setInformMsg('请输入 cli 命令')
       return
@@ -113,8 +130,7 @@ Loopback 0                    [up/up]
           id="combo-box-demo"
           options={allCliList}
           sx={{ width: 400 }}
-          value={'show ipv6 interface brief'}
-          /* value={''} */
+          /* value={'show ipv6 interface brief'} */
           renderInput={(params) => <TextField {...params} label="cli 命令" />}
           onChange={handleChange}
           onInputChange={handleInputChange}
@@ -151,7 +167,7 @@ Loopback 0                    [up/up]
         <Box id="inputShowResultId" sx={{fontSize: 14}}>
           <TextField
             id="outlined-multiline-flexible"
-            /* label="返回参数形式" */
+    /* label="返回参数形式" */
             multiline
             minRows={10}
             value={resultKVList.join('\n')}
@@ -165,25 +181,49 @@ Loopback 0                    [up/up]
           />
         </Box>
 
-      <Box>
+        <Box>
           <Autocomplete
-            autoHighlight
+            multiple
+            disableCloseOnSelect
             disableListWrap
             id="combo-box-demo"
             options={resultKVList}
             sx={{ width: 700 }}
             renderInput={(params) => <TextField {...params} label="结果搜索" />}
+            renderOption={(props, option, { selected }) => (
+              <li {...props}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {/* {option.title} */}
+                {option}
+              </li>
+            )}
             onChange={handleKVResultChange}
           />
-        <Box sx={{m:1}} >猜你需要:</Box>
-        <TextField
-          value={guessRFStr}
-          sx={{ width: 700 }}
-          onFocus={selOnFocus}
-        />
+          <Box sx={{m:1}} >猜你需要:</Box>
+          <TextField
+            value={guessRFStr}
+            sx={{ width: 700 }}
+            onFocus={selOnFocus}
+          />
 
-      </Box>
+        </Box>
       </Stack>
+      <Box>原始输出:</Box>
+      <TextField
+        multiline
+        minRows={10}
+        value={rawResult}
+        onFocus={selOnFocus}
+        InputProps={{
+          readOnly: true,
+        }}
+        style={{ width: 700 }}
+      />
     </Box>
   )
 }

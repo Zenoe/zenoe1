@@ -7,6 +7,8 @@ const {logger} = require('init')
 const { generateRf } = require('tool/testCaseParse/xlsReader');
 const { callPy } = require('tool/dutShow')
 
+const {ThridPartyError} = require('error/appErrors');
+
 const { PROJECT_DIR } = require('config')
 
 const uploadFile = asyncHandler( async (req, res, next)=>{
@@ -103,14 +105,17 @@ const convertParam = asyncHandler( async (req, res, next) =>{
 
   try{
     const _result = await callPy(cli, showInfo)
-    logger.debug('receive from py:', _result[1])
+    console.log(_result[1]);
+    // logger is async, it won't get _result here
+    // logger.info('receive from py:', _result[1])
     _result[0].kill('SIGTERM');
     res.json({
       result: _result[1],
       status: 1,
     })
   }catch(e){
-    throw e
+    // console.log('throw e');
+    throw new ThridPartyError('python script returns error')
   }
 } )
 

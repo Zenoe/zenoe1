@@ -7,6 +7,15 @@ class ApplicationError extends Error {
   }
 }
 
+class ThridPartyError extends Error {
+  constructor(message, details = {}) {
+    super();
+    this.name = 'ThirdPartyError';
+    this.message = message || 'A Thrid party component error occured';
+    this.details = details;
+  }
+}
+
 class AsyncError extends Error {
   constructor(res, message, details = {}) {
     super();
@@ -27,6 +36,7 @@ class UnauthorizedError extends ApplicationError {
 
 module.exports = {
   ApplicationError,
+  ThridPartyError,
   UnauthorizedError,
   AsyncError,
 };

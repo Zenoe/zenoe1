@@ -71,6 +71,7 @@ const debounceFn = (fn, delay) => {
     }, delay)
   }
 }
+
 module.exports = {
   debounceFn,
   throttleFn,

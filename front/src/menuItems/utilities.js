@@ -7,6 +7,8 @@ import {
   FontSizeOutlined,
   LoadingOutlined,
   SnippetsOutlined,
+  ToolOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 
 // icons
@@ -16,7 +18,9 @@ const icons = {
   AntDesignOutlined,
   LoadingOutlined,
   AppstoreAddOutlined,
-  SnippetsOutlined
+  CheckOutlined,
+  SnippetsOutlined,
+  ToolOutlined,
 };
 <SnippetsOutlined />
 // ==============================|| MENU ITEMS - UTILITIES ||============================== //
@@ -39,15 +43,15 @@ const utilities = {
       title: '设备传参工具',
       type: 'item',
       url: '/deviceparamconverter',
-      icon: icons.SnippetsOutlined
+      icon: icons.ToolOutlined
     },
-    // {
-    //   id: 'util-typography',
-    //   title: 'Typography',
-    //   type: 'item',
-    //   url: '/typography',
-    //   icon: icons.FontSizeOutlined
-    // },
+    {
+      id: 'util-typography',
+      title: '脚本语法检查',
+      type: 'item',
+      url: '/rfsyntaxcheck',
+      icon: icons.CheckOutlined
+    },
     // {
     //     id: 'util-shadow',
     //     title: 'Shadow',

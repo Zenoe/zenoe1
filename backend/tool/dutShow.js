@@ -11,17 +11,22 @@ function callPy(funcName, showInfo){
     logger.error(`error from python ${err}`)
   })
 
-  pythonProcess.on('close', (code, signal) => {
-    logger.info(
-      `child process terminated due to receipt of signal ${signal}`);
-  });
 
   return new Promise((resolve, reject) =>{
     pythonProcess.stdout.on("data", data =>{
       // by default converts to utf-8
       resolve([pythonProcess, data.toString()]);
     })
-    process.stderr.on("data", data=>reject(data))
+    process.stderr.on("data", data=>{
+      reject(data)
+    })
+
+    pythonProcess.on('close', (code, signal) => {
+      logger.info(`child process terminated due to receipt of signal ${signal}`);
+      if(signal !== 'SIGTERM')
+        reject('child process exit for unknow reason')
+    });
+
   })
 }
 
