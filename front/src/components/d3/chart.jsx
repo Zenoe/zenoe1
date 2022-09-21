@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 // import PropTypes from 'propTypes';
-import FlexBox from '@/components/FlexBox';
 import styles from './svg.css';
 import './chart-style.css'
 

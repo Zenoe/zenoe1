@@ -4,7 +4,7 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const globalVar = {
-  SERVER_URL:'http://10.110.198.52:81',
+  SERVER_URL:'http://10.110.198.52:7007',
 }
 const config = {
   mode: 'production',
@@ -12,7 +12,9 @@ const config = {
     app: [`${commonPaths.appEntry}/index.js`],
   },
   output: {
-    filename: 'h5/[name].[fullehash].js',
+    // copy-webpack-plugin doesn't support [fullhash], use contenthash,
+    // [fullhash] available only Compilation level and ideally should be used as directory, i.e. path: path.resolve(__dirname, 'dist/[fullhash]/')
+    filename: 'h5/[name].[contenthash].js',
   },
   devtool: 'source-map',
   module: {

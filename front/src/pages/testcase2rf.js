@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Box, Divider, Grid, Link, ListItem, Stack, Typography } from '@mui/material';
+import { Button, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
@@ -18,12 +18,16 @@ const TestCase2RF = ()=>{
   const [loading, setLoading] = useState(false);
   const [pkgNameList, setPkgNameList] = useState([])
   const [curPkgName, setCurPkgName] = useState('')
+  const [convertMsg, setConvertMsg] = useState('')
 
   const convert2Rf = ()=>{
     setLoading(true)
+    setConvertMsg('')
+
     requestGet('api/utils/convert2rf', {pkgName:curPkgName})
       .then(res=>{
-        console.log('convert ok');
+        setConvertMsg('生成RF脚本成功')
+        // console.log('convert ok');
         setLoading(false)
         requestGet('api/utils/filelist', {ext:'zip'}).then(res=>{
           setRfFileList(res.data.fileList)
@@ -32,6 +36,7 @@ const TestCase2RF = ()=>{
       .catch(res=>{
         console.log('convert error', res);
         setLoading(false)
+        setConvertMsg('生成RF脚本失败')
       })
   }
   useEffect(()=>{
@@ -72,7 +77,7 @@ const TestCase2RF = ()=>{
         </Stack>
 
       </Grid>
-      <Grid item xs={3}>
+      <Grid item xs={6}>
         <Stack direction="row" spacing={2}>
         <LoadingButton
           onClick={convert2Rf}
@@ -98,6 +103,9 @@ const TestCase2RF = ()=>{
             {pkgNameList.map( i=> (<MenuItem value={i} key={i}>{i}</MenuItem>) )}
           </Select>
         </FormControl>
+          <Box>
+            {convertMsg}
+          </Box>
         </Stack>
       </Grid>
     </Grid>

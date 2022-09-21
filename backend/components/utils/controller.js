@@ -5,6 +5,7 @@ const {findFileRecursivelySync} = require('utils/fs');
 const {AsyncError} = require('error/appErrors');
 const {logger} = require('init')
 const { generateRf } = require('tool/testCaseParse/xlsReader');
+const { callPy } = require('tool/dutShow')
 
 const { PROJECT_DIR } = require('config')
 
@@ -44,7 +45,11 @@ const uploadFile = asyncHandler( async (req, res, next)=>{
 })
 
 const getUploadFileList = async (clientIp, query) =>{
-  const uploadPath = PROJECT_DIR + 'upload/' + clientIp
+  // const { tmpfield } = query
+
+  let uploadPath = PROJECT_DIR + 'upload/' + clientIp
+  // if(tmpfield)
+  //   uploadPath = PROJECT_DIR + 'upload/' + tmpfield
   // return findFileRecursivelySync(uploadPath).map(i=>path.basename(i))
   let _list = await findFileRecursivelySync(uploadPath).map(i=>i.substring(i.indexOf('/upload')))
   const condition = i=>(i.endsWith('.xls') || i.endsWith('.xlsx') || i.endsWith('.zip'))
@@ -65,7 +70,12 @@ const getFileList = asyncHandler( async (req, res) =>{
 
 
 const convert2Rf = asyncHandler( async (req, res, next) =>{
-  const uploadPath = PROJECT_DIR + 'upload/' + req.ip
+  let uploadPath = PROJECT_DIR + 'upload/' + req.ip
+  // const { tmpfield } = req.query
+  // if(tmpfield){
+  //   uploadPath = PROJECT_DIR + 'upload/' + tmpfield
+  // }
+
   console.log(req.query);
   const { pkgName } = req.query
   try{
@@ -87,8 +97,26 @@ const convert2Rf = asyncHandler( async (req, res, next) =>{
   // res.sendFile(your_file, {headers: {'Content-Type': 'your_file_type'}})
 } )
 
+const convertParam = asyncHandler( async (req, res, next) =>{
+  const { cli, showInfo } = req.query
+  logger.debug(`${cli}, ${showInfo}`)
+
+  try{
+    const _result = await callPy(cli, showInfo)
+    logger.debug('receive from py:', _result[1])
+    _result[0].kill('SIGTERM');
+    res.json({
+      result: _result[1],
+      status: 1,
+    })
+  }catch(e){
+    throw e
+  }
+} )
+
 module.exports = {
   getFileList,
   uploadFile,
   convert2Rf,
+  convertParam,
 }

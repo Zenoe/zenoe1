@@ -14,7 +14,7 @@ const config = {
     app: `${commonPaths.appEntry}/index.js`,
   },
   output: {
-    filename: 'h5/[name].[fullhash].js',
+    filename: 'h5/[name].[contenthash].js',
   },
   // add for [HMR] Update failed: ChunkLoadError: Loading hot update chunk app failed
   // https://stackoverflow.com/questions/65640449/how-to-solve-chunkloaderror-loading-hot-update-chunk-second-app-failed-in-webpa

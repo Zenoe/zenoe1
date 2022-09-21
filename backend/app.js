@@ -48,7 +48,7 @@ app.use(express.json())
 app.use(cors({
   credentials: true,
   // credentials is confilct with "*" origin, so we need specify origins
-  origin: ['http://10.110.198.50:3009', ]
+  origin: appConfig.cors
 }));
 
 // routes

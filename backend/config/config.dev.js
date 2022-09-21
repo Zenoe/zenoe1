@@ -17,6 +17,8 @@ config.appcfg = {
   env : 'dev',
   hostname : '10.110.198.50',
   JWT_SECRET: '123asdjkl',
+  cors:['http://10.110.198.50:3009',],
+  loggerLevel: 'debug',
 }
 
 module.exports = config;

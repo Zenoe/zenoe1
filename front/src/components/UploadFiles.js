@@ -33,6 +33,7 @@ const UploadFiles = ({title, id, setFileList })=> {
 
   const upload = () => {
     let _currentFile = selectedFiles[0];
+    // console.log(_currentFile);
 
     setCurrentFile(_currentFile)
     setProgress(0)

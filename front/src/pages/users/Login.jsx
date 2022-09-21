@@ -1,7 +1,6 @@
 import {useEffect, useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 
-import FlexBox from '@/components/FlexBox';
 import { useIntl } from 'react-intl';
 
 import * as Yup from 'yup';

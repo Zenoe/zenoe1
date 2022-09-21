@@ -28,4 +28,5 @@ yarn-error.log*
 *.xls
 *.xlsx
 
+*.bk
 local-data

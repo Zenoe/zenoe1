@@ -44,11 +44,15 @@ function getTopData(file, idx){
   return topDataMap
 }
 
-function getHeader(p_caseNo){
-  // default header
-  return `Resource          common.txt
-Resource          D:/rf/lib/lib_source.txt
-Resource          D:/rf/key/key_source.txt`
+function getConfig(_cfgMap, _caseNo, _colName){
+  if(_cfgMap.get(_caseNo))
+    return _cfgMap.get(_caseNo)[_colName].split('\n')
+  else{
+    if(_cfgMap.get('默认'))
+      return _cfgMap.get('默认')[_colName].split('\n')
+    else
+      return ''
+  }
 }
 
 function getTail(p_caseNo){
@@ -99,9 +103,11 @@ async function generateTxt(caseData, topMap, cfgMap){
     steps,
     exps,
     // get from config file
-    header: cfgMap.get(caseNo).header || getHeader(caseNo),
-    tail: cfgMap.get(caseNo).tail.split('\n') || getTail(caseNo),
-    author: cfgMap.get(caseNo).author || getAuthor(caseNo)
+    header: getConfig(cfgMap, caseNo, 'header'),
+    // tail: cfgMap.get(caseNo).tail.split('\n') || getTail(caseNo),
+    tail: getConfig(cfgMap, caseNo, 'tail'),
+    // author: cfgMap.get(caseNo).author || getAuthor(caseNo)
+    author: getConfig(cfgMap, caseNo, 'author')
   }
   const resultTxt = await ejs.renderFile(`${PROJECT_DIR}/tool/testCaseParse/template.txt`, templateFillData, {async: true})
   // console.log(resultTxt);

@@ -1,3 +1,5 @@
+const {appConfig} = require("config");
+
 const pino = require('pino');
 const streams = [
   { stream: process.stdout },
@@ -25,7 +27,7 @@ class LogManager{
               options: {destination: `${in_config.logdir}/common.log`}
             },
             { target: 'pino-pretty',
-              level: 'info',
+              level: appConfig.loggerLevel,
               options:{
                 colorize: true,
                 levelFirst: true,
