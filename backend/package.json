@@ -39,7 +39,11 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "eslint": "^8.15.0",
+    "eslint": "^8.24.0",
+    "eslint-config-standard": "https://github.com/standard/eslint-config-standard",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.3.0",
+    "eslint-plugin-promise": "^6.0.1",
     "nodemon": "^2.0.18",
     "pino-pretty": "^7.6.1"
   }

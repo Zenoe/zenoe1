@@ -1,8 +1,14 @@
+import { useState, useEffect } from 'react'
+import { Button, Box, Divider, Grid, Stack, Typography, MenuItem, Autocomplete, TextField, Checkbox, TextareaAutosize } from '@mui/material'
 
-const RFSyntaxCheck = () =>{
-  return <div>
+import { requestGet } from '@/utils/request'
+
+const RFSyntaxCheck = () => {
+  const [rfTxt, setRfTxt] = useState('')
+
+  return <>
            todo
-         </div>
+         </>
 }
 
 export default RFSyntaxCheck

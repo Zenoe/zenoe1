@@ -1,6 +1,14 @@
-{
-  "extends": "google",
-  "rules": {
-    // Additional, per-project rules...
+module.exports = {
+  extends: ['standard'],
+  parserOptions: {
+    ecmaVersion: 6,
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true
+    }
   }
+
+//   "rules": {
+//     Additional, per-project rules...
+//   }
 }

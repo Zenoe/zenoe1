@@ -12232,7 +12232,7 @@ Total number of ARP entries: 11
                 if "Age(min) Interface" in value:
                     value = value.replace("Age(min) Interface","Age(min)    Interface")
                 # else:
-                #     value = value.replace(" ","  ")
+                #     value = value.replace(" ","  ") #接口“vlan 10”会影响
                 list_info.append(value)
         show_info2 = "\n".join(list_info)
         dict_value2 = self.dut_show_autoget_blank_list(show_info2,"IP Address")
@@ -12627,7 +12627,11 @@ mtp_switch on
                 erspan_flag = 1
             else:
                 if scr_flag == 1 :
-                    src_list.append(show_info_list[i].strip())
+                    if "Sample:" in show_info_list[i].strip():
+                        temp_value = show_info_list[i].strip().split("Sample:")[0].strip()
+                        src_list.append(temp_value)
+                    else:
+                        src_list.append(show_info_list[i].strip())
                     dict_value["sess-num " + sess_num + "/" + "src-intf"] = src_list
                 if dest_flag == 1 :
                     dest_list.append(show_info_list[i].strip())
@@ -25332,7 +25336,10 @@ C     40.1.1.1/32 is local host.
                         if new_list[i] == title_value :
                             new_list_title_key = i
                     new_list_title_value = new_list[new_list_title_key]          #需要变参的地方
-                    if "/" in new_list_title_value:
+                    if "/" in new_list_title_value and "RT" in new_list_title_value:
+                        ip_obj = re.findall(r"(RT<\d+.*/\d+)",new_list_title_value)
+                        ip_flag = ip_obj[0]
+                    elif "/" in new_list_title_value:
                         ip_obj = re.findall(r"(\d+.*/\d+)",new_list_title_value)
                         ip_flag = ip_obj[0]
                     else:
@@ -26469,8 +26476,41 @@ Total number of prefixes 16
         | ${result1} | dut_judge_show | cmd_str=show bgp l2vpn evpn evi <num> mac-ip | yinfo=${yinfo}  | alias=dut1   | include=1    | change_letter=0 |
         备注：${yinfo}同Returns格式一致.
         """
-
-        return self.dut_get_bgp_network(show_info)
+        if "       Network" in show_info:
+            dict_value = {}
+            show_info_split = show_info.split("\n")
+            if re.match(r'.*#.*', show_info_split[0]):
+                show_info_split.remove(show_info_split[0])
+            if re.match(r'.*show.*', show_info_split[0]):
+                show_info_split.remove(show_info_split[0])
+            if re.match(r'.*#.*', show_info_split[-1]):
+                show_info_split.remove(show_info_split[-1])
+            line_len = len(show_info_split)
+            for line_len_num in range(0, line_len):
+                if "For address family" in show_info_split[line_len_num]:
+                    list1 = show_info_split[line_len_num].split(":")
+                    dict_value[list1[0].strip()] = list1[1].strip()
+                if "BGP table version" in show_info_split[line_len_num]:
+                    list2 = show_info_split[line_len_num].split(",")
+                    for list2_value in list2:
+                        if "is" in list2_value:
+                            list3 = list2_value.split("is")
+                            dict_value[list3[0].strip()] = list3[1].strip()
+                        if re.match("bgp instance(.*)", list2_value.strip()):
+                            obj_0 = re.match("bgp instance(.*)", list2_value.strip())
+                            dict_value["bgp instance"] = obj_0.group(1).strip()
+                if "Total number of prefixes" in show_info_split[line_len_num]:
+                    end_num = line_len_num
+                    list1 = show_info_split[line_len_num].split("prefixes")
+                    dict_value["Total number of prefixes"] = list1[1].strip()
+                if "Next Hop" in show_info_split[line_len_num]:
+                    star_num = line_len_num
+            whippletree_list_2 = [20, 20, 12, 11, 11, 50]
+            dict_value1 = self.dut_show_autoget_form_bgp_network(star_num, end_num, "Network", whippletree_list_2,show_info_split)
+            dict_value2 = dict(dict_value.items() + dict_value1.items())
+            return dict_value2
+        else:
+            return self.dut_get_bgp_network(show_info)
     def dut_get_show_bgp_l2vpn_evpn_evi_num_inclusivemulticast(self,show_info):
         """
         Function:show bgp l2vpn evpn evi <num> inclusive-multicast回显解析函数
@@ -34360,12 +34400,12 @@ Ruijie#show ip ref route vrf vpn1
         """
 
         return self.dut_get_show_ip_ref_route(show_info)
-    def dut_get_show_ip_route_fastreroute(self,show_info):
+    def dut_get_show_ip_route_fastreroute(self, show_info):
         """
         Function:show ip route fast-reroute回显解析函数
         CLI命令:show ip route fast-reroute
         回显信息示例:
-S57-2PL2#show ip route fast-reroute 
+S57-2PL2#show ip route fast-reroute
 
 Codes:  C - Connected, L - Local, S - Static
         R - RIP, O - OSPF, B - BGP, I - IS-IS, V - Overflow route
@@ -34394,29 +34434,70 @@ S     2.2.2.2/32[ma] via 192.168.1.2, Loopback 1
         """
 
         dict_value = {}
-        via_ip_list=[]
+        via_ip_list = []
         show_info_list = self.dut_get_start_show_info(show_info)
         for value in show_info_list:
             if "via" in value:
-                if re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*)",value):
-                    obj1 = re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*)",value)
+                if re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value):
+                    obj1 = re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value)
                     Codes = obj1.group(1).strip()
-                    ip = obj1.group(2)
-                    ststus = obj1.group(3)
-                    via_ip = obj1.group(4)
+                    ip = obj1.group(2).strip()
+                    ststus = obj1.group(3).strip()
+                    via_ip = obj1.group(4).strip()
                     via_ip_list.append(via_ip)
-                    intf = obj1.group(5)
-                    dict_value[ip+"/"+"codes"] = Codes
-                    dict_value[ip+"/"+via_ip+"/"+"status"] = ststus
-                    dict_value[ip+"/"+via_ip+"/"+"interface"] = intf
-                elif re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*)",value):
-                    obj2 = re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*)",value)
-                    ststus = obj2.group(1)
-                    via_ip = obj2.group(2)
+                    intf = obj1.group(5).strip()
+                    dict_value[ip + "/" + "codes"] = Codes
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
+                elif re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+\[\d+/\d+\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value):
+                    obj1 = re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+\[\d+/\d+\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value)
+                    Codes = obj1.group(1).strip()
+                    ip = obj1.group(2).strip()
+                    ststus = obj1.group(3).strip()
+                    via_ip = obj1.group(4).strip()
                     via_ip_list.append(via_ip)
-                    intf = obj2.group(3)
-                    dict_value[ip+"/"+via_ip+"/"+"status"] = ststus
-                    dict_value[ip+"/"+via_ip+"/"+"interface"] = intf
+                    intf = obj1.group(5).strip()
+                    dict_value[ip + "/" + "codes"] = Codes
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
+                elif re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value):
+                    obj2 = re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*), \d+:\d+:\d+", value)
+                    ststus = obj2.group(1).strip()
+                    via_ip = obj2.group(2).strip()
+                    via_ip_list.append(via_ip)
+                    intf = obj2.group(3).strip()
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
+                elif re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*)", value):
+                    obj1 = re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+via\s+(\S+),(.*)", value)
+                    Codes = obj1.group(1).strip()
+                    ip = obj1.group(2).strip()
+                    ststus = obj1.group(3).strip()
+                    via_ip = obj1.group(4).strip()
+                    via_ip_list.append(via_ip)
+                    intf = obj1.group(5).strip()
+                    dict_value[ip + "/" + "codes"] = Codes
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
+                elif re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+\[\d+/\d+\]\s+via\s+(\S+),(.*)", value):
+                    obj1 = re.match("(\w+.*)\s+(\S+)\[(\w+)\]\s+\[\d+/\d+\]\s+via\s+(\S+),(.*)", value)
+                    Codes = obj1.group(1).strip()
+                    ip = obj1.group(2).strip()
+                    ststus = obj1.group(3).strip()
+                    via_ip = obj1.group(4).strip()
+                    via_ip_list.append(via_ip)
+                    intf = obj1.group(5).strip()
+                    dict_value[ip + "/" + "codes"] = Codes
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
+                elif re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*)", value):
+                    obj2 = re.match("\s+\[(\w+)\]\s+via\s+(\S+),(.*)", value)
+                    ststus = obj2.group(1).strip()
+                    via_ip = obj2.group(2).strip()
+                    via_ip_list.append(via_ip)
+                    intf = obj2.group(3).strip()
+                    dict_value[ip + "/" + via_ip + "/" + "status"] = ststus
+                    dict_value[ip + "/" + via_ip + "/" + "interface"] = intf
         dict_value["via_list"] = via_ip_list
         return dict_value
     def dut_get_show_ip_ref_route_fastreroute(self,show_info):
@@ -47629,9 +47710,38 @@ S79_2#show interfaces  tunnel 510
                 obj_1 = re.match("Tunnel TOS/Traffic Class (.*), Tunnel TTL (\d+)",value)
                 dict_value["Tunnel TOS/Traffic Class"] = obj_1.group(1).strip()
                 dict_value["Tunnel TTL"] = obj_1.group(2).strip()
+            elif re.match("10 seconds input rate (\d+) bits/sec, (\d+) packets/sec",value):
+                obj = re.match("10 seconds input rate (\d+) bits/sec, (\d+) packets/sec",value)
+                dict_value["10 seconds input rate/bits/sec"] = obj.group(1).strip()
+                dict_value["10 seconds input rate/packets/sec"] = obj.group(2).strip()
+            elif re.match("10 seconds output rate (\d+) bits/sec, (\d+) packets/sec",value):
+                obj = re.match("10 seconds output rate (\d+) bits/sec, (\d+) packets/sec",value)
+                dict_value["10 seconds output rate/bits/sec"] = obj.group(1).strip()
+                dict_value["10 seconds output rate/packets/sec"] = obj.group(2).strip()
+            elif re.match("Input: (\d+) packets, (\d+) bytes",value):
+                obj = re.match("Input: (\d+) packets, (\d+) bytes",value)
+                key_1 = "Input"
+                dict_value[key_1 + "/packets"] = obj.group(1).strip()
+                dict_value[key_1 + "/bytes"] = obj.group(2).strip()
+            elif re.match("Output: (\d+) packets, (\d+) bytes",value):
+                obj = re.match("Output: (\d+) packets, (\d+) bytes",value)
+                key_1 = "Input"
+                dict_value[key_1 + "/packets"] = obj.group(1).strip()
+                dict_value[key_1 + "/bytes"] = obj.group(2).strip()
+            elif re.match("(\d+) unicast packets",value) and key_1 != "":
+                obj = re.match("(\d+) unicast packets",value)
+                dict_value[key_1 + "/unicast packets"] = obj.group(1).strip()
+            elif re.match("(\d+) multicast packets",value) and key_1 != "":
+                obj = re.match("(\d+) multicast packets",value)
+                dict_value[key_1 + "/multicast packets"] = obj.group(1).strip()
+            elif re.match("(\d+) broadcast packets",value) and key_1 != "":
+                obj = re.match("(\d+) broadcast packets",value)
+                dict_value[key_1 + "/broadcast packets"] = obj.group(1).strip()
             if flag == 1 :
                 ipv6_list.append(value)
         return dict_value
+    def dut_get_show_interface_tunnel_num(self,show_info):
+        return self.dut_get_show_interfaces_tunnel_num(show_info)
     def dut_get_show_bfd_neighbors_parmconsult(self,show_info):
         """
         Function:show bfd neighbors parm-consult回显解析函数
@@ -51369,6 +51479,45 @@ Lost packet ratio :0%
         dict_value =dict(dict_value1.items()+dict_value2.items())
         dict_value.pop("Total number of prefixes")
         return dict_value
+    def dut_get_show_bgp_vpnv4_unicast_al(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        new_list = []
+        title_value = ""
+        flag = 0
+        for value in show_info_list:
+            if re.match("Route Distinguisher: (.*)",value):
+                if len(new_list) > 1 :
+                    new_list_1 = []
+                    new_list_1.append(title_value)
+                    new_list_2 = new_list_1 + new_list
+                    show_info_1 = "\n".join(new_list_2)
+                    dict_value_1 = self.dut_get_bgp_network(show_info_1)
+                    for k,v in dict_value_1.items():
+                        dict_value[key_1+"/"+k] = v
+                    new_list = []
+                obj = re.match("Route Distinguisher: (.*)",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("Total number of prefixes \d+",value):
+                obj = re.match("Total number of prefixes (\d+)",value)
+                dict_value[key_1+"/Total number of prefixes"] = obj.group(1).strip()
+                new_list.append(value)
+            elif "Network" in value:
+                title_value = value
+                flag = 1
+            elif flag == 1:
+                new_list.append(value)
+        if len(new_list) > 1:
+            new_list_1 = []
+            new_list_1.append(title_value)
+            new_list_2 = new_list_1 + new_list
+            show_info_1 = "\n".join(new_list_2)
+            dict_value_1 = self.dut_get_bgp_network(show_info_1)
+            for k, v in dict_value_1.items():
+                dict_value[key_1 + "/" + k] = v
+        return dict_value
+    def dut_get_show_bgp_vpnv6_unicast_al(self,show_info):
+        return self.dut_get_show_bgp_vpnv4_unicast_al(show_info)
     def dut_get_show_bgp_vpnv6_unicast_all(self,show_info):
         return self.dut_get_show_bgp_vpnv4_unicast_all(show_info)
     def dut_get_show_srp_ref_sidlist(self,show_info):
@@ -52164,8 +52313,8 @@ Vl10                      3.3.3.3         1           down
                 dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
             elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
                 obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/IGP Metric-Bytes"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/IGP Metric"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
         return dict_value
     def dut_get_show_hideisis_route_all_ipv6(self,show_info):
         show_info_list = self.dut_get_start_show_info(show_info)
@@ -52221,6 +52370,11 @@ Vl10                      3.3.3.3         1           down
                 dict_value[key_1 + "/static"] = obj_1.group(2).strip()
                 dict_value[key_1 + "/bind-sid"] = obj_1.group(3).strip()
                 dict_value[key_1 + "/args"] = obj_1.group(4).strip()
+            elif re.match("prefix (\S+ \d+) static (\d+) flex-algo-id (\d+)",value.strip()):
+                obj_1 = re.match("prefix (\S+ \d+) static (\d+) flex-algo-id (\d+)",value.strip())
+                dict_value[key_1 + "/prefix"] = obj_1.group(1).strip()
+                dict_value[key_1 + "/static"] = obj_1.group(2).strip()
+                dict_value[key_1 + "/flex-algo-id"] = obj_1.group(3).strip()
             elif re.match("prefix (\S+ \d+) block (\d+) static (\d+) g-static (\d+)",value.strip()):
                 obj_1 = re.match("prefix (\S+ \d+) block (\d+) static (\d+) g-static (\d+)",value.strip())
                 dict_value[key_1 + "/prefix"] = obj_1.group(1).strip()
@@ -52236,15 +52390,30 @@ Vl10                      3.3.3.3         1           down
                 dict_value[key_1+"/"+obj.group(3).strip()+"/opcode"] = obj.group(1).strip()
                 dict_value[key_1 + "/" + obj.group(3).strip() + "/end"] = obj.group(2).strip()
                 dict_value[key_1 + "/" + obj.group(3).strip() + "/status"] = obj.group(4).strip()
+
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/opcode"] = obj.group(1).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/end"] = obj.group(2).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/SR"] = obj.group(3).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/status"] = obj.group(4).strip()
             elif re.match("opcode \S+ (\S+) (end.*)  - SR\((\S+)\) (\S+)",value.strip()):
                 obj = re.match("opcode \S+ (\S+) (end.*)  - SR\((\S+)\) (\S+)",value.strip())
                 dict_value[key_1+"/"+obj.group(3).strip()+"/opcode"] = obj.group(1).strip()
                 dict_value[key_1 + "/" + obj.group(3).strip() + "/end"] = obj.group(2).strip()
                 dict_value[key_1 + "/" + obj.group(3).strip() + "/status"] = obj.group(4).strip()
+
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/opcode"] = obj.group(1).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/end"] = obj.group(2).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/SR"] = obj.group(3).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/status"] = obj.group(4).strip()
+
             elif re.match("opcode (\S+) (end.*)  - SR\((\S+)\)",value.strip()):
                 obj = re.match("opcode (\S+) (end.*)  - SR\((\S+)\)",value.strip())
                 dict_value[key_1+"/"+obj.group(3).strip()+"/opcode"] = obj.group(1).strip()
                 dict_value[key_1 + "/" + obj.group(3).strip() + "/end"] = obj.group(2).strip()
+
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/opcode"] = obj.group(1).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/end"] = obj.group(2).strip()
+                dict_value[key_1 + "/" + obj.group(2).strip() + "/SR"] = obj.group(3).strip()
             elif " : " in value:
                 list_1 = value.split(" : ")
                 dict_value[key_1 + "/" + list_1[0].strip()] = list_1[1].strip()
@@ -52385,8 +52554,8 @@ Vl10                      3.3.3.3         1           down
                 dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
             elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
                 obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/IGP Metric-Bytes"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/IGP Metric"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
         return dict_value
     def dut_get_show_bgp_l2vpn_evpn_all_ipprefix_ip_detail(self,show_info):
         dict_value ={}
@@ -53488,7 +53657,7 @@ Vl10                      3.3.3.3         1           down
         return dict_value
     def dut_get_show_isis_route_ipv6_verbose(self,show_info):
         dict_value = {}
-        show_info_list = self.dut_get_start_show_info(show_info)
+        show_info_list = self.dut_get_start_show_info(show_info.replace("\t","  "))
         for value in show_info_list:
             value = value.strip()
             if re.match("Area (\d+):",value):
@@ -53512,6 +53681,11 @@ Vl10                      3.3.3.3         1           down
                 key_2 = key_1 +"/"+ via_ip
                 dict_value[key_2 + "/interface"] = obj.group(2).strip()
                 dict_value[key_2+"/weight"] = obj.group(3).strip()
+            elif re.match("via (\S+), (\S+ \S+)",value):
+                obj = re.match("via (\S+), (\S+ \S+)",value)
+                via_ip = obj.group(1).strip()
+                key_2 = key_1 +"/"+ via_ip
+                dict_value[key_2 + "/interface"] = obj.group(2).strip()
             elif re.match("TILFA backup via (\S+), (.*)",value):
                 obj = re.match("TILFA backup via (\S+), (.*)",value)
                 via_ip = obj.group(1).strip()
@@ -54833,10 +55007,15 @@ Interface HundredGigabitEthernet 10/32:
                 if re.match("magic\s*:(\d+)",value.strip()):
                     obj = re.match("magic\s*:(\d+)",value.strip())
                     dict_value["magic"] = obj.group(1).strip()
-                elif re.match("=====Packet\(efb: (\S+), bufid: (\d+)\) Data====",value):
-                    obj = re.match("=====Packet\(efb: (\S+), bufid: (\d+)\) Data====",value)
+                elif re.match("=====Packet\(efb: (\S+), bufid: (\d+)\) Data====",value.strip()):
+                    obj = re.match("=====Packet\(efb: (\S+), bufid: (\d+)\) Data====",value.strip())
                     dict_value["efb"] = obj.group(1).strip()
                     dict_value["bufid"] = obj.group(2).strip()
+                elif re.match("=+Packet\(efb: (\S+), bufid: (\d+), nextPkt:(\S+)\) Data=+",value.strip()):
+                    obj = re.match("=+Packet\(efb: (\S+), bufid: (\d+), nextPkt:(\S+)\) Data=+",value.strip())
+                    dict_value["efb"] = obj.group(1).strip()
+                    dict_value["bufid"] = obj.group(2).strip()
+                    dict_value["nextPkt"] = obj.group(3).strip()
                 elif "," in value:
                     list_1 = value.strip().split(",")
                     for list_1_value in list_1:
@@ -55000,51 +55179,6 @@ Interface HundredGigabitEthernet 10/32:
         return dict_value
     def dut_get_show_merge_summary(self,show_info):
         return self.dut_show_autoget_whippletree_form_analysis(show_info,"Port")
-    def dut_get_show_srv6_policy_policyname_word(self,show_info):
-        dict_value = {}
-        key_1 = ""
-        show_info_list = self.dut_get_start_show_info(show_info)
-        for value in show_info_list:
-            value_1 = value
-            value = value.strip()
-
-            if re.match("Segment routing ipv6 policy is (.*)",value):
-                obj = re.match("Segment routing ipv6 policy is (.*)",value)
-                dict_value["Segment routing ipv6 policy is"] = obj.group(1).strip()
-            elif re.match("Oam Relay is (.*)",value):
-                obj = re.match("Oam Relay is (.*)",value)
-                dict_value["Oam Relay is"] = obj.group(1).strip()
-            elif re.match("BGP-LS is (.*)",value):
-                obj = re.match("BGP-LS is (.*)",value)
-                dict_value["BGP-LS is"] = obj.group(1).strip()
-            elif re.match("Router Id IPv6 :(.*)",value):
-                obj = re.match("Router Id IPv6 :(.*)",value)
-                dict_value["Router Id IPv6"] = obj.group(1).strip()
-            elif re.match("Global BFD Echo : (.*), Global SBFD : (.*)",value):
-                obj = re.match("Global BFD Echo : (.*), Global SBFD : (.*)",value)
-                dict_value["Global BFD Echo"] = obj.group(1).strip()
-                dict_value["Global SBFD"] = obj.group(1).strip()
-            elif re.match("PolicyName :(.*)",value):
-                obj = re.match("PolicyName :(.*)",value)
-                dict_value["PolicyName"] = obj.group(1).strip()
-            elif re.match("Candidate-path Preference : (.*)",value):
-                key_1 = re.match("Candidate-path Preference : (.*)",value).group(1).strip()
-            elif value.count(":") >= 2 and len(value) > 55 :
-                str1 = value_1[0:55]
-                str2 = value_1[55:]
-                if ":" in str1:
-                    list_1 = str1.split(":",1)
-                    if key_1 != "":
-                        dict_value[key_1+"/"+list_1[0].strip()] = list_1[1].strip()
-                    else:
-                        dict_value[list_1[0].strip()] = list_1[1].strip()
-                if ":" in str2:
-                    list_2 = str2.split(":",1)
-                    if key_1 != "":
-                        dict_value[key_1+"/"+list_2[0].strip()] = list_2[1].strip()
-                    else:
-                        dict_value[list_2[0].strip()] = list_2[1].strip()
-        return dict_value
     def dut_get_show_bgp_bmp_summary(self,show_info):
         return self.dut_show_autoget_blank_list(show_info,"Host")
     def dut_get_show_bgp_bmp_neighbor(self,show_info):
@@ -55224,82 +55358,6 @@ Interface HundredGigabitEthernet 10/32:
                 dict_value[ip + "/via"] = obj.group(5).strip()
                 dict_value[ip + "/interface"] = obj.group(6).strip()
         return dict_value
-    def dut_get_show_srv6_policy(self,show_info):
-        dict_value = {}
-        show_info_list = self.dut_get_start_show_info(show_info)
-        key_2 = ""
-        key_1 = ""
-        for value in show_info_list:
-            if re.match("Segment Routing Ipv6 is (.*), Oam Relay is (\S+)",value):
-                obj = re.match("Segment Routing Ipv6 is (.*), Oam Relay is (\S+)",value)
-                dict_value["Segment Routing Ipv6"] = obj.group(1).strip()
-                dict_value["Oam Relay"] = obj.group(2).strip()
-            elif re.match("Segment Routing Ipv6 is (.*)",value):
-                obj = re.match("Segment Routing Ipv6 is (.*)",value)
-                dict_value["Segment Routing Ipv6"] = obj.group(1).strip()
-            elif re.match("Backup Hot-Standby is (\S+), Switch Delay Time (\S+), Delete Delay Time (\S+)",value):
-                obj = re.match("Backup Hot-Standby is (\S+), Switch Delay Time (\S+), Delete Delay Time (\S+)",value)
-                dict_value["Backup Hot-Standby"] = obj.group(1).strip()
-                dict_value["Switch Delay Time"] = obj.group(2).strip()
-                dict_value["Delete Delay Time"] = obj.group(3).strip()
-            elif re.match("Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+)",value):
-                obj = re.match("Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+)",value)
-                dict_value["Backup Hot-Standby"] = obj.group(1).strip()
-                dict_value["Traffic-Statistics"] = obj.group(2).strip()
-                dict_value["BGP-LS"] = obj.group(3).strip()
-            elif re.match("Traffic-Statistics is (\S+), Oam Relay is (\S+), BGP-LS is (\S+)",value):
-                obj = re.match("Traffic-Statistics is (\S+), Oam Relay is (\S+), BGP-LS is (\S+)",value)
-                dict_value["Traffic-Statistics"] = obj.group(1).strip()
-                dict_value["Oam Relay"] = obj.group(2).strip()
-                dict_value["BGP-LS"] = obj.group(3).strip()
-            elif re.match("Encap Mode (\S+), Encaps Local-End.X is (\S+)",value):
-                obj = re.match("Encap Mode (\S+), Encaps Local-End.X is (\S+)",value)
-                dict_value["Encap Mode"] = obj.group(1).strip()
-                dict_value["Encaps Local-End.X"] = obj.group(2).strip()
-            elif re.match("Encap IPv6 is (.*), Encap IPv6 (\S+)",value):
-                obj = re.match("Encap IPv6 is (.*), Encap IPv6 (\S+)",value)
-                dict_value["Encap IPv6 is"] = obj.group(1).strip()
-                dict_value["Encap IPv6"] = obj.group(2).strip()
-            elif re.match("Router Id IPv6 is (.*), Router Id IPv6 (\S+)",value):
-                obj = re.match("Router Id IPv6 is (.*), Router Id IPv6 (\S+)",value)
-                dict_value["Router Id IPv6 is"] = obj.group(1).strip()
-                dict_value["Router Id IPv6"] = obj.group(2).strip()
-            elif re.match("Encaps Source Address is (.*), Encaps Source Address (\S+)",value):
-                obj = re.match("Encaps Source Address is (.*), Encaps Source Address (\S+)",value)
-                dict_value["Encaps Source Address is"] = obj.group(1).strip()
-                dict_value["Encaps Source Address"] = obj.group(2).strip()
-            elif re.match("BSID Register Mode is (\S+)", value):
-                obj = re.match("BSID Register Mode is (\S+)", value)
-                dict_value["BSID Register Mode"] = obj.group(1).strip()
-            elif re.match("BSID Register Mode (\S+)",value):
-                obj = re.match("BSID Register Mode (\S+)",value)
-                dict_value["BSID Register Mode"] = obj.group(1).strip()
-            elif re.match("Segment-List Encaps Mode is (\S+), Encaps Local-End is (\S+), Encaps Local-End.X is (\S+)",value):
-                obj = re.match("Segment-List Encaps Mode is (\S+), Encaps Local-End is (\S+), Encaps Local-End.X is (\S+)",value)
-                dict_value["Segment-List Encaps Mode"] = obj.group(1).strip()
-                dict_value["Encaps Local-End"] = obj.group(2).strip()
-                dict_value["Encaps Local-End.X"] = obj.group(3).strip()
-            elif re.match("Candidate-path Preference : (\d+)",value.strip()):
-                obj = re.match("Candidate-path Preference : (\d+)",value.strip())
-                key_2 = obj.group(1).strip()
-            elif re.match("PolicyName : (.*)",value):
-                key_1 = re.match("PolicyName : (.*)",value).group(1).strip()
-            elif value.count(":") >= 2 and len(value.strip()) > 55 and re.search("\S+\s{8,}\S+",value):
-                str_1 = value[0:55]
-                str_2 = value[55:]
-                list_1 = str_1.split(":",1)
-                list_2 = str_2.split(":", 1)
-                key_11 = list_1[0].strip()
-                value_11 = list_1[1].strip()
-                key_22 = list_2[0].strip()
-                value_22 = list_2[1].strip()
-                if key_2 == "":
-                    dict_value[key_1 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_22] = value_22
-                else:
-                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22
-        return dict_value
     def dut_get_show_srv6_policy_bfd_echo_neighbor(self,show_info):
         dict_value = {}
         show_info_list = self.dut_get_start_show_info(show_info)
@@ -55319,6 +55377,15 @@ Interface HundredGigabitEthernet 10/32:
                 dict_value["Backup Interval"] = obj.group(1).strip()
                 dict_value["Backup Min-Rx"] = obj.group(2).strip()
                 dict_value["Backup Multiplier"] = obj.group(3).strip()
+            elif re.match("Backup Interval (\S+) milliseconds, Backup Multiplier (\S+)",value):
+                obj = re.match("Backup Interval (\S+) milliseconds, Backup Multiplier (\S+)",value)
+                dict_value["Backup Interval"] = obj.group(1).strip()
+                dict_value["Backup Multiplier"] = obj.group(2).strip()
+            elif re.match("BFD Echo is (\S+), No-bypass is (\S+), Reverse bind-sid is (\S+)",value):
+                obj = re.match("BFD Echo is (\S+), No-bypass is (\S+), Reverse bind-sid is (\S+)",value)
+                dict_value["BFD Echo"] = obj.group(1).strip()
+                dict_value["No-bypass"] = obj.group(2).strip()
+                dict_value["Reverse bind-sid"] = obj.group(3).strip()
             elif re.match("BFD Echo is (\S+)\Z",value):
                 obj = re.match("BFD Echo is (\S+)\Z",value)
                 dict_value["BFD Echo"] = obj.group(1).strip()
@@ -55327,14 +55394,32 @@ Interface HundredGigabitEthernet 10/32:
                 dict_value["Interval"] = obj.group(1).strip()
                 dict_value["Min-Rx"] = obj.group(2).strip()
                 dict_value["Multiplier"] = obj.group(3).strip()
+            elif re.match("Interval (\S+) milliseconds, Min-Rx (\S+) milliseconds, Multiplier (\S+)",value):
+                obj = re.match("Interval (\S+) milliseconds, Min-Rx (\S+) milliseconds, Multiplier (\S+)",value)
+                dict_value["Interval"] = obj.group(1).strip()
+                dict_value["Min-Rx"] = obj.group(2).strip()
+                dict_value["Multiplier"] = obj.group(3).strip()
+            elif re.match("Interval (\S+) milliseconds, Multiplier (\S+)",value):
+                obj = re.match("Interval (\S+) milliseconds, Multiplier (\S+)",value)
+                dict_value["Interval"] = obj.group(1).strip()
+                dict_value["Multiplier"] = obj.group(2).strip()
             elif re.match("Wait Status Time (\S+), Delay Recover Time (\S+)",value):
                 obj = re.match("Wait Status Time (\S+), Delay Recover Time (\S+)",value)
+                dict_value["Wait Status Time"] = obj.group(1).strip()
+                dict_value["Delay Recover Time"] = obj.group(2).strip()
+            elif re.match("Wait Status Time (\S+) seconds, Delay Recover Time (\S+) seconds",value):
+                obj = re.match("Wait Status Time (\S+) seconds, Delay Recover Time (\S+) seconds",value)
                 dict_value["Wait Status Time"] = obj.group(1).strip()
                 dict_value["Delay Recover Time"] = obj.group(2).strip()
             elif re.match("BFD Echo Sessions (\S+), UP (\S+)",value):
                 obj = re.match("BFD Echo Sessions (\S+), UP (\S+)",value)
                 dict_value["BFD Echo Sessions"] = obj.group(1).strip()
                 dict_value["UP"] = obj.group(2).strip()
+            elif re.match("BFD Echo Sessions (\S+), UP (\S+), CREATE (\S+)",value):
+                obj = re.match("BFD Echo Sessions (\S+), UP (\S+), CREATE (\S+)",value)
+                dict_value["BFD Echo Sessions"] = obj.group(1).strip()
+                dict_value["UP"] = obj.group(2).strip()
+                dict_value["CREATE"] = obj.group(3).strip()
             elif re.match("Candidate-path Preference : (\d+)",value.strip()):
                 obj = re.match("Candidate-path Preference : (\d+)",value.strip())
                 key_2 = obj.group(1).strip()
@@ -55353,11 +55438,11 @@ Interface HundredGigabitEthernet 10/32:
                 value_22 = list_2[1].strip()
 
                 if key_2 == "":
-                    dict_value[key_1 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_22] = value_22
+                    dict_value[key_1 + "/" + key_11] = value_11.replace("(ms)","").strip()
+                    dict_value[key_1 + "/" + key_22] = value_22.replace("(ms)","").strip()
                 else:
-                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22
+                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11.replace("(ms)","").strip()
+                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22.replace("(ms)","").strip()
         return dict_value
     def dut_get_show_srv6_policy_sbfd_neighbor(self,show_info):
         dict_value = {}
@@ -55377,6 +55462,15 @@ Interface HundredGigabitEthernet 10/32:
                 dict_value["Interval"] = obj.group(1).strip()
                 dict_value["Min-Rx"] = obj.group(2).strip()
                 dict_value["Multiplier"] = obj.group(3).strip()
+            elif re.match("Interval (\S+) milliseconds, Min-Rx (\S+) milliseconds, Multiplier (\S+)",value):
+                obj = re.match("Interval (\S+) milliseconds, Min-Rx (\S+) milliseconds, Multiplier (\S+)",value)
+                dict_value["Interval"] = obj.group(1).strip()
+                dict_value["Min-Rx"] = obj.group(2).strip()
+                dict_value["Multiplier"] = obj.group(3).strip()
+            elif re.match("Interval (\S+) milliseconds, Multiplier (\S+)",value):
+                obj = re.match("Interval (\S+) milliseconds, Multiplier (\S+)",value)
+                dict_value["Interval"] = obj.group(1).strip()
+                dict_value["Multiplier"] = obj.group(2).strip()
             elif re.match("SBFD is (\S+), Interval (\S+), Multiplier (\S+), Backup Interval (\S+), Backup Multiplier (\S+)",value):
                 obj = re.match("SBFD is (\S+), Interval (\S+), Multiplier (\S+), Backup Interval (\S+), Backup Multiplier (\S+)",value)
                 dict_value["SBFD"] = obj.group(1).strip()
@@ -55410,11 +55504,11 @@ Interface HundredGigabitEthernet 10/32:
                 value_22 = list_2[1].strip()
 
                 if key_2 == "":
-                    dict_value[key_1 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_22] = value_22
+                    dict_value[key_1 + "/" + key_11] = value_11.replace("(ms)","").strip()
+                    dict_value[key_1 + "/" + key_22] = value_22.replace("(ms)","").strip()
                 else:
-                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11
-                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22
+                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11.replace("(ms)","").strip()
+                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22.replace("(ms)","").strip()
         return dict_value
     def dut_get_show_loadbalance_all(self,show_info):
         dict_value = {}
@@ -55835,6 +55929,870 @@ Interface HundredGigabitEthernet 10/32:
         return self.dut_get_show_efd_ipv6_fpm_flows_filter(show_info)
     def dut_get_show_efd_slot_num_ip_fpm_flows_filter(self,show_info):
         return self.dut_get_show_efd_ipv6_fpm_flows_filter(show_info)
+    def dut_get_show_interface_multilink_num(self,show_info):
+        return self.dut_get_show_interfaces_dutport(show_info)
+    def dut_get_show_interface_serial(self,show_info):
+        return self.dut_get_show_interfaces_dutport(show_info)
+    def dut_get_show_mpls_ref_vc(self,show_info):
+        return self.dut_show_autoget_whippletree_form_analysis(show_info,"VC ID")
+    def dut_get_show_evpn_evi_word_df_result(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if re.match("ESI:(\S+)",value):
+                obj = re.match("ESI:(\S+)",value)
+                dict_value["ESI"] = obj.group(1).strip()
+            elif re.match("Bridge-domain:(\d+)\s+(\S+.*)",value):
+                obj = re.match("(Bridge-domain:\d+)\s+(\S+.*)",value)
+                dict_value[obj.group(1).strip()+"/DF-Result"] = obj.group(2).strip()
+            elif re.match("(Number of ESI for evi \d+): (\d+)",value):
+                obj = re.match("(Number of ESI for evi \d+): (\d+)",value)
+                dict_value[obj.group(1).strip()] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_ethernetad_detail(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("Route Distinguisher: (.*)",value):
+                obj = re.match("Route Distinguisher: (.*)",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("BGP routing table entry for (.*)",value):
+                obj = re.match("BGP routing table entry for (.*)",value)
+                dict_value[key_1+"/BGP routing table entry for"] = obj.group(1).strip()
+            elif re.match("(.*) from (.*) \((.*)\)",value):
+                obj = re.match("(.*) from (.*) \((.*)\)",value)
+                dict_value[key_1 + "/from_1"] = obj.group(1).strip()
+                dict_value[key_1 + "/from_2"] = obj.group(2).strip()
+                dict_value[key_1 + "/from_3"] = obj.group(3).strip()
+            elif re.match("Origin (.*), localpref (.*), weight (.*),.*",value):
+                obj = re.match("Origin (.*), localpref (.*), weight (.*),.*",value)
+                dict_value[key_1 + "/Origin"] = obj.group(1).strip()
+                dict_value[key_1 + "/localpref"] = obj.group(2).strip()
+                dict_value[key_1 + "/weight"] = obj.group(3).strip()
+            elif re.match("Extended Community: (.*) ESI LABEL: (.*)",value):
+                obj = re.match("Extended Community: (.*) ESI LABEL: (.*)",value)
+                dict_value[key_1 + "/Extended Community"] = obj.group(1).strip()
+                dict_value[key_1 + "/ESI LABEL"] = obj.group(2).strip()
+            elif re.match("Extended Community: RT:(.*) EVPN L2-attributes: MTU (\d+) C:(\d+) P:(\d+) B:(\d+)",value):
+                obj = re.match("Extended Community: RT:(.*) EVPN L2-attributes: MTU (\d+) C:(\d+) P:(\d+) B:(\d+)",value)
+                dict_value[key_1 + "/Extended Community/RT"] = obj.group(1).strip()
+                dict_value[key_1 + "/EVPN L2-attributes/MTU"] = obj.group(2).strip()
+                dict_value[key_1 + "/EVPN L2-attributes/C"] = obj.group(3).strip()
+                dict_value[key_1 + "/EVPN L2-attributes/P"] = obj.group(4).strip()
+                dict_value[key_1 + "/EVPN L2-attributes/B"] = obj.group(5).strip()
+            elif re.match("Prefix-ByPass-SID: SRv6 L2 Service SID (.*), Flags (.*), Endpoint Behavior (.*)",value):
+                obj = re.match("Prefix-ByPass-SID: SRv6 L2 Service SID (.*), Flags (.*), Endpoint Behavior (.*)",value)
+                dict_value[key_1 + "/Prefix-ByPass-SID/SRv6 L2 Service SID"] = obj.group(1).strip()
+                dict_value[key_1 + "/Prefix-ByPass-SID/Flags"] = obj.group(2).strip()
+                dict_value[key_1 + "/Prefix-ByPass-SID/Endpoint Behavior"] = obj.group(3).strip()
+            elif re.match("ESI: (\S+) label1: (\S+)",value):
+                obj = re.match("ESI: (\S+) label1: (\S+)",value)
+                dict_value[key_1 + "/ESI"] = obj.group(1).strip()
+                dict_value[key_1 + "/label1"] = obj.group(2).strip()
+            elif re.match("Import to EVI:(\S+)",value):
+                obj = re.match("Import to EVI:(\S+)",value)
+                dict_value[key_1 + "/ESI"] = obj.group(1).strip()
+            elif re.match("Last update: (.*)",value):
+                obj = re.match("Last update: (.*)",value)
+                dict_value[key_1 + "/Last update"] = obj.group(1).strip()
+            elif re.match("RX ID: (\S+),TX ID: (\S+)",value):
+                obj = re.match("RX ID: (\S+),TX ID: (\S+)",value)
+                dict_value[key_1 + "/RX ID"] = obj.group(1).strip()
+                dict_value[key_1 + "/TX ID"] = obj.group(2).strip()
+            elif re.match("Total number of prefixes (\d+)",value):
+                obj = re.match("Total number of prefixes (\d+)",value)
+                dict_value[key_1 + "/Total number of prefixes"] = obj.group(1).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all(self,show_info):
+        dict_value1 = {}
+        show_info_list_line = show_info.split("\n")
+        if re.match(r'.*#.*', show_info_list_line[0]):
+            show_info_list_line.remove(show_info_list_line[0])
+        if re.match(r'.*show.*', show_info_list_line[0]):
+            show_info_list_line.remove(show_info_list_line[0])
+        if re.match(r'.*#.*', show_info_list_line[-1]):
+            show_info_list_line.remove(show_info_list_line[-1])
+        for i in show_info_list_line:
+            if '' in show_info_list_line:
+                show_info_list_line.remove('')
+        for value in show_info_list_line[:]:
+            if "Route Distinguisher" in value:
+                if re.match("Route Distinguisher:(.*)\((.*)\)",value):
+                    obj_1 = re.match("Route Distinguisher:(.*)\((.*)\)",value)
+                    obj_1_value_1 = obj_1.group(1).strip()
+                    obj_1_value_2 = obj_1.group(2).strip()
+                    dict_value1["Route Distinguisher"+"/"+obj_1_value_2] = obj_1_value_1
+                elif re.match("Route Distinguisher:(.*)",value):
+                    obj = re.match("Route Distinguisher:(.*)",value)
+                    obj_1_value_1 = obj.group(1).strip()
+                    dict_value1["Route Distinguisher"] = obj.group(1).strip()
+                show_info_list_line.remove(value)
+            if "Total number of prefixes" in value:
+                obj_2 = re.match("Total number of prefixes (\d+)",value)
+                obj_2_value_1 = obj_2.group(1).strip()
+                dict_value1["Total number of prefixes"+"/"+obj_1_value_1] = obj_2_value_1
+                total_num = value
+                show_info_list_line.remove(value)
+        show_info_list_line.append(total_num)
+        show_info ="\n".join(show_info_list_line)
+        dict_value2 = self.dut_get_bgp_network(show_info)
+        dict_value =dict(dict_value1.items()+dict_value2.items())
+        dict_value.pop("Total number of prefixes")
+        return dict_value
+    def dut_get_show_virtualethernet_vegroup_num(self,show_info):
+        dict_value = self.dut_show_autoget_blank_list(show_info,"VE-GroupID",value_title_end="Total")
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if re.match("Total (\d+), (\d+) printed",value):
+                obj = re.match("Total (\d+), (\d+) printed",value)
+                dict_value["Total"] = obj.group(1)
+                dict_value["printed"] = obj.group(2)
+        return dict_value
+    def dut_get_show_mpls_vfi_word(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("VFI name: (\S+) \(vpnid (\d+)\), Admin State:(\S+)",value):
+                obj = re.match("VFI name: (\S+) \(vpnid (\d+)\), Admin State:(\S+)",value)
+                dict_value["VFI name"] = obj.group(1).strip()
+                dict_value["vpnid"] = obj.group(2).strip()
+                dict_value["Admin State"] = obj.group(3).strip()
+            elif ":" in value and value.count(":") == 1:
+                list1 = value.split(":")
+                dict_value[list1[0].strip()] = list1[1].strip()
+            elif re.match("(.*)\s{6,}(\S+)\Z",value):
+                obj = re.match("(.*)\s{6,}(\S+)",value)
+                dict_value[obj.group(1).strip()+"/AC State"] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_eap_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        new_list = []
+        for value in show_info_list:
+            if "The Member information" in value:
+                flag = 1
+                continue
+            elif flag == 0 and re.match(".*\S+\s{15,}\S+.*",value):
+                obj = re.match("(.*\S+)\s{15,}(\S+.*)",value)
+                value_1 = obj.group(1).strip()
+                value_2 = obj.group(2).strip()
+                list1 = value_1.split (":",1)
+                list2 = value_2.split(":", 1)
+                dict_value[list1[0].strip()] = list1[1].strip()
+                dict_value[list2[0].strip()] = list2[1].strip()
+            elif flag == 0 and str(value).count(":") == 1 :
+                list3 = value.split(":")
+                dict_value[list3[0].strip()] = list3[1].strip()
+            if flag == 1 :
+                new_list.append(value)
+        show_info = "\n".join(new_list)
+        dict_value_1 = self.dut_show_autoget_blank_list(show_info,"ID")
+        return dict(dict_value.items()+dict_value_1.items())
+    def dut_get_show_vrf_brief(self,show_info):
+        return self.dut_show_autoget_blank_list(show_info,"Name")
+    def dut_get_show_evpn_evi_num_dftimer_state(self,show_info):
+        return self.dut_show_autoget_blank_list(show_info, "Esi")
+    def dut_get_show_evpn_evi_word_dftimer_state(self,show_info):
+        return self.dut_show_autoget_blank_list(show_info, "Esi")
+    def dut_get_show_hdf_all(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        new_list = []
+        for value in show_info_list:
+            if re.match("Slot: (\S+)   Hdf Status: (.*)",value):
+                if len(new_list) > 0:
+                    show_1 = "\n".join(new_list)
+                    star,end,show_len_list,show_info_list_line = self.dut_common_get_linelist(show_1,"MainNode")
+                    title_len = show_len_list[0] + show_len_list[1] +show_len_list[2]
+                    key_2_flag_len = show_len_list[0] + show_len_list[1]
+                    new_list_2 = []
+                    for value_1 in show_info_list_line:
+                        str1 = value_1[:title_len]
+                        str2 = value_1[title_len:]
+                        if "MainNode" in value_1:
+                            str1 = "MainNode/ChildNode/Item"
+                            blank_num = title_len - len(str1)
+                            new_value = str1+" "*blank_num+str2
+                            new_list_2.append(new_value.strip())
+                            continue
+                        if re.match("\A\S+\s+\Z",str1):
+                            key_1 = str1.strip()
+                            str1 = str1.strip()+"/NA/NA"
+                            blank_num = title_len - len(str1)
+                            new_value = str1 + " " * blank_num + str2
+                            new_list_2.append(new_value.strip())
+                        elif re.match("\A\s{%s}\S+\s+\Z"%show_len_list[0],str1):
+                            key_2 = str1.strip()
+                            str1 = key_1 + "/" + str1.strip()+"/NA"
+
+                            blank_num = title_len - len(str1)
+                            new_value = str1 + " " * blank_num + str2
+                            new_list_2.append(new_value.strip())
+                        elif re.match("\A\s{%s}\S+\s+\Z"%key_2_flag_len,str1):
+                            str1 = key_1 + "/" + key_2 + "/" + str1.strip()
+                            blank_num = title_len - len(str1)
+                            new_value = str1 + " " * blank_num + str2
+                            new_list_2.append(new_value.strip())
+                    show_2 =  "\n".join(new_list_2)
+                    star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(show_2, "MainNode")
+                    dict_value_2 = self.dut_show_autoget_form(star, end,"MainNode/ChildNode/Item",show_len_list,show_info_list_line)
+                    for k,v in dict_value_2.items():
+                        dict_value[key_0+'/'+k] = v
+                obj = re.match("Slot: (\S+)   Hdf Status: (.*)",value)
+                key_0 = obj.group(1).strip()
+                dict_value[key_0 + "/Hdf Status"] = obj.group(2).strip()
+                new_list = []
+            elif "-----------------------------" in value:
+                pass
+            else:
+                new_list.append(value)
+
+        if len(new_list) > 0:
+            show_1 = "\n".join(new_list)
+            star,end,show_len_list,show_info_list_line = self.dut_common_get_linelist(show_1,"MainNode")
+            title_len = show_len_list[0] + show_len_list[1] +show_len_list[2]
+            key_2_flag_len = show_len_list[0] + show_len_list[1]
+            new_list_2 = []
+            for value_1 in show_info_list_line:
+                str1 = value_1[:title_len]
+                str2 = value_1[title_len:]
+                if "MainNode" in value_1:
+                    str1 = "MainNode/ChildNode/Item"
+                    blank_num = title_len - len(str1)
+                    new_value = str1+" "*blank_num+str2
+                    new_list_2.append(new_value.strip())
+                    continue
+                if re.match("\A\S+\s+\Z",str1):
+                    key_1 = str1.strip()
+                    str1 = str1.strip()+"/NA/NA"
+                    blank_num = title_len - len(str1)
+                    new_value = str1 + " " * blank_num + str2
+                    new_list_2.append(new_value.strip())
+                elif re.match("\A\s{%s}\S+\s+\Z"%show_len_list[0],str1):
+                    key_2 = str1.strip()
+                    str1 = key_1 + "/" + str1.strip()+"/NA"
+
+                    blank_num = title_len - len(str1)
+                    new_value = str1 + " " * blank_num + str2
+                    new_list_2.append(new_value.strip())
+                elif re.match("\A\s{%s}\S+\s+\Z"%key_2_flag_len,str1):
+                    str1 = key_1 + "/" + key_2 + "/" + str1.strip()
+                    blank_num = title_len - len(str1)
+                    new_value = str1 + " " * blank_num + str2
+                    new_list_2.append(new_value.strip())
+            show_2 =  "\n".join(new_list_2)
+            star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(show_2, "MainNode")
+            dict_value_2 = self.dut_show_autoget_form(star, end,"MainNode/ChildNode/Item",show_len_list,show_info_list_line)
+            for k,v in dict_value_2.items():
+                dict_value[key_0+'/'+k] = v
+        return dict_value
+    def dut_get_show_hdf_fault(self,show_info):
+        return self.dut_get_show_hdf_all(show_info)
+    def dut_get_show_bgp_ipv4_vpntarget(self,show_info):
+        return self.dut_get_bgp_network(show_info)
+    def dut_get_show_bgp_ipv4_vpntarget_summary(self,show_info):
+        return self.dut_get_show_bgp_all_summary(show_info)
+    def dut_get_show_bgp_l2vpn_evpn_all_inclusivemulticast(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        new_list = []
+        title_value = ""
+        flag = 0
+        for value in show_info_list:
+            if re.match("Route Distinguisher: (.*)",value):
+                if len(new_list) > 1 :
+                    new_list_1 = []
+                    new_list_1.append(title_value)
+                    new_list_2 = new_list_1 + new_list
+                    show_info_1 = "\n".join(new_list_2)
+                    dict_value_1 = self.dut_get_bgp_network(show_info_1)
+                    for k,v in dict_value_1.items():
+                        dict_value[key_1+"/"+k] = v
+                    new_list = []
+                obj = re.match("Route Distinguisher: (.*)",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("Total number of prefixes \d+",value):
+                obj = re.match("Total number of prefixes (\d+)",value)
+                dict_value[key_1+"/Total number of prefixes"] = obj.group(1).strip()
+                new_list.append(value)
+            elif "Network" in value:
+                title_value = value
+                flag = 1
+            elif flag == 1:
+                new_list.append(value)
+        if len(new_list) > 1:
+            new_list_1 = []
+            new_list_1.append(title_value)
+            new_list_2 = new_list_1 + new_list
+            show_info_1 = "\n".join(new_list_2)
+            dict_value_1 = self.dut_get_bgp_network(show_info_1)
+            for k, v in dict_value_1.items():
+                dict_value[key_1 + "/" + k] = v
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_ipprefix(self,show_info):
+        return self.dut_get_show_bgp_l2vpn_evpn_all_inclusivemulticast(show_info)
+    def dut_get_show_ipv6_ospf_database_external(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        new_list = []
+        Prefix_list = []
+        key_1 = ""
+        for value in show_info_list:
+            if "LS age:" in value:
+                flag = 1
+                if len(new_list) > 0 :
+                    for value_1 in new_list:
+                        if ": " in value_1:
+                            list_1 = value_1.split(":",1)
+                            dict_value[key_1 + "/"+list_1[0].strip()] = list_1[1].strip()
+            elif re.match("OSPFv3 Router with ID \((.*)\) \(Process (\d+)\)",value.strip()):
+                obj = re.match("OSPFv3 Router with ID \((.*)\) \((Process \d+)\)",value.strip())
+                dict_value[obj.group(2).strip()+ "/OSPFv3 Router with ID"] = obj.group(1).strip()
+            if flag == 1 :
+                if re.match("Prefix: (.*)",value.strip()):
+                    obj = re.match("Prefix: (.*)",value.strip())
+                    key_1 = obj.group(1).strip()
+                    Prefix_list.append(key_1)
+                    continue
+                new_list.append(value)
+        if len(new_list) > 0:
+            for value_1 in new_list:
+                if ": " in value_1:
+                    list_1 = value_1.split(":", 1)
+                    dict_value[key_1 + "/" + list_1[0].strip()] = list_1[1].strip()
+        return dict_value
+    def dut_get_show_ppp_multilink(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("multilink interface (\d+) \((.*)\)",value):
+                obj = re.match("multilink interface (\d+) \((.*)\)",value)
+                key_1 = obj.group(1)
+                dict_value[key_1 + "/status"] = obj.group(2).strip()
+            elif re.match("authname \((.*)\) / endpoint\((.*)\)  interface state (.*)",value):
+                obj = re.match("authname \((.*)\) / endpoint\((.*)\)  interface state (.*)",value)
+                dict_value[key_1 + "/authname"] = obj.group(1).strip()
+                dict_value[key_1 + "/endpoint"] = obj.group(2).strip()
+                dict_value[key_1 + "/interface state"] = obj.group(3).strip()
+            elif re.match("ipcp state: (.*)",value):
+                obj = re.match("ipcp state: (.*)",value)
+                dict_value[key_1 + "/ipcp state"] = obj.group(1).strip()
+            elif re.match("ipv6cp state: (.*)",value):
+                obj = re.match("ipv6cp state: (.*)",value)
+                dict_value[key_1 + "/ipv6cp state"] = obj.group(1).strip()
+            elif re.match("frag queue: (.*) bytes, (.*) frags,  drops: (.*) timeout, (.*) lack", value):
+                obj = re.match("frag queue: (.*) bytes, (.*) frags,  drops: (.*) timeout, (.*) lack", value)
+                dict_value[key_1 + "/frag queue"] = obj.group(1).strip()
+                dict_value[key_1 + "/frags"] = obj.group(2).strip()
+                dict_value[key_1 + "/drops"] = obj.group(3).strip()
+                dict_value[key_1 + "/lack"] = obj.group(4).strip()
+            elif re.match("group members: (.*), active members: (.*),",value):
+                obj = re.match("group members: (.*), active members: (.*),",value)
+                dict_value[key_1 + "/group members"] = obj.group(1).strip()
+                dict_value[key_1 + "/active members"] = obj.group(2).strip()
+            elif re.match("(Serial .*) \((.*)\),",value):
+                obj = re.match("(Serial .*) \((.*)\),",value)
+                dict_value[key_1 + "/"+obj.group(1).strip()] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_interface_pos(self,show_info):
+        return self.dut_get_show_interfaces_dutport(show_info)
+    def dut_get_show_portqueue_statistics_interface_pos(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("\[(.*)\]",value.strip()):
+                obj = re.match("\[(.*)\]",value.strip())
+                key_1 = obj.group(1).strip()
+            elif re.match("Pass\s+:\s+(\d+) packets,\s+(\d+) bytes",value):
+                obj = re.match("Pass\s+:\s+(\d+) packets,\s+(\d+) bytes",value)
+                dict_value[key_1 + "/Pass/packets"] = obj.group(1).strip()
+                dict_value[key_1 + "/Pass/bytes"] = obj.group(2).strip()
+            elif re.match("Drop\s+:\s+(\d+) packets,\s+(\d+) bytes",value):
+                obj = re.match("Drop\s+:\s+(\d+) packets,\s+(\d+) bytes",value)
+                dict_value[key_1 + "/Drop/packets"] = obj.group(1).strip()
+                dict_value[key_1 + "/Drop/bytes"] = obj.group(2).strip()
+            elif re.match("Que\s+:\s+(\d+) packets,\s+(\d+) bytes,\s+(\d+) balance,\s+(\d+) token",value):
+                obj = re.match("Que\s+:\s+(\d+) packets,\s+(\d+) bytes,\s+(\d+) balance,\s+(\d+) token",value)
+                dict_value[key_1 + "/Que/packets"] = obj.group(1).strip()
+                dict_value[key_1 + "/Que/bytes"] = obj.group(2).strip()
+                dict_value[key_1 + "/Que/balance"] = obj.group(3).strip()
+                dict_value[key_1 + "/Que/token"] = obj.group(4).strip()
+        return dict_value
+    def dut_get_show_portqueue_statistics_interface_serial(self,show_info):
+        return self.dut_get_show_portqueue_statistics_interface_pos(show_info)
+    def dut_get_show_bgp_vpnv6_unicast_all_ipv6mask(self,show_info):
+        dict_value = {}
+        show_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_2 = []
+        for value in show_list:
+            if re.match("BGP routing table entry for .*", value):
+                obj = re.match("BGP routing table entry for (.*)/\d+", value)
+                key_1 = obj.group(1).strip()
+            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
+            elif re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
+                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("IGP instance id: (\d+)", value.strip()):
+                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Extended Community: (.*)", value.strip()):
+                obj_4 = re.match("Extended Community: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
+                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
+                obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_macip_detail(self,show_info):
+        dict_value ={}
+        show_info_list_line = self.dut_get_start_show_info(show_info)
+        rd_list = []
+        neighbor_list = []
+        key_0 = ""
+        for value in show_info_list_line:
+            if re.match("Route Distinguisher:(.*)", value.strip()):
+                obj = re.match("Route Distinguisher:(.*)",value.strip())
+                rd_list.append(obj.group(1).strip())
+                key_0 = obj.group(1).strip()
+                if len(neighbor_list) >0:
+                    dict_value[key_0 + "/neighbor_list"] = neighbor_list
+                    neighbor_list = []
+            elif "BGP routing table entry" in value:
+                list1 = value.split("for")
+                title =key_0 + "/"+list1[1].strip()
+                if re.match(".*:(\S{4}\.\S{4}\.\S{4}):.*",list1[1].strip()):
+                    obj = re.match(".*:(\S{4}\.\S{4}\.\S{4}):.*",list1[1].strip())
+                    neighbor_list.append(obj.group(1))
+                #dict_value["BGP routing table entry for"] = title
+            elif re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip()):
+                obj_0 = re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip())
+                dict_value[title + "/Origin"] = obj_0.group(1).strip()
+                dict_value[title + "/metric"] = obj_0.group(2).strip()
+                dict_value[title + "/localpref"] = obj_0.group(3).strip()
+            elif re.match("Origin (.*), localpref (\S+), weight (\S+), .*", value.strip()):
+                obj_0 = re.match("Origin (.*), localpref (\S+), weight (\S+), .*", value.strip())
+                dict_value[title + "/Origin"] = obj_0.group(1).strip()
+                dict_value[title + "/localpref"] = obj_0.group(2).strip()
+                dict_value[title + "/weight"] = obj_0.group(3).strip()
+            elif re.match("Extended Community:(.*) Color:(.*)",value.strip()):
+                obj2 = re.match("Extended Community:(.*) Color:(.*)",value.strip())
+                dict_value[title+"/"+"Extended Community"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Color"] = obj2.group(2).strip()
+            elif re.match("Extended Community:(.*) MAC-VLAN: outer-vlan:(.*),inner-vlan:(.*)",value.strip()):
+                obj2 = re.match("Extended Community:(.*) MAC-VLAN: outer-vlan:(.*),inner-vlan:(.*)",value.strip())
+                dict_value[title+"/"+"Extended Community"] = obj2.group(1).strip()
+                dict_value[title+"/"+"MAC-VLAN/outer-vlan"] = obj2.group(2).strip()
+                dict_value[title + "/" + "MAC-VLAN/inner-vlan"] = obj2.group(3).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Remote-Prefix-SID/Flags"] = obj2.group(2).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(3).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(2).strip()
+            elif re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value):
+                obj = re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value)
+                dict_value[title + "/" + "Iteration segment-routing policy/Color"] = obj.group(1).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/End-point"] = obj.group(2).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/BSID"] = obj.group(3).strip()
+            elif re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip()):
+                obj3 = re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip())
+                dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
+                dict_value[title+"/"+"label1"] = obj3.group(2).strip()
+                dict_value[title+"/"+"label2"] = obj3.group(3).strip()
+            elif re.match("Import to Bridge-Domain: (.*)",value.strip()):
+                obj3 = re.match("Import to Bridge-Domain: (.*)",value.strip())
+                dict_value[title+"/"+"Import to Bridge-Domain"] = obj3.group(1).strip()
+            elif re.match("Import to EVI: (.*)",value.strip()):
+                obj3 = re.match("Import to EVI: (.*)",value.strip())
+                dict_value[title+"/"+"Import to EVI"] = obj3.group(1).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[title+"/"+"Last update"] = obj3.group(1).strip()
+            elif re.match("Total number of prefixes(.*)",value.strip()):
+                obj4 = re.match("Total number of prefixes(.*)",value.strip())
+                dict_value["Total number of prefixes"] = obj4.group(1).strip()
+            elif "," in value :
+                list2 = value.split(",")
+                for list2_value in list2 :
+                    if list2_value.count(":") == 1 :
+                        list3 = list2_value.split(":")
+                        dict_value[title+"/"+list3[0].strip()] = list3[1].strip()
+        if len(neighbor_list) > 0:
+            dict_value[key_0 + "/neighbor_list"] = neighbor_list
+        return dict_value
+    def dut_get_show_evpn_l2eviname_word_df_result(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if re.match("ESI:(\S+)",value):
+                obj = re.match("ESI:(\S+)",value)
+                dict_value["ESI"] = obj.group(1).strip()
+            elif re.match("Bridge-domain:(\d+)\s+(\S+.*)",value):
+                obj = re.match("(Bridge-domain:\d+)\s+(\S+.*)",value)
+                dict_value[obj.group(1).strip()+"/DF-Result"] = obj.group(2).strip()
+            elif re.match("(Number of ESI for evi \d+): (\d+)",value):
+                obj = re.match("(Number of ESI for evi \d+): (\d+)",value)
+                dict_value[obj.group(1).strip()] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_evi_l2eviname_word_macip_detail(self,show_info):
+        dict_value ={}
+        show_info_list_line = show_info.split("\n")
+        if re.match(r'.*show.*', show_info_list_line[0]):
+            show_info_list_line.remove(show_info_list_line[0])
+        if re.match(r'.*#.*', show_info_list_line[-1]):
+            show_info_list_line.remove(show_info_list_line[-1])
+        for i in show_info_list_line:
+            if '' in show_info_list_line:
+                show_info_list_line.remove('')
+        for value in show_info_list_line:
+            if re.match("Route Distinguisher:(.*)\(Default for(.*)\)",value.strip()):
+                obj1 = re.match("Route Distinguisher:(.*)\(Default for(.*)\)",value.strip())
+                dict_value["Route Distinguisher"] = obj1.group(1).strip()
+                dict_value["Default for"] = obj1.group(2).strip()
+            elif "BGP routing table entry" in value:
+                list1 = value.split("for")
+                title =list1[1].strip()
+                #dict_value["BGP routing table entry for"] = title
+            elif re.match("(.* from) (\S+ \(\S+\))",value.strip()):
+                obj2 = re.match("(.* from) (\S+ \(\S+\))",value.strip())
+                dict_value[title+"/"+obj2.group(1).strip()] = obj2.group(2).strip()
+            elif re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip()):
+                obj_0 = re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip())
+                dict_value[title + "/Origin"] = obj_0.group(1).strip()
+                dict_value[title + "/metric"] = obj_0.group(2).strip()
+                dict_value[title + "/localpref"] = obj_0.group(3).strip()
+            elif re.match("Extended Community:(.*) Color:(.*)",value.strip()):
+                obj2 = re.match("Extended Community:(.*) Color:(.*)",value.strip())
+                dict_value[title+"/"+"Extended Community"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Color"] = obj2.group(2).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Remote-Prefix-SID/Flags"] = obj2.group(2).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(3).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(2).strip()
+            elif re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value):
+                obj = re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value)
+                dict_value[title + "/" + "Iteration segment-routing policy/Color"] = obj.group(1).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/End-point"] = obj.group(2).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/BSID"] = obj.group(3).strip()
+            elif re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip()):
+                obj3 = re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip())
+                dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
+                dict_value[title+"/"+"label1"] = obj3.group(2).strip()
+                dict_value[title+"/"+"label2"] = obj3.group(3).strip()
+            elif re.match("Import to Bridge-Domain: (.*)",value.strip()):
+                obj3 = re.match("Import to Bridge-Domain: (.*)",value.strip())
+                dict_value[title+"/"+"Import to Bridge-Domain"] = obj3.group(1).strip()
+            elif re.match("Total number of prefixes(.*)",value.strip()):
+                obj4 = re.match("Total number of prefixes(.*)",value.strip())
+                dict_value["Total number of prefixes"] = obj4.group(1).strip()
+            elif "," in value :
+                list2 = value.split(",")
+                for list2_value in list2 :
+                    if list2_value.count(":") == 1 :
+                        list3 = list2_value.split(":")
+                        dict_value[title+"/"+list3[0].strip()] = list3[1].strip()
+        return dict_value
+    def dut_get_show_bgp_evpn_evpl_instanceid_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("EVPL ID (\d+)",value):
+                obj = re.match("EVPL ID (\d+)",value)
+                dict_value["EVPL ID"] = obj.group(1).strip()
+            elif re.match("EVPL State (\S+)",value):
+                obj = re.match("EVPL State (\S+)",value)
+                dict_value["EVPL State"] = obj.group(1).strip()
+            elif re.match("Bind EVI (\S+)",value):
+                obj = re.match("Bind EVI (\S+)",value)
+                dict_value["Bind EVI"] = obj.group(1).strip()
+            elif re.match("EVPL Type (\S+)",value):
+                obj = re.match("EVPL Type (\S+)",value)
+                dict_value["EVPL Type"] = obj.group(1).strip()
+            elif re.match("SSID (\S+)",value):
+                obj = re.match("SSID (\S+)",value)
+                dict_value["SSID"] = obj.group(1).strip()
+            elif re.match("Local Service ID (\S+), Remote Service ID (\S+)",value):
+                obj = re.match("Local Service ID (\S+), Remote Service ID (\S+)",value)
+                dict_value["Local Service ID"] = obj.group(1).strip()
+                dict_value["Remote Service ID"] = obj.group(2).strip()
+            elif re.match("Local MTU (\S+)",value):
+                obj = re.match("Local MTU (\S+)",value)
+                dict_value["Local MTU"] = obj.group(1).strip()
+            elif re.match("Remote MTU (\S+)",value):
+                obj = re.match("Remote MTU (\S+)",value)
+                dict_value["Remote MTU"] = obj.group(1).strip()
+            elif re.match("Ignore MTU (\S+)",value):
+                obj = re.match("Ignore MTU (\S+)",value)
+                dict_value["Ignore MTU"] = obj.group(1).strip()
+            elif re.match("Control Word (\S+)",value):
+                obj = re.match("Control Word (\S+)",value)
+                dict_value["Control Word"] = obj.group(1).strip()
+            elif re.match("VC Mode (\S+)",value):
+                obj = re.match("VC Mode (\S+)",value)
+                dict_value["VC Mode"] = obj.group(1).strip()
+            elif re.match("Iteration to segment-routing (\S+)", value):
+                obj = re.match("Iteration to segment-routing (\S+)", value)
+                dict_value["Iteration to segment-routing"] = obj.group(1).strip()
+            elif re.match("Bind L2 Interface (\S+)",value):
+                obj = re.match("Bind L2 Interface (\S+)",value)
+                dict_value["Bind L2 Interface"] = obj.group(1).strip()
+            elif re.match("Ignore AC Status (\S+)",value):
+                obj = re.match("Ignore AC Status (\S+)",value)
+                dict_value["Ignore AC Status"] = obj.group(1).strip()
+            elif re.match("Interface Status (\S+)",value):
+                obj = re.match("Interface Status (\S+)",value)
+                dict_value["Interface Status"] = obj.group(1).strip()
+            elif re.match("Interface Last UP Timestamp (.*)",value):
+                obj = re.match("Interface Last UP Timestamp (.*)",value)
+                dict_value["Interface Last UP Timestamp"] = obj.group(1).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_al(self,show_info):
+        return self.dut_get_show_bgp_vpnv4_unicast_al(show_info)
+    def dut_get_show_isis_word_flexalgo_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if ":" in value:
+                list_1 = value.split(":",1)
+                dict_value[list_1[0].strip()] = list_1[1].strip()
+            elif re.match("Elected Flexible Algorithm Defination for ISIS (\S+)",value):
+                obj = re.match("Elected Flexible Algorithm Defination for ISIS (\S+)",value)
+                dict_value["Elected Flexible Algorithm Defination for ISIS"] = obj.group(1).strip()
+        return dict_value
+    def dut_get_show_isis_word_flexalgo_num_all(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        key_1 = ""
+        System_Id_list = []
+        for value in show_info_list:
+            if re.match("Flex-Algo Id : (.*)",value):
+                obj = re.match("Flex-Algo Id : (.*)",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("System Id : (.*)",value):
+                obj = re.match("System Id : (.*)",value)
+                key_2 = obj.group(1).strip()
+                System_Id_list.append(key_2)
+            elif ":" in value:
+                list_1 = value.split(":",1)
+                dict_value[key_1 + "/" +key_2 + "/"+ list_1[0].strip()] = list_1[1].strip()
+            elif re.match("Elected Flexible Algorithm Defination for ISIS (\S+)",value):
+                obj = re.match("Elected Flexible Algorithm Defination for ISIS (\S+)",value)
+                dict_value["Elected Flexible Algorithm Defination for ISIS"] = obj.group(1).strip()
+        dict_value["System_Id_list"] = System_Id_list
+        return dict_value
+    def dut_get_show_isis_flexalgo_num_all(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        key_1 = ""
+        for value in show_info_list:
+            if re.match(".* Defination for ISIS (\S+)", value):
+                obj = re.match(".* Defination for ISIS (\S+)", value)
+                key_0 = obj.group(1).strip()
+            elif re.match("Flex-Algo Id : (.*)",value):
+                obj = re.match("Flex-Algo Id : (.*)",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("System Id : (.*)",value):
+                obj = re.match("System Id : (.*)",value)
+                key_2 = obj.group(1).strip()
+            elif ":" in value:
+                list_1 = value.split(":",1)
+                dict_value[key_0 + "/" +key_1 + "/" +key_2 + "/"+ list_1[0].strip()] = list_1[1].strip()
+        return dict_value
+    def dut_get_show_isis_flexalgo_num(self,show_info):
+        return self.dut_get_show_isis_flexalgo_num_all(show_info)
+    def dut_get_show_bgp_ipv4_vpntarget_detail_word(self,show_info):
+        dict_value = {}
+        show_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_2 = []
+        for value in show_list:
+            if re.match("BGP routing table entry for .*", value):
+                obj = re.match("BGP routing table entry for (.*)/\d+", value)
+                key_1 = obj.group(1).strip()
+            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
+            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
+                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("IGP instance id: (\d+)", value.strip()):
+                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Extended Community: (.*)", value.strip()):
+                obj_4 = re.match("Extended Community: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
+                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[key_1 + "/" + key_2+"/"+"Last update"] = obj3.group(1).strip()
+            elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
+                obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
+        return dict_value
+    def dut_get_show_interfaces_pwve_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value = value.strip()
+            if re.match("Index\(dec\):(\d+) \(hex\):(\d+)",value):
+                obj = re.match("Index\(dec\):(\d+) \(hex\):(\d+)",value)
+                dict_value["Index/dec"] = obj.group(1).strip()
+                dict_value["Index/hex"] = obj.group(2).strip()
+            elif re.match("PW-VE 1 is (.*), line protocol is (.*)",value):
+                obj = re.match("PW-VE 1 is (.*), line protocol is (.*)",value)
+                dict_value["PW-VE 1"] = obj.group(1).strip()
+                dict_value["line protocol"] = obj.group(2).strip()
+            elif re.match("Hardware is (.*), address is (.*) \(bia (.*)\)",value):
+                obj = re.match("Hardware is (.*), address is (.*) \(bia (.*)\)",value)
+                dict_value["Hardware"] = obj.group(1).strip()
+                dict_value["address"] = obj.group(2).strip()
+                dict_value["bia"] = obj.group(3).strip()
+            elif re.match("Interface address is: (.*)",value):
+                obj = re.match("Interface address is: (.*)",value)
+                dict_value["Interface address is"] = obj.group(1).strip()
+            elif re.match("ARP type: (.*), ARP Timeout: (.*) seconds",value):
+                obj = re.match("ARP type: (.*), ARP Timeout: (.*) seconds",value)
+                dict_value["ARP type"] = obj.group(1).strip()
+                dict_value["ARP Timeout"] = obj.group(2).strip()
+            elif re.match("MTU (.*) bytes, BW (.*) Kbit",value):
+                obj = re.match("MTU (.*) bytes, BW (.*) Kbit",value)
+                dict_value["MTU"] = obj.group(1).strip()
+                dict_value["BW"] = obj.group(2).strip()
+            elif re.match("Encapsulation protocol is (.*), loopback (.*)",value):
+                obj = re.match("Encapsulation protocol is (.*), loopback (.*)",value)
+                dict_value["Encapsulation protocol"] = obj.group(1).strip()
+                dict_value["loopback"] = obj.group(2).strip()
+            elif re.match("Keepalive interval is (.*) sec , set",value):
+                obj = re.match("Keepalive interval is (.*) sec , set",value)
+                dict_value["Keepalive interval"] = obj.group(1).strip()
+            elif re.match("Carrier delay up is (.*) sec, down is (.*) sec",value):
+                obj = re.match("Carrier delay up is (.*) sec, down is (.*) sec",value)
+                dict_value["Carrier delay up"] = obj.group(1).strip()
+                dict_value["down"] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_isis_hostname(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        new_list = []
+        for value in show_info_list:
+            if "System ID" in value:
+                if len(new_list) > 2:
+                    show_1 = "\n".join(new_list)
+                    star,end,show_len_list,show_info_list_line = self.dut_common_get_linelist(show_1,"Dynamic Hostname",split_num=2)
+                    dict_value_1 = self.dut_show_autoget_form(star,end,"Dynamic Hostname",show_len_list,show_info_list_line)
+                    dict_value = dict(dict_value.items()+dict_value_1.items())
+                new_list = []
+                new_list.append(value)
+            else:
+                new_list.append(value)
+        if len(new_list) > 2:
+            show_1 = "\n".join(new_list)
+            star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(show_1, "Dynamic Hostname",
+                                                                                         split_num=2)
+            dict_value_1 = self.dut_show_autoget_form(star, end, "Dynamic Hostname", show_len_list, show_info_list_line)
+            dict_value = dict(dict_value.items() + dict_value_1.items())
+        dict_value_2 = {}
+        for k,v in dict_value.items():
+            if re.match("\*\s+\S+",str(v)):
+                dict_value_2[k+"_1"] = re.match("\*\s+(\S+)",v).group(1).strip()
+            dict_value_2[k] = v
+
+        return dict_value_2
 #实习
     def dut_get_show_wlan_hotbackup_ip(self,show_info):
         """
@@ -57775,7 +58733,6 @@ Ruijie(config)#
                         new_show_1 = "\n".join(new_list)
                         dict_value_2 = self.dut_show_autoget_blank_list_3(new_show_1, 'Switch', value_title_2='Slot',value_title_3='Name')
         return dict(dict_value_1.items() + dict_value.items() + dict_value_2.items())
-    #1131
     def dut_get_show_hdf_detailinfo_slot_num_mainnode_FABRIC_INF_childnode_protocol(self, show_info):
         show_info_list = self.dut_get_start_show_info(show_info)
         dict_value = {}
@@ -57796,7 +58753,6 @@ Ruijie(config)#
             new_show = "\n".join(new_list)
             dict_value = self.dut_show_autoget_blank_list(new_show, "Fabric-interface")
         return dict(dict_value.items()+dict_value_1.items())
-    #1120
     def dut_get_show_policymap_statistics_name_word_output(self, show_info):
         dict_value = {}
         flag = 0
@@ -57823,7 +58779,6 @@ Ruijie(config)#
                     for k,v in dict_value_2.items():
                         dict_value[key_1 + "/" + k] = v
         return dict(dict_value.items()+dict_value_1.items()+dict_value_2.items())
-    #1118
     def dut_get_show_port_maclink(self, show_info):
         dict_value = {}
         new_list = []
@@ -57841,7 +58796,6 @@ Ruijie(config)#
             else:
                 dict_value[k] = v
         return dict_value
-    #1040
     def dut_get_show_ip_route_static_bfd(self, show_info):
         dict_value = {}
         show_info_list = show_info.split("\n")
@@ -57860,7 +58814,6 @@ Ruijie(config)#
                 dict_value[key_1 + '/' + key_2 + '/BFD ID'] = obj.group(6)
                 dict_value[key_1 + '/' + key_2 + '/session name'] = obj.group(7)
         return dict_value
-    #1020
     def dut_get_show_isis_database_detail(self, show_info):
         dict_value = {}
         flag = 0
@@ -57911,7 +58864,6 @@ Ruijie(config)#
                     for j in range(len(value3)):
                         dict_value['Area (null)' + '/' + key_4 + '/' + value3[j]] = ''
         return dict_value
-    #1110
     def dut_get_show_ipv6_pim_sparsemode_interface(self, show_info):
         show_info = show_info.replace("VIFindex Ver/Mode Nbr-Count DR-Prior","VIFindex    Ver/Mode   Nbr-Count   DR-Prior")
         dict_value = {}
@@ -57922,7 +58874,6 @@ Ruijie(config)#
             new_show = "\n".join(new_list)
             dict_value = self.dut_show_autoget_blank_list(new_show, "Address")
         return dict_value
-    #1023
     def dut_get_ut_show_lport_info(self, show_info):
         dict_value = {}
         flag = 0
@@ -57940,7 +58891,6 @@ Ruijie(config)#
                     list_1 = value.split('=')
                     dict_value[list_1[0].strip()] = list_1[1].strip()
         return dict_value
-    #1114
     def dut_get_ut_show_port_config(self,show_info):
         dict_value = {}
         new_list = []
@@ -57977,7 +58927,6 @@ Ruijie(config)#
                     new_show = "\n".join(new_list)
                     dict_value_1 = self.dut_show_autoget_blank_list(new_show, "num")
         return dict(dict_value_1.items()+dict_value.items())
-    #1026
     def dut_get_show_ps(self,show_info):
         dict_value = {}
         new_list = []
@@ -58029,7 +58978,6 @@ Ruijie(config)#
             else:
                 new_dict_value[k] = v
         return new_dict_value
-    #1085
     def dut_get_show_ip_ospf_tilfa_node(self, show_info):
         dict_value = {}
         show_info_list = show_info.split("\n")
@@ -58056,7 +59004,6 @@ Ruijie(config)#
                 dict_value[key_1 + "/" + key_2 + '/' + list_1[0].strip()] = list_1[1].strip()
         dict_value["ip_list"] = ip_list
         return dict_value
-    #1130
     def dut_get_show_ip_flow_cache_dev_num_slot_num(self, show_info):
         show_info = show_info.replace("Type SrcIPAddress    DstIPAddress    Sport Dport Pro Tos Flag Active     Vlan VNI","Type  SrcIPAddress    DstIPAddress    Sport  Dport  Pro  Tos  Flag  Active     Vlan  VNI")
         dict_value = {}
@@ -58097,7 +59044,6 @@ Ruijie(config)#
                     new_show = "\n".join(new_list)
                     dict_value_1 = self.dut_show_autoget_blank_list(new_show, "Type")
         return dict(dict_value.items()+dict_value_1.items())
-    #1137
     def dut_get_show_efd_slot_num_efhpage_poolinfo(self, show_info):
         dict_value = {}
         new_list = []
@@ -58244,6 +59190,343 @@ Ruijie(config)#
         return dict_value
     def dut_get_show_ipv6_pathmtu_vrf(self, show_info):
         return self.dut_get_show_ipv6_pathmtu(show_info)
+
+    def dut_get_show_evpn_mac_routingtable_evi_num(self, show_info):
+        dict_value = {}
+        new_list = []
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if re.match('EVPN name: (.+)', value):
+                dict_value['EVPN name'] = re.match('EVPN name: (.+)', value).group(1).strip()
+            elif re.match('MACs: (\d+)', value):
+                dict_value['MACs'] = re.match('MACs: (\d+)', value).group(1).strip()
+            else:
+                new_list.append(value)
+                new_show = "\n".join(new_list)
+                star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(new_show,
+                                                                                             "MAC-Address", )
+                show_len_list = [9, 15, 9, 39, 28]
+                dict_value_1 = self.dut_show_autoget_form(star, end, "MAC-Address", show_len_list,
+                                                          show_info_list_line)
+        return dict(dict_value_1.items() + dict_value.items())
+    def dut_get_show_ipv6_route_ipv6mask(self, show_info):
+        return self.dut_get_show_ipv6_route(show_info)
+    def dut_get_show_ipv6_route_isis(self, show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            if re.match('(\A\S+.*)\s+(\S+ \[.*\]) via (\S+), (.*), \d+:\d+:\d+', value):
+                obj = re.match('(\A\S+.*)\s+(\S+ \[.*\]) via (\S+), (.*), \d+:\d+:\d+', value)
+                ip = obj.group(2).strip()
+                via = obj.group(3).strip()
+                interface = obj.group(4).strip()
+                code = obj.group(1).strip()
+                dict_value[ip + '/' + 'code'] = code
+                dict_value[ip + '/' + 'via'] = via
+                dict_value[ip + '/' + 'interface'] = interface
+            elif re.match('\A(\[.*\]) via (\S+), (.*), \d+:\d+:\d+', value.strip()):
+                obj = re.match('\A(\[.*\]) via (\S+), (.*), \d+:\d+:\d+', value.strip())
+                via = obj.group(2).strip()
+                interface = obj.group(3).strip()
+                dict_value[ip + '/' + 'via_2'] = via
+                dict_value[ip + '/' + 'interface_2'] = interface
+        return dict_value
+    def dut_get_show_srv6_policy_policyname_word(self, show_info):
+        dict_value = {}
+        key_1 = ""
+        key_2 = ''
+        show_info_list = self.dut_get_start_show_info(show_info)
+        for value in show_info_list:
+            value_1 = value
+            value = value.strip()
+            if re.match("Segment routing ipv6 policy is (.*)", value):
+                obj = re.match("Segment routing ipv6 policy is (.*)", value)
+                dict_value["Segment routing ipv6 policy is"] = obj.group(1).strip()
+            elif re.search("Oam Relay is (.*)", value):
+                obj = re.search("Oam Relay is (.*)", value)
+                dict_value["Oam Relay is"] = obj.group(1).strip()
+            elif re.match("BGP-LS is (.*)", value):
+                obj = re.match("BGP-LS is (.*)", value)
+                dict_value["BGP-LS is"] = obj.group(1).strip()
+            elif re.match("Router Id IPv6 :(.*)", value):
+                obj = re.match("Router Id IPv6 :(.*)", value)
+                dict_value["Router Id IPv6"] = obj.group(1).strip()
+            elif re.match("Global BFD Echo : (.*), Global SBFD : (.*)", value):
+                obj = re.match("Global BFD Echo : (.*), Global SBFD : (.*)", value)
+                dict_value["Global BFD Echo"] = obj.group(1).strip()
+                dict_value["Global SBFD"] = obj.group(1).strip()
+            elif re.match("Router ID is (.*), Router ID (.*)", value):
+                obj = re.match("Router ID is (.*), Router ID (.*)", value)
+                dict_value["Router ID is"] = obj.group(1).strip()
+                dict_value["Router ID"] = obj.group(2).strip()
+            elif re.match("Segment-List Encaps Mode is (.*), Encaps Local-End is (.*), Encaps Local-End.X is (.*)",value):
+                obj = re.match("Segment-List Encaps Mode is (.*), Encaps Local-End is (.*), Encaps Local-End.X is (.*)", value)
+                dict_value["Segment-List Encaps Mode"] = obj.group(1).strip()
+                dict_value["Encaps Local-End"] = obj.group(2).strip()
+                dict_value["Encaps Local-End.X"] = obj.group(3).strip()
+            elif re.match("PolicyName :(.*)", value):
+                obj = re.match("PolicyName :(.*)", value)
+                dict_value["PolicyName"] = obj.group(1).strip()
+            elif re.match("Candidate-path Preference : (.*)", value):
+                key_1 = re.match("Candidate-path Preference : (.*)", value).group(1).strip()
+            elif re.match('Candidate-path Count     : (.*)', value):
+                obj = re.match('Candidate-path Count     : (.*)', value)
+                dict_value['Candidate-path Count'] = obj.group(1).strip()
+            elif re.search('Segment-List : (.*)', value):
+                key_2 = re.search('Segment-List : (.*)', value).group(1).strip()
+            elif re.match('Backup Hot-Standby is (.*), Traffic-Statistics is (.*), BGP-LS is (.*), TI-LFA is (.*)',value):
+                obj = re.match('Backup Hot-Standby is (.*), Traffic-Statistics is (.*), BGP-LS is (.*), TI-LFA is (.*)', value)
+                dict_value['Backup Hot-Standby'] = obj.group(1).strip()
+                dict_value['Traffic-Statistics'] = obj.group(2).strip()
+                dict_value['BGP-LS'] = obj.group(3).strip()
+                dict_value['TI-LFA'] = obj.group(4).strip()
+            elif re.match('BSID Register Mode is (.*), Dynamic BSID is (.*), Locator is (.*)', value):
+                obj = re.match('BSID Register Mode is (.*), Dynamic BSID is (.*), Locator is (.*)', value)
+                dict_value['BSID Register Mode'] = obj.group(1).strip()
+                dict_value['Dynamic BSID'] = obj.group(2).strip()
+                dict_value['Locator'] = obj.group(3).strip()
+            elif re.match('Segment-List Switch-Delay (.*), Delete-Delay (.*)', value):
+                obj = re.match('Segment-List Switch-Delay (.*), Delete-Delay (.*)', value)
+                dict_value['Segment-List Switch-Delay'] = obj.group(1).strip()
+                dict_value['Delete-Delay'] = obj.group(2).strip()
+            elif re.match('Encaps Source Address is (.*), Encaps Source Address (.*)', value):
+                obj = re.match('Encaps Source Address is (.*), Encaps Source Address (.*)', value)
+                dict_value['Encaps Source Address is'] = obj.group(1).strip()
+                dict_value['Encaps Source Address'] = obj.group(2).strip()
+            elif re.match('Path MTU is (.*), Reserved Path MTU is (.*)', value):
+                obj = re.match('Path MTU is (.*), Reserved Path MTU is (.*)', value)
+                dict_value['Path MTU'] = obj.group(1).strip()
+                dict_value['Reserved Path MTU'] = obj.group(2).strip()
+            elif re.match('Path Verification is (.*)', value):
+                obj = re.match('Path Verification is (.*)', value)
+                dict_value['Path Verification'] = obj.group(1).strip()
+            elif value.count(":") >= 2 and len(value) > 55:
+                str1 = value_1[0:55]
+                str2 = value_1[55:]
+                if ":" in str1:
+                    list_1 = str1.split(":", 1)
+                    if key_1 != "":
+                        dict_value[key_1 + "/" + list_1[0].strip()] = list_1[1].strip()
+                        if key_2 != "":
+                            dict_value[key_1 + "/" + key_2 + "/" + list_1[0].strip()] = list_1[1].strip()
+                    else:
+                        dict_value[list_1[0].strip()] = list_1[1].strip()
+                if ":" in str2:
+                    list_2 = str2.split(":", 1)
+                    if key_1 != "":
+                        dict_value[key_1 + "/" + list_2[0].strip()] = list_2[1].strip()
+                        if key_2 != "":
+                            dict_value[key_1 + "/" + key_2 + "/" + list_1[0].strip()] = list_1[1].strip()
+                    else:
+                        dict_value[list_2[0].strip()] = list_2[1].strip()
+            elif re.search('(.*)(\s+):(.*)', value):
+                list_3 = value.split(':')
+                if key_1 == '':
+                    dict_value[list_3[0].strip()] = list_3[1].strip()
+                elif key_2 == "":
+                    dict_value[key_1 + "/" + list_3[0].strip()] = list_3[1].strip()
+                else:
+                    dict_value[key_1 + "/" + key_2 + "/" + list_3[0].strip()] = list_3[1].strip()
+        return dict_value
+    def dut_get_show_srv6_policy(self, show_info):
+        dict_value = {}
+        dict_value_1 = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        key_2 = ""
+        key_1 = ""
+        key_3 = ''
+        for value in show_info_list:
+            if re.match("Segment Routing Ipv6 is (.*), Oam Relay is (\S+)", value):
+                obj = re.match("Segment Routing Ipv6 is (.*), Oam Relay is (\S+)", value)
+                dict_value["Segment Routing Ipv6"] = obj.group(1).strip()
+                dict_value["Oam Relay"] = obj.group(2).strip()
+            elif re.match("Segment Routing Ipv6 is (.*)", value):
+                obj = re.match("Segment Routing Ipv6 is (.*)", value)
+                dict_value["Segment Routing Ipv6"] = obj.group(1).strip()
+            elif re.match("Backup Hot-Standby is (\S+), Switch Delay Time (\S+), Delete Delay Time (\S+)", value):
+                obj = re.match("Backup Hot-Standby is (\S+), Switch Delay Time (\S+), Delete Delay Time (\S+)",
+                               value)
+                dict_value["Backup Hot-Standby"] = obj.group(1).strip()
+                dict_value["Switch Delay Time"] = obj.group(2).strip()
+                dict_value["Delete Delay Time"] = obj.group(3).strip()
+            elif re.match(
+                    'Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+), TI-LFA is (\S+)',
+                    value):
+                obj = re.match(
+                    'Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+), TI-LFA is (\S+)',
+                    value)
+                dict_value['Backup Hot-Standby'] = obj.group(1)
+                dict_value['Traffic-Statistics'] = obj.group(2)
+                dict_value['BGP-LS'] = obj.group(3)
+                dict_value['TI-LFA'] = obj.group(4)
+            elif re.match("Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+)", value):
+                obj = re.match("Backup Hot-Standby is (\S+), Traffic-Statistics is (\S+), BGP-LS is (\S+)", value)
+                dict_value["Backup Hot-Standby"] = obj.group(1).strip()
+                dict_value["Traffic-Statistics"] = obj.group(2).strip()
+                dict_value["BGP-LS"] = obj.group(3).strip()
+            elif re.match("Traffic-Statistics is (\S+), Oam Relay is (\S+), BGP-LS is (\S+)", value):
+                obj = re.match("Traffic-Statistics is (\S+), Oam Relay is (\S+), BGP-LS is (\S+)", value)
+                dict_value["Traffic-Statistics"] = obj.group(1).strip()
+                dict_value["Oam Relay"] = obj.group(2).strip()
+                dict_value["BGP-LS"] = obj.group(3).strip()
+            elif re.match("Encap Mode (\S+), Encaps Local-End.X is (\S+)", value):
+                obj = re.match("Encap Mode (\S+), Encaps Local-End.X is (\S+)", value)
+                dict_value["Encap Mode"] = obj.group(1).strip()
+                dict_value["Encaps Local-End.X"] = obj.group(2).strip()
+            elif re.match("Encap IPv6 is (.*), Encap IPv6 (\S+)", value):
+                obj = re.match("Encap IPv6 is (.*), Encap IPv6 (\S+)", value)
+                dict_value["Encap IPv6 is"] = obj.group(1).strip()
+                dict_value["Encap IPv6"] = obj.group(2).strip()
+            elif re.match("Router Id IPv6 is (.*), Router Id IPv6 (\S+)", value):
+                obj = re.match("Router Id IPv6 is (.*), Router Id IPv6 (\S+)", value)
+                dict_value["Router Id IPv6 is"] = obj.group(1).strip()
+                dict_value["Router Id IPv6"] = obj.group(2).strip()
+            elif re.match("Encaps Source Address is (.*), Encaps Source Address (\S+)", value):
+                obj = re.match("Encaps Source Address is (.*), Encaps Source Address (\S+)", value)
+                dict_value["Encaps Source Address is"] = obj.group(1).strip()
+                dict_value["Encaps Source Address"] = obj.group(2).strip()
+            elif re.match("BSID Register Mode is (\S+)", value):
+                obj = re.match("BSID Register Mode is (\S+)", value)
+                dict_value["BSID Register Mode"] = obj.group(1).strip()
+            elif re.match("BSID Register Mode (\S+)", value):
+                obj = re.match("BSID Register Mode (\S+)", value)
+                dict_value["BSID Register Mode"] = obj.group(1).strip()
+            elif re.match(
+                    "Segment-List Encaps Mode is (\S+), Encaps Local-End is (\S+), Encaps Local-End.X is (\S+)",
+                    value):
+                obj = re.match(
+                    "Segment-List Encaps Mode is (\S+), Encaps Local-End is (\S+), Encaps Local-End.X is (\S+)",
+                    value)
+                dict_value["Segment-List Encaps Mode"] = obj.group(1).strip()
+                dict_value["Encaps Local-End"] = obj.group(2).strip()
+                dict_value["Encaps Local-End.X"] = obj.group(3).strip()
+            elif re.match("Candidate-path Preference : (\d+)", value.strip()):
+                obj = re.match("Candidate-path Preference : (\d+)", value.strip())
+                key_2 = obj.group(1).strip()
+            elif re.match("PolicyName : (.*)", value):
+                key_1 = re.match("PolicyName : (.*)", value).group(1).strip()
+            elif re.search('Segment-List : (.*)', value):
+                key_3 = re.search('Segment-List : (.*)', value).group(1).strip()
+            elif re.match('Segment-List Switch-Delay (.*), Delete-Delay (.*)', value):
+                obj = re.match('Segment-List Switch-Delay (.*), Delete-Delay (.*)', value)
+                dict_value['Segment-List Switch-Delay'] = obj.group(1)
+                dict_value['Delete-Delay'] = obj.group(2)
+            elif re.match('Router ID is (.*), Router ID (.*)', value):
+                obj = re.match('Router ID is (.*), Router ID (.*)', value)
+                dict_value['Router ID is'] = obj.group(1)
+                dict_value['Router ID'] = obj.group(2)
+            elif re.match('Path MTU is (.*), Reserved Path MTU is (.*)', value):
+                obj = re.match('Path MTU is (.*), Reserved Path MTU is (.*)', value)
+                dict_value['Path MTU'] = obj.group(1)
+                dict_value['Reserved Path MTU'] = obj.group(2)
+            elif re.match('Path Verification is (.*)', value):
+                obj = re.match('Path Verification is (.*)', value)
+                dict_value['Path Verification'] = obj.group(1)
+            elif value.count(":") >= 2 and len(value.strip()) > 55 and re.search("\S+\s{8,}\S+", value):
+                str_1 = value[0:55]
+                str_2 = value[55:]
+                list_1 = str_1.split(":", 1)
+                list_2 = str_2.split(":", 1)
+                key_11 = list_1[0].strip()
+                value_11 = list_1[1].strip()
+                key_22 = list_2[0].strip()
+                value_22 = list_2[1].strip()
+                if key_2 == "":
+                    dict_value[key_1 + "/" + key_11] = value_11
+                    dict_value[key_1 + "/" + key_22] = value_22
+                else:
+                    dict_value[key_1 + "/" + key_2 + "/" + key_11] = value_11
+                    dict_value[key_1 + "/" + key_2 + "/" + key_22] = value_22
+            elif re.search("(.*)(\s+):(.*)", value):
+                if 'Weight' in value:
+                    list_3 = value.split(':')
+                    dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + list_3[0].strip()] = list_3[1].strip()
+                else:
+                    list_4 = value.split(':', 1)
+                    dict_value_1[list_4[0].strip()] = list_4[1].strip()
+                for k, v in dict_value_1.items():
+                    if re.match('Path ID', k):
+                        dict_value[key_1 + "/" + key_2 + "/" + k] = v
+                    elif re.match('Policy ID', k):
+                        dict_value[key_1 + "/" + k] = v
+                    elif re.match('Candidate-path Count', k):
+                        dict_value[key_1 + "/" + k] = v
+        return dict_value
+    def dut_get_show_srv6_policy_trafficstatistics(self, show_info):
+        dict_value = {}
+        dict_value_1 = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        key_2 = ""
+        key_1 = ""
+        key_3 = ''
+        for value in show_info_list:
+            if re.match('PolicyName : (.*)', value):
+                key_1 = re.match('PolicyName : (.*)', value).group(1).strip()
+            elif re.search('(.+ Candidate-path):', value):
+                key_2 = re.search('(.+ Candidate-path):', value).group(1).strip()
+            elif re.search('Segment-List Name      : (.*)', value):
+                key_3 = re.search('Segment-List Name      : (.*)', value).group(1).strip()
+            elif value.count(":") >= 2 and len(value) > 55:
+                str1 = value[0:55]
+                str2 = value[55:]
+                if ":" in str1:
+                    list_1 = str1.split(":", 1)
+                    if key_2 == '':
+                        dict_value[key_1 + "/" + list_1[0].strip()] = list_1[1].strip()
+                    else:
+                        if key_3 == "":
+                            dict_value_1[key_1 + "/" + key_2 + "/" + list_1[0].strip()] = list_1[1].strip()
+                        else:
+                            dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + list_1[0].strip()] = list_1[1].strip()
+                if ":" in str2:
+                    list_2 = str2.split(":", 1)
+                    if key_2 == '':
+                        dict_value[key_1 + "/" + list_2[0].strip()] = list_2[1].strip()
+                    else:
+                        if key_3 == "":
+                            dict_value[key_1 + "/" + key_2 + "/" + list_2[0].strip()] = list_2[1].strip()
+                        else:
+                            dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + list_2[0].strip()] = list_2[1].strip()
+            elif re.search('(Last \d+ seconds output rate) (\d+) bits/sec, (\d+) packets/sec', value):
+                obj = re.search('(Last \d+ seconds output rate) (\d+) bits/sec, (\d+) packets/sec', value)
+                key_5 = obj.group(1).strip()
+                value = obj.group(2).strip()
+                value_1 = obj.group(3).strip()
+                if key_2 == '':
+                    dict_value[key_1 + "/" + key_5 + "/" + 'bits/sec'] = value
+                    dict_value[key_1 + "/" + key_5 + "/" + 'packets/sec'] = value_1
+                else:
+                    if key_3 == "":
+                        dict_value[key_1 + "/" + key_2 + "/" + key_5 + "/" + 'bits/sec'] = value
+                        dict_value[key_1 + "/" + key_2 + "/" + key_5 + "/" + 'packets/sec'] = value_1
+                    else:
+                        dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + key_5 + "/" + 'bits/sec'] = value
+                        dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + key_5 + "/" + 'packets/sec'] = value_1
+            elif re.search('Output : (\d+) bytes, (\d+) packets', value):
+                obj = re.search('Output : (\d+) bytes, (\d+) packets', value)
+                value_2 = obj.group(1).strip()
+                value_3 = obj.group(2).strip()
+                if key_2 == '':
+                    dict_value[key_1 + "/" + 'Output' + "/" + 'bytes'] = value_2
+                    dict_value[key_1 + "/" + 'Output' + "/" + 'packets'] = value_3
+                else:
+                    if key_3 == '':
+                        dict_value[key_1 + "/" + key_2 + "/" + 'Output' + "/" + 'bytes'] = value_2
+                        dict_value[key_1 + "/" + key_2 + "/" + 'Output' + "/" + 'packets'] = value_3
+                    else:
+                        dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + 'Output' + "/" + 'bytes'] = value_2
+                        dict_value[key_1 + "/" + key_2 + "/" + key_3 + "/" + 'Output' + "/" + 'packets'] = value_3
+            elif re.match('Total Policy Number: (\d+)', value):
+                dict_value['Total Policy Number'] = re.match('Total Policy Number: (\d+)', value).group(1)
+            elif ':' in value:
+                list_3 = value.split(':')
+                if key_2 == '':
+                    dict_value[key_1 + "/" + "/" + list_3[0].strip()] = list_3[1].strip()
+                else:
+                    dict_value[key_1 + "/" + key_2 + "/" + list_3[0].strip()] = list_3[1].strip()
+        return dict_value
+    def dut_get_show_srv6_policy_trafficstatistics_policyname_word(self,show_info):
+        return self.dut_get_show_srv6_policy_trafficstatistics(show_info)
 #by：外包
     def dut_get_show_ip_dhcp_history(self,show_info):                          #函数名由锐捷提供
         """
@@ -64444,6 +65727,9 @@ Switch ID is 2
                 dict_value["Output underruns"] = obj_1.group(3).strip()
                 dict_value["Output no buffer"] = obj_1.group(4).strip()
                 dict_value["Output dropped"] = obj_1.group(5).strip()
+            elif re.match("fe80\S+/\d+",show_info_split[i].strip()):
+                mainobj = re.match("(fe80\S+)/\d+",show_info_split[i].strip())
+                dict_value["Link-local address"] = mainobj.group(1).strip()
         for i in range(length):
             if re.match("(.*)Link Status:(.*)Lacp Status:(.*)BFD Status:(.*)", show_info_split[i].strip()):
                 obj_0 = re.match("(.*)Link Status:(.*)Lacp Status:(.*)BFD Status:(.*)", show_info_split[i].strip())
@@ -64934,6 +66220,9 @@ Switch ID is 2
                 dict_value["Output underruns"] = obj_1.group(3).strip()
                 dict_value["Output no buffer"] = obj_1.group(4).strip()
                 dict_value["Output dropped"] = obj_1.group(5).strip()
+            elif re.match("fe80\S+/\d+",show_info_split[i].strip()):
+                mainobj = re.match("(fe80\S+)/\d+",show_info_split[i].strip())
+                dict_value["Link-local address"] = mainobj.group(1).strip()
         for i in range(length):
             if re.match("(.*)Link Status:(.*)Lacp Status:(.*)BFD Status:(.*)", show_info_split[i].strip()):
                 obj_0 = re.match("(.*)Link Status:(.*)Lacp Status:(.*)BFD Status:(.*)", show_info_split[i].strip())
@@ -65549,6 +66838,42 @@ Module information:
                     dict_value[title2] = vaule_list[i][k].strip()
         dict_value['Network_List'] = Network_list
 
+        return dict_value
+    def dut_get_show_bgp_al(self,show_info):
+        dict_value1 = {}
+        show_info_list_line = show_info.split("\n")
+        if re.match(r'.*#.*', show_info_list_line[0]):
+            show_info_list_line.remove(show_info_list_line[0])
+        if re.match(r'.*show.*', show_info_list_line[0]):
+            show_info_list_line.remove(show_info_list_line[0])
+        if re.match(r'.*#.*', show_info_list_line[-1]):
+            show_info_list_line.remove(show_info_list_line[-1])
+        for i in show_info_list_line:
+            if '' in show_info_list_line:
+                show_info_list_line.remove('')
+        for value in show_info_list_line[:]:
+            if "Route Distinguisher" in value:
+                if re.match("Route Distinguisher:(.*)\((.*)\)",value):
+                    obj_1 = re.match("Route Distinguisher:(.*)\((.*)\)",value)
+                    obj_1_value_1 = obj_1.group(1).strip()
+                    obj_1_value_2 = obj_1.group(2).strip()
+                    dict_value1["Route Distinguisher"+"/"+obj_1_value_2] = obj_1_value_1
+                elif re.match("Route Distinguisher:(.*)",value):
+                    obj = re.match("Route Distinguisher:(.*)",value)
+                    obj_1_value_1 = obj.group(1).strip()
+                    dict_value1["Route Distinguisher"] = obj.group(1).strip()
+                show_info_list_line.remove(value)
+            if "Total number of prefixes" in value:
+                obj_2 = re.match("Total number of prefixes (\d+)",value)
+                obj_2_value_1 = obj_2.group(1).strip()
+                dict_value1["Total number of prefixes"+"/"+obj_1_value_1] = obj_2_value_1
+                total_num = value
+                show_info_list_line.remove(value)
+        show_info_list_line.append(total_num)
+        show_info ="\n".join(show_info_list_line)
+        dict_value2 = self.dut_get_bgp_network(show_info)
+        dict_value =dict(dict_value1.items()+dict_value2.items())
+        dict_value.pop("Total number of prefixes")
         return dict_value
     def dut_get_show_ip_bgp(self, show_info):
         """
@@ -70980,64 +72305,7 @@ DUT1#
         dict_value['count_route']=len(addr_list)
 
         return dict_value
-    def dut_get_show_ip_rns_twamplight_configuration_testsession_num(self,show_info):
-        """
-        Function:show ip rns twamp-light configuration test-session 1回显解析函数
-        CLI命令:show ip rns twamp-light configuration test-session 1
-        回显信息示例:
-Ruijie(config-ip-rns-twamp-light-responder)#$uration test-session 1
-Session ID       : 1
-Report-period    : 10
-Sender-IP        : 12.1.1.1
-Sender-Port      : 2001
-Reflector-IP     : 12.1.1.2
-Reflector-Port   : 2000
-Period Time      : 10ms
-Repeat Time      : -
-Time Out         : 5s
-Duration Time    : 300s
-DSCP             : 0
-Padding Length   : 128
-Padding Value    : 0x0
-VRF Name         : -
-PTP Enable       : disable
-Oneway-enable    : disable
-Packet Count     : -
-Bind Interface   : HundredGigabitEthernet 1/0/1
-Trunk interface  : -
-Vlan             : -
-Description      : -
-        Example:
-        | *Returns*  | *Keywords*     | *Parameters*                                                                                     |
-        | ${result1} | dut_judge_show | cmd_str=show ip rns twamp-light configuration test-session 1 | yinfo=${yinfo}  | alias=dut1   | include=1    | change_letter=0 |
-        备注：${yinfo}同Returns格式一致.
-        """
-
-        return self.dut_get_show_info_analy_all_colon(show_info,"show")
-    def dut_get_show_ip_rns_twamplightresponder_configuration_testsession_num(self,show_info):
-        """
-        Function:show ip rns twamp-light-responder configuration test-session 1回显解析函数
-        CLI命令:show ip rns twamp-light-responder configuration test-session 1
-        回显信息示例:
-Ruijie(config-ip-rns-twamp-light-responder)#$rns twamp-light-responder configu$
-Session ID      : 1
-Local-IP        : 12.1.1.1
-Local-Port      : 862
-Remote-IP       : 12.1.1.2
-Remote-Port     : 862
-VRF Name        : -
-Timestamp type  : NTP
-Trunk interface : -
-Vlan            : -
-Description     : 1111111111111111111111111111111
-        Example:
-        | *Returns*  | *Keywords*     | *Parameters*                                                                                     |
-        | ${result1} | dut_judge_show | cmd_str=show ip rns twamp-light-responder configuration test-session 1 | yinfo=${yinfo}  | alias=dut1   | include=1    | change_letter=0 |
-        备注：${yinfo}同Returns格式一致.
-        """
-
-        return self.dut_get_show_info_analy_all_colon(show_info,"show")
-    def dut_get_show_ip_rns_twamplight_statistics_testsession_num_total(self,show_info):
+    def dut_get_show_ip_rns_twamplight_statistics_testsession_num_total(self, show_info):
         """
         Function:show ip rns twamp-light statistics test-session 1 total回显解析函数
         CLI命令:show ip rns twamp-light statistics test-session 1 total
@@ -71062,41 +72330,64 @@ Ruijie#
         备注：${yinfo}同Returns格式一致.
         """
         dict_value = {}
-        # 按行读取写入
-        show_info_split = show_info.split("\n")
-        # print show_info_split
-        # 去掉命令行无用表头
-        if re.match(r'.*Ruijie.*', show_info_split[0]):
-            show_info_split.remove(show_info_split[0])
-        if re.match(r'.*#.*', show_info_split[0]):
-            show_info_split.remove(show_info_split[0])
-        # 处理后的数据存入dut_info_split
-        dut_info_split = show_info_split
-        # 去掉dut_info_split中的空值以及只包含空格符的值
-        for i in dut_info_split:
-            if '' in dut_info_split:
-                dut_info_split.remove('')
-        for i in dut_info_split:
-            if ' ' in dut_info_split:
-                dut_info_split.remove(' ')
-        print(dut_info_split)
-    
-        title_list = []
-        for i in range(len(dut_info_split)):
-            if re.match('The Session \d+ \w+ Statistics:', dut_info_split[i]):
-                mainobj = re.match('The Session (\d+) (\w+) Statistics:', dut_info_split[i])
-                title = mainobj.group(1).strip() + '/' + mainobj.group(2).strip()+ '/'
-                title_list.append(mainobj.group(2).strip().decode("utf-8"))
-                continue
-            elif re.match('.*:.*:.*', dut_info_split[i]):
-                mainobj = re.match('(.*):\s+(.*):\s+(.*)', dut_info_split[i])
-    
-                name1 = title + mainobj.group(1).strip().replace(' ','/')
-                name2 = title + re.split("\s+",mainobj.group(2),maxsplit=1)[1].strip().replace(' ','/')
-                value1 = re.split("\s+",mainobj.group(2),maxsplit=1)[0].strip()
-                value2 = mainobj.group(3).strip()
-                dict_value[name1.decode("utf-8")] = value1.decode("utf-8")
-                dict_value[name2.decode("utf-8")] = value2.decode("utf-8")
-        dict_value['statistics total'] = title_list
-    
-        return dict_value
+        if "Delay and Loss Statistics" in show_info:
+            show_info_list = self.dut_get_start_show_info(show_info)
+            key_1 = ""
+            for value in show_info_list:
+                value = value.strip()
+                if "Delay and Loss Statistics" in value:
+                    pass
+                elif re.match("Session State : (.*)", value):
+                    obj = re.match("Session State : (.*)", value)
+                    dict_value["Session State"] = obj.group(1).strip()
+                elif re.match("Latest Detection Period Start Time : (.*)", value):
+                    obj = re.match("Latest Detection Period Start Time : (.*)", value)
+                    dict_value["Latest Detection Period Start Time"] = obj.group(1).strip()
+                elif re.match("Latest Detection Period End Time : (.*)", value):
+                    obj = re.match("Latest Detection Period End Time : (.*)", value)
+                    dict_value["Latest Detection Period End Time"] = obj.group(1).strip()
+                elif re.match("(.*Statistics):\Z", value):
+                    key_1 = re.match("(.*Statistics):\Z", value).group(1).strip()
+                elif re.match("(.*): (\S+)\s{3,}(.*): (\S+)", value):
+                    obj = re.match("(.*): (\S+)\s{3,}(.*): (\S+)", value)
+                    dict_value[key_1 + "/" + obj.group(1).strip()] = obj.group(2).strip().replace("%", "")
+                    dict_value[key_1 + "/" + obj.group(3).strip()] = obj.group(4).strip().replace("%", "")
+            return dict_value
+        else:
+            # 按行读取写入
+            show_info_split = show_info.split("\n")
+            # print show_info_split
+            # 去掉命令行无用表头
+            if re.match(r'.*Ruijie.*', show_info_split[0]):
+                show_info_split.remove(show_info_split[0])
+            if re.match(r'.*#.*', show_info_split[0]):
+                show_info_split.remove(show_info_split[0])
+            # 处理后的数据存入dut_info_split
+            dut_info_split = show_info_split
+            # 去掉dut_info_split中的空值以及只包含空格符的值
+            for i in dut_info_split:
+                if '' in dut_info_split:
+                    dut_info_split.remove('')
+            for i in dut_info_split:
+                if ' ' in dut_info_split:
+                    dut_info_split.remove(' ')
+            print(dut_info_split)
+
+            title_list = []
+            for i in range(len(dut_info_split)):
+                if re.match('The Session \d+ \w+ Statistics:', dut_info_split[i]):
+                    mainobj = re.match('The Session (\d+) (\w+) Statistics:', dut_info_split[i])
+                    title = mainobj.group(1).strip() + '/' + mainobj.group(2).strip() + '/'
+                    title_list.append(mainobj.group(2).strip().decode("utf-8"))
+                    continue
+                elif re.match('.*:.*:.*', dut_info_split[i]):
+                    mainobj = re.match('(.*):\s+(.*):\s+(.*)', dut_info_split[i])
+
+                    name1 = title + mainobj.group(1).strip().replace(' ', '/')
+                    name2 = title + re.split("\s+", mainobj.group(2), maxsplit=1)[1].strip().replace(' ', '/')
+                    value1 = re.split("\s+", mainobj.group(2), maxsplit=1)[0].strip()
+                    value2 = mainobj.group(3).strip()
+                    dict_value[name1.decode("utf-8")] = value1.decode("utf-8")
+                    dict_value[name2.decode("utf-8")] = value2.decode("utf-8")
+            dict_value['statistics total'] = title_list
+            return dict_value
