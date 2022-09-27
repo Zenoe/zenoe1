@@ -4,6 +4,7 @@
  * */
 
 const json2ObjList = (jsonObj) => {
+  // console.log(jsonObj)
   const _retList4Tbl = []
   const _retList4Combox = []
 
@@ -12,12 +13,12 @@ const json2ObjList = (jsonObj) => {
     if (jsonObj.hasOwnProperty(key)) {
       if (Array.isArray(value)) {
         // format to "['1.1.1.1','2.2.2.2','3.3.3.3']"
-        value = `[${value.map(i => ('\'' + i.toString() + '\'')).join(',')}]`
+        value = `[${value.map(i => ('"' + i.toString() + '"')).join(',')}]`
       }
       // console.log(`Property ${key} is NOT from prototype chain`);
-      const trimKey = key.trim()
-      _retList4Combox.push({ title: `${trimKey}:${value}` })
-      _retList4Tbl.push({ key: trimKey, value: `'${value}'` })
+      // const trimKey = key.trim()
+      _retList4Combox.push({ title: `"${key}":${value}` })
+      _retList4Tbl.push({ key: `"${key}"`, value })
     }
   }
   return [_retList4Combox, _retList4Tbl]

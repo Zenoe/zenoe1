@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Button, Box, Divider, Grid, Stack, Typography, MenuItem, Autocomplete, TextField, Checkbox, TextareaAutosize } from '@mui/material'
+import { Button, Box, Divider, Stack, Autocomplete, TextField, Checkbox, TextareaAutosize } from '@mui/material'
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
-import Select, { SelectChangeEvent } from '@mui/material/Select'
-import InputLabel from '@mui/material/InputLabel'
-import FormControl from '@mui/material/FormControl'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
-import { mybasename } from '@/utils/jsutils'
 import { json2ObjList } from '@/utils/projutils'
 import { LoadingButton } from '@mui/lab'
 import allCliList from './cliData'
@@ -39,6 +35,7 @@ const DCParamConverter = () => {
   const [guessRFStr, setGuessRFStr] = useState('')
 
   const [rawResult, setRawResult] = useState('')
+
   const [showInfo, setShowInfo] = useState()
   const icon = <CheckBoxOutlineBlankIcon fontSize="small" />
   const checkedIcon = <CheckBoxIcon fontSize="small" />
@@ -62,8 +59,8 @@ const DCParamConverter = () => {
   }
 
   const processConvertParamResult = (result) => {
-    setRawResult(result)
     const _result = result.replace(/\n$/, '').replace(/'/g, '"')
+    setRawResult(_result)
     // console.log(_result);
     try {
       const jsonList = _result.split('\n')

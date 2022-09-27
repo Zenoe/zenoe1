@@ -8,7 +8,6 @@ import MainLayout from '@/layout/MainLayout';
 const DashboardDefault = Loadable(lazy(() => import('@/pages/Dashboard')));
 
 // render - utilities
-const Typography = Loadable(lazy(() => import('@/pages/TyTest')));
 const TestCase2RF = Loadable(lazy(() => import('@/pages/testcase2rf')));
 const DeviceParamConverter = Loadable(lazy(() => import('@/pages/deviceparamconverter')));
 const RFSyntaxCheck = Loadable(lazy(() => import('@/pages/rfsyntaxcheck')));
@@ -32,10 +31,6 @@ const MainRoutes = {
           element: <DashboardDefault />
         }
       ]
-    },
-    {
-      path: 'typography',
-      element: <Typography />
     },
     {
       path: 'testcase2rf',

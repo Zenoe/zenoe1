@@ -28,18 +28,6 @@ const uploadFile = asyncHandler(async (req, res, next) => {
   } catch (e) {
     throw new AsyncError(res, e.message)
   }
-
-  // // Use the mv() method to place the file somewhere on your server
-  // uploadedFile.mv(uploadPath, function(err) {
-  //   if (err){
-  //     // error from callback can not be catch by middleware error handler
-  //     throw new AsyncError(res, err.message)
-  //     // throw new Error(`fileError: ${err.message}`)
-  //   }
-  //   res.json({
-  //     message:'File uploaded!',
-  //   });
-  // });
 })
 
 const getUploadFileList = async (clientIp, query) => {
@@ -89,10 +77,13 @@ const convert2Rf = asyncHandler(async (req, res, next) => {
     // we process errors in the central error hander
     throw e
   }
-
   // res.sendFile(your_file, {headers: {'Content-Type': 'your_file_type'}})
 })
 
+const checkRFSyntax = asyncHandler(async (req, res, next) => {
+  const { rfTxt } = req.query
+  logger.debug(`${rfTxt}`)
+})
 const convertParam = asyncHandler(async (req, res, next) => {
   const { cli, showInfo } = req.query
   logger.debug(`${cli}, ${showInfo}`)
@@ -118,5 +109,6 @@ module.exports = {
   getFileList,
   uploadFile,
   convert2Rf,
+  checkRFSyntax,
   convertParam
 }
