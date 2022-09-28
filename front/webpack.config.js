@@ -14,7 +14,7 @@ module.exports = (env) => {
 
   const envConfig = require(`./config/webpack.${env.env}.js`);
   const mergedConfig = merge(
-    commonConfig,
+    commonConfig(env),
     mockConfig,
     envConfig,
   );

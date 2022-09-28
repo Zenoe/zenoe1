@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react'
 import { Box, Divider, Grid, Stack, Typography, TextField, TextareaAutosize } from '@mui/material'
 import { LoadingButton } from '@mui/lab'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
-import { requestGet } from '@/utils/request'
+import { request } from '@/utils/request'
 
 const RFSyntaxCheck = () => {
   const [rfTxt, setRFTxt] = useState('')
   const [checkResult, setCheckResult] = useState('')
 
   const [loading, setLoading] = useState(false)
-  const handleRFTxthange = (e, v) => {
-
+  const handleRFTxthange = (e) => {
+    setRFTxt(e.target.value)
   }
 
   const selOnFocus = (e) => {
@@ -28,14 +28,15 @@ const RFSyntaxCheck = () => {
       return
     }
     setLoading(true)
-    requestGet('api/utils/checkrfsyntax', { rf: rfTxt })
+    request('api/utils/checkrfsyntax', { rfTxt })
       .then(res => {
         // console.log('convert ok');
         const { result } = res.data
+        console.log(result)
         setLoading(false)
       })
       .catch(res => {
-        console.log('convert error', res)
+        console.log('check error', res)
         setLoading(false)
       })
   }
@@ -46,6 +47,7 @@ const RFSyntaxCheck = () => {
         <Grid item xs={12} md={6}>
           <TextareaAutosize
             minRows={20}
+            maxRows={100}
             placeholder="输入cli RF脚本"
             value={rfTxt}
             onChange={handleRFTxthange}

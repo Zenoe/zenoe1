@@ -16,6 +16,6 @@ router.post('/upload', uploadFile)
 router.get('/filelist', getFileList)
 router.get('/convert2rf', convert2Rf)
 router.get('/convertparam', convertParam)
-router.get('/checkrfsyntax', checkRFSyntax)
+router.post('/checkrfsyntax', checkRFSyntax)
 
 module.exports = router

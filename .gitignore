@@ -6,6 +6,7 @@ node_modules
 
 # testing
 /coverage
+mytest.js
 
 # production
 /build
@@ -30,3 +31,4 @@ yarn-error.log*
 
 *.bk
 local-data
+backend/upload

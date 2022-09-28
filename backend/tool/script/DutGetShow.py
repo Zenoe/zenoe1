@@ -56326,73 +56326,6 @@ Interface HundredGigabitEthernet 10/32:
         return dict_value
     def dut_get_show_portqueue_statistics_interface_serial(self,show_info):
         return self.dut_get_show_portqueue_statistics_interface_pos(show_info)
-    def dut_get_show_bgp_vpnv6_unicast_all_ipv6mask(self,show_info):
-        dict_value = {}
-        show_list = self.dut_get_start_show_info(show_info)
-        flag = 0
-        list_2 = []
-        for value in show_list:
-            if re.match("BGP routing table entry for .*", value):
-                obj = re.match("BGP routing table entry for (.*)/\d+", value)
-                key_1 = obj.group(1).strip()
-            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
-                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
-                key_2 = obj_2.group(1)
-                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
-                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
-            elif re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value):
-                obj_2 = re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value)
-                key_2 = obj_2.group(1)
-                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
-            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
-                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
-                key_2 = obj_2.group(1)
-                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
-            elif re.match("IGP instance id: (\d+)", value.strip()):
-                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
-            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
-                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
-                if "best" in value:
-                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
-            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
-                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
-                if "best" in value:
-                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
-            elif re.match("Extended Community: (.*)", value.strip()):
-                obj_4 = re.match("Extended Community: (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
-            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
-                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
-                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
-                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
-                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
-                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
-            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
-                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
-                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
-                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
-                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
-                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
-            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
-                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
-            elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
-                obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
-                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
-                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
-        return dict_value
     def dut_get_show_bgp_l2vpn_evpn_all_macip_detail(self,show_info):
         dict_value ={}
         show_info_list_line = self.dut_get_start_show_info(show_info)
@@ -56793,6 +56726,236 @@ Interface HundredGigabitEthernet 10/32:
             dict_value_2[k] = v
 
         return dict_value_2
+    def dut_get_show_bgp_vpnv4_unicast_all_ip(self,show_info):
+        dict_value = {}
+        show_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_2 = []
+        for value in show_list:
+            if re.match("BGP routing table entry for .*", value):
+                obj = re.match("BGP routing table entry for (.*)/\d+", value)
+                key_1 = obj.group(1).strip()
+            elif re.match("\(Default for (VRF \S+)\)",value.strip()):
+                obj = re.match("\(Default for (VRF \S+)\)",value.strip())
+                key_1 = key_1 +"/" + obj.group(1).strip()
+            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
+            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
+                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("IGP instance id: (\d+)", value.strip()):
+                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Extended Community: (.*)", value.strip()):
+                obj_4 = re.match("Extended Community: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
+                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("Import to VRF:(.*)", value.strip()):
+                obj_4 = re.match("Import to VRF:(.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Import to VRF"] = obj_4.group(1).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[key_1 + "/" + key_2+"/"+"Last update"] = obj3.group(1).strip()
+            elif re.match("RX ID: (.*),\s*TX ID: (.*)", value.strip()):
+                obj_4 = re.match("RX ID: (.*),\s*TX ID: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_vpnv6_unicast_all_ipv6mask(self,show_info):
+        dict_value = {}
+        show_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_2 = []
+        for value in show_list:
+            if re.match("BGP routing table entry for .*", value):
+                obj = re.match("BGP routing table entry for (.*)/\d+", value)
+                key_1 = obj.group(1).strip()
+            elif re.match("\(Default for (VRF \S+)\)", value.strip()):
+                obj = re.match("\(Default for (VRF \S+)\)", value.strip())
+                key_1 = key_1 + "/" + obj.group(1).strip()
+            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
+            elif re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
+                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("IGP instance id: (\d+)", value.strip()):
+                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Extended Community: (.*)", value.strip()):
+                obj_4 = re.match("Extended Community: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
+                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
+                obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_fromneighbor_ip_detail(self,show_info):
+        dict_value ={}
+        show_info_list_line = self.dut_get_start_show_info(show_info)
+        rd_list = []
+        neighbor_list = []
+        key_0 = ""
+        for value in show_info_list_line:
+            if re.match("Route Distinguisher:(.*)", value.strip()):
+                obj = re.match("Route Distinguisher:(.*)",value.strip())
+                rd_list.append(obj.group(1).strip())
+                key_0 = obj.group(1).strip()
+                if len(neighbor_list) >0:
+                    dict_value[key_0 + "/neighbor_list"] = neighbor_list
+                    neighbor_list = []
+            elif "BGP routing table entry" in value:
+                list1 = value.split("for")
+                title =key_0 + "/"+list1[1].strip()
+                if re.match(".*:(\d{4}\.\d{4}\.\d{4}):.*",list1[1].strip()):
+                    obj = re.match(".*:(\d{4}\.\d{4}\.\d{4}):.*",list1[1].strip())
+                    neighbor_list.append(obj.group(1))
+                #dict_value["BGP routing table entry for"] = title
+            elif re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip()):
+                obj_0 = re.match("Origin (.*), \S*metric (\S+), localpref (\S+), .*", value.strip())
+                dict_value[title + "/Origin"] = obj_0.group(1).strip()
+                dict_value[title + "/metric"] = obj_0.group(2).strip()
+                dict_value[title + "/localpref"] = obj_0.group(3).strip()
+            elif re.match("Origin (.*), localpref (\S+), weight (\S+), .*", value.strip()):
+                obj_0 = re.match("Origin (.*), localpref (\S+), weight (\S+), .*", value.strip())
+                dict_value[title + "/Origin"] = obj_0.group(1).strip()
+                dict_value[title + "/localpref"] = obj_0.group(2).strip()
+                dict_value[title + "/weight"] = obj_0.group(3).strip()
+            elif re.match("Extended Community:(.*) Color:(.*)",value.strip()):
+                obj2 = re.match("Extended Community:(.*) Color:(.*)",value.strip())
+                dict_value[title+"/"+"Extended Community"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Color"] = obj2.group(2).strip()
+            elif re.match("Extended Community:(.*) MAC-VLAN: outer-vlan:(.*),inner-vlan:(.*)",value.strip()):
+                obj2 = re.match("Extended Community:(.*) MAC-VLAN: outer-vlan:(.*),inner-vlan:(.*)",value.strip())
+                dict_value[title+"/"+"Extended Community"] = obj2.group(1).strip()
+                dict_value[title+"/"+"MAC-VLAN/outer-vlan"] = obj2.group(2).strip()
+                dict_value[title + "/" + "MAC-VLAN/inner-vlan"] = obj2.group(3).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Flags (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title+"/"+"Remote-Prefix-SID/Flags"] = obj2.group(2).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(3).strip()
+            elif re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip()):
+                obj2 = re.match("Remote-Prefix-SID: SRv6 L2 SSID (.*), Endpoint Behavior (.*)",value.strip())
+                dict_value[title+"/"+"Remote-Prefix-SID/SRv6 L2 SSID"] = obj2.group(1).strip()
+                dict_value[title + "/" + "Remote-Prefix-SID/Endpoint Behavior"] = obj2.group(2).strip()
+            elif re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value):
+                obj = re.match("Iteration segment-routing policy \<Color (.*), End-point (.*)\> BSID (.*)",value)
+                dict_value[title + "/" + "Iteration segment-routing policy/Color"] = obj.group(1).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/End-point"] = obj.group(2).strip()
+                dict_value[title + "/" + "Iteration segment-routing policy/BSID"] = obj.group(3).strip()
+            elif re.match("ESI:(.*) GW IP:(.*) label:(.*)",value.strip()):
+                obj3 = re.match("ESI:(.*) GW IP:(.*) label:(.*)",value.strip())
+                dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
+                dict_value[title+"/"+"GW IP"] = obj3.group(2).strip()
+                dict_value[title+"/"+"label1"] = obj3.group(3).strip()
+            elif re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip()):
+                obj3 = re.match("ESI:(.*) label1:(.*) label2:(.*)",value.strip())
+                dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
+                dict_value[title+"/"+"label1"] = obj3.group(2).strip()
+                dict_value[title+"/"+"label2"] = obj3.group(3).strip()
+            elif re.match("Import to Bridge-Domain: (.*)",value.strip()):
+                obj3 = re.match("Import to Bridge-Domain: (.*)",value.strip())
+                dict_value[title+"/"+"Import to Bridge-Domain"] = obj3.group(1).strip()
+            elif re.match("Import to EVI:(.*)",value.strip()):
+                obj3 = re.match("Import to EVI:(.*)",value.strip())
+                dict_value[title+"/"+"Import to EVI"] = obj3.group(1).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[title+"/"+"Last update"] = obj3.group(1).strip()
+            elif re.match("Total number of prefixes (\d+), receive from peer (.*)",value.strip()):
+                obj = re.match("Total number of prefixes (\d+), receive from peer (.*)",value.strip())
+                dict_value["Total number of prefixes"] = obj.group(1).strip()
+                dict_value["receive from peer"] = obj.group(2).strip()
+            elif re.match("Total number of prefixes(.*)",value.strip()):
+                obj4 = re.match("Total number of prefixes(.*)",value.strip())
+                dict_value["Total number of prefixes"] = obj4.group(1).strip()
+            elif "," in value :
+                list2 = value.split(",")
+                for list2_value in list2 :
+                    if list2_value.count(":") == 1 :
+                        list3 = list2_value.split(":")
+                        dict_value[title+"/"+list3[0].strip()] = list3[1].strip()
+        if len(neighbor_list) > 0:
+            dict_value[key_0 + "/neighbor_list"] = neighbor_list
+        return dict_value
 #实习
     def dut_get_show_wlan_hotbackup_ip(self,show_info):
         """

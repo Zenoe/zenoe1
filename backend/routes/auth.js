@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const logger = require('services/logger')
+const logger = require('init')
 
 router.post('/', (req, res) => {
   const { name } = req.body

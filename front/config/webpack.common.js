@@ -1,13 +1,13 @@
-const commonPaths = require('./common-paths');
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-
+const commonPaths = require('./common-paths')
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+// React-Hot-Loader replacer
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 function resolveAt (dir) {
   return path.join(__dirname, '..', dir)
 }
 
-const config = {
+const config = (env = 'dev') => ({
   entry: {
     app: './src/index.js',
     vendor: ['axios', 'react', 'react-dom']
@@ -28,13 +28,16 @@ const config = {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         resolve: {
-          extensions: [".js", ".jsx"],
+          extensions: ['.js', '.jsx'],
           alias: {
             '@': resolveAt('src')
           }
         },
         use: {
-          loader: 'babel-loader'
+          loader: 'babel-loader',
+          options: {
+            plugins: [env === 'dev' && require.resolve('react-refresh/babel')].filter(Boolean)
+          }
         }
       },
       {
@@ -48,12 +51,12 @@ const config = {
       {
         test: /\.(png|jpe?g|gif)$/i,
         exclude: /node_modules/,
-        use: ['file-loader?name=./static/images/avatar/[name].[ext]'],
+        use: ['file-loader?name=./static/images/avatar/[name].[ext]']
       },
       {
         test: /\.(woff|woff2|eot|ttf|svg)$/,
         exclude: /node_modules/,
-        use:[
+        use: [
           {
             loader: 'url-loader?limit=1024&name=fonts/[name].[ext]'
           }
@@ -67,14 +70,14 @@ const config = {
             loader: 'css-loader',
             options: {
               importLoaders: 1,
-              modules:{
+              modules: {
                 localIdentName: '[name]__[local]___[hash:base64:5]'
               }
             }
           }
         ],
         include: /\.module\.css$/
-      },
+      }
     ]
   },
   optimization: {
@@ -97,10 +100,11 @@ const config = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: `public/index.html`,
-      favicon: `public/favicon.ico`,
+      template: 'public/index.html',
+      favicon: 'public/favicon.ico'
     }),
-  ]
-};
+    env === 'dev' && new ReactRefreshWebpackPlugin()
+  ].filter(Boolean) // *conditionally* use a plugin?
+})
 
-module.exports = config;
+module.exports = config
