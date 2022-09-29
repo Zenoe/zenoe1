@@ -5,4 +5,7 @@ if [ $? -eq 0 ]; then
     rsync -azv --exclude={'.git','node_modules','log','upload'}  dist/* root@10.110.198.52:/var/www/html/zenoe/
 else
     echo 'build error'
+    exit 1
 fi
+
+ssh root@10.110.198.52 'systemctl restart nginx'
