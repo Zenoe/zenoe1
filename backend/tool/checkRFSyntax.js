@@ -1,4 +1,4 @@
-const logger = require('init')
+const { logger } = require('init')
 
 const SYNTAX_SETTING_SECTION = 0
 const SYNTAX_TYPE_COMMA = 1
@@ -13,55 +13,123 @@ const SPC_NUM = 4
 const createCheckResult = (errortype, level, message, row, col = 0) => {
   return ({ errortype, level, message, pos: { row, col } })
 }
-const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
+
+const isDescText = (_line) => {
+  // fw_log, fw_expect, fw_step, log
+  //
+  if (_line.search(/^ {4}(?:fw_log|fw_expect|fw_step|log) {4}/) === 0) return true
+  else return false
+}
+
+const checkResultSidList = (_stepNum, _sidList, _checkSidList) => {
   const retList = []
+  if (_sidList.length !== _checkSidList.length) {
+    const message = 'global_result 的 result 数量不一致'
+    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', -1))
+  }
+
+  return retList
+}
+const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
+  console.log('#check step', _rfTxtList[_rowStart])
+  // get step number
+
+  const _stepNumMatch = _rfTxtList[_rowStart].match(/step *([1-9]+[0-9]*)/)
+  const curStepNum = _stepNumMatch[1]
+  // console.log(stepNumMatch[1])
+  const retList = []
+  const resultSidList = []
   for (let i = _rowStart + 1; i < _rowEnd; i++) {
     const _line = _rfTxtList[i]
+    // pass if it's an empty line
+    if (_line.search(/^ *$/) === 0) {
+      continue
+    }
+    // console.log('begin to check _line', _line)
     // must start with 4 spaces
-    if (_line.search(/ {4}\S/) !== 0) {
-      const message = '每行脚本开始应该空出4个空格'
-      retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i))
+    {
+      if (_line.search(/^ {4}\S+.*/) !== 0) {
+        const message = '每行脚本开始应该空出4个空格'
+        retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i))
+        console.log('4 space needed:', _line, i)
+      }
+    }
+
+    if (isDescText(_line)) {
+      continue
     }
     // check if there are continuous spaces, the number of whihc is neither 1 nor 4
     const _pos = _line.search(/(\S {5,}\S|\S {2,3}\S)/)
     if (_pos > 0) {
-      const message = `${_pos}: 出现连续多个空格数为2-3个，或者大于5个`
+      const message = `${_pos}: 出现连续2或3个空格，或大于4个空格`
       retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i))
     }
+    // ${result1_2}
+    const _matchResult = _line.match(/^ {4}\$\{result(\S+)\}/)
+    if (_matchResult) {
+      // get result number
+      resultSidList.push(_matchResult[1])
+      continue
+    }
+
+    if (_line.search(/^ {4}\$\{global_result\}/) === 0) {
+      // global_result
+      let matches; const output = []
+      const regex = / {4}\$\{result(\S+)\}/g
+      while ((matches = regex.exec(_line))) {
+        output.push(matches[1])
+      }
+      console.log('global_result:', output)
+      checkResultSidList(curStepNum, resultSidList, output)
+    }
   }
+
+  // console.log(retList)
+  // check result sid
+  //
+  console.log(resultSidList)
+  return retList
 }
 
-/** _rowStart is row of header,  _rowEnd is row of the next section */
-const checkTestCases = (_rfTxtList, _stepList, _stMap, _testCaseSectionList, _rowStart, _rowEnd) => {
+/** _rowStart the line below the header,  _rowEnd is row of the next section */
+const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, _rowEnd) => {
   const retList = []
   // case name
-  if (_rfTxtList[_rowStart].search(/^[a-zA-Z_][a-zA-Z_0-9.]* *$/) !== 0) {
+
+  // console.log(_rfTxtList);
+  console.log(_rowStart)
+  console.log(_rfTxtList[_rowStart])
+  if (_rfTxtList[_rowStart].search(/^[a-zA-Z_][-_a-zA-Z0-9.]* *$/) !== 0) {
     const message = '用例名应该单独一行，由大小写字母下划线开头，由大小写字母下划线，中划线，数字和小数点组成'
     retList.push(createCheckResult(SYNTAX_TESTCASE_SECTION, message, 'error', _rowStart))
+  } else {
+    console.log('>>test case name checked ok')
   }
+
   for (let i = 0; i < _stepList.length; i++) {
     const rowStepStart = _stepList[i].row
     let rowStepEnd = _rowEnd
     if (i < _stepList.length - 1) { rowStepEnd = _stepList[i + 1].row }
 
-    checkStepContent(_rfTxtList, rowStepStart, rowStepEnd)
+    retList.concat(checkStepContent(_rfTxtList, rowStepStart, rowStepEnd))
   }
-  for (let i = _rowStart + 1; i < _rowEnd; i += 1) {
 
-  }
+  return retList
 }
 async function checkRFSyntaxTool (_rfTxt) {
   const checkResultList = []
 
   const stMap = new Map()
   const keyWordsMap = new Map()
-  const sectionNameList = []
+  const orderedSectionList = []
   const testCaseSectionList = []
   const fwStepList = []
   const expList = []
   const stepList = []
   const rfTxtList = _rfTxt.split('\n')
 
+  // console.log('.............', rfTxtList[0])
+  // console.log('.............', rfTxtList[1])
   const sectionSettings = '*** Settings ***'
   const sectionTestCases = '*** Test Cases ***'
   const sectionVariables = '*** Variables ***'
@@ -88,7 +156,7 @@ async function checkRFSyntaxTool (_rfTxt) {
   }
   for (const [idx, line] of rfTxtList.entries()) {
     for (const sec of sectionList) {
-      if (searchSection(sec, line, idx, stMap, sectionNameList)) {
+      if (searchSection(sec, line, idx, stMap, orderedSectionList)) {
         foundSection = true
         break
       }
@@ -136,16 +204,19 @@ async function checkRFSyntaxTool (_rfTxt) {
       continue
     }
 
-    // comma check
-    const fullCommaPos = line.search(new RegExp(fullComma))
-    if (fullCommaPos >= 0) {
-      checkResultList.push(createCheckResult(SYNTAX_TYPE_COMMA, 'error', `出现中文逗号: row:${idx}:${fullCommaPos}`), i, fullCommaPos)
-    }
+    // comma check todo
+    // const fullCommaPos = line.search(new RegExp(fullComma))
+    // if (fullCommaPos >= 0) {
+    //   checkResultList.push(createCheckResult(SYNTAX_TYPE_COMMA, 'error', `出现中文逗号: row:${idx}:${fullCommaPos}`), idx + 1, fullCommaPos)
+    // }
   }
 
   // now begin to check
 
-  for (const sec of sectionNameList) {
+  logger.debug('check setting section')
+  console.log(orderedSectionList)
+  for (const sec of orderedSectionList) {
+    console.log(sec)
     const sectionLine = stMap.get(sec).line
     const row = stMap.get(sec).row
     const matchSectionLineRegex = new RegExp(`^${sec.replace(/\*/g, '\\*')} *$`)
@@ -154,15 +225,19 @@ async function checkRFSyntaxTool (_rfTxt) {
       checkResultList.push(createCheckResult(SYNTAX_SECTION, 'error', message, row))
     }
   }
+
   // console.log(stMap)
   const isSettingSection = (txt) => (txt.search(/(^Library|^Resource|^Variables) *[a-zA-Z_][a-zA-Z_0-9]*/ === 0))
   const rowSetting = stMap.get(sectionSettings).row
-  if (!rowSetting || rowSetting !== 0) {
+  if (rowSetting === undefined || rowSetting !== 0) {
     checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
-    return checkResultList
+    console.log(checkResultList)
+    // return checkResultList
   }
 
-  const nextSection = sectionNameList[1]
+  const nextSection = orderedSectionList[1]
+  console.log('nextSection', nextSection)
+  logger.debug(`next section: ${nextSection}`)
   if (!nextSection) {
     checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords', -1))
     return checkResultList
@@ -177,21 +252,27 @@ async function checkRFSyntaxTool (_rfTxt) {
       }
     }
   }
+
+  // logger.debug(`error: ${checkResultList}`)
   let rowNextSection = 0
   if (lineTestCase) {
-    const rowStart = lineTestCase.row
+    logger.info('begin to check testCaseSection')
+    const rowStart = lineTestCase.row + 1
     let rowEnd = rfTxtList.length
     // its a testcase file
     rowNextSection = lineTestCase.row
     // find next section row
-    const _nextSec = findNextSec(sectionTestCases)
+    const _nextSec = findNextSec(sectionTestCases, orderedSectionList)
     if (_nextSec && stMap.get(_nextSec)) {
       // find next section
       rowEnd = stMap.get(_nextSec).row
     }
-    checkTestCases(rfTxtList, stMap, testCaseSectionList, rowStart, rowEnd)
+
+    const testCaseCheckResult = checkTestCases(rfTxtList, stepList, testCaseSectionList, rowStart, rowEnd)
+    console.log('testcase errors: ', testCaseCheckResult)
   } else {
     // its a common txt file
+    logger.info('begin to check keyWordsSection')
     rowNextSection = rowKeyWord.row
   }
 

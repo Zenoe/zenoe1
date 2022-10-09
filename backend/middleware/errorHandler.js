@@ -10,12 +10,14 @@ const { logger } = require('init')
 // or visit http://10.110.198.50:7007/ from browser cause: typeerror res.status is not a function express
 function errorHandler (err, req, res, next) {
   logger.error(`errorHandler: ${err.stack}`)
-  const is404 = err.toLowerCase().endsWith('not found')
-  const statusCode = is404 ? 404 : 400
   switch (true) {
     case typeof err === 'string':
-    // custom application error
+    {
+      const is404 = err.toLowerCase().endsWith('not found')
+      const statusCode = is404 ? 404 : 400
       return res.status(statusCode).json({ message: err })
+    }
+    // custom application error
     case err.name === 'UnauthorizedError':
     // jwt authentication error
       return res.status(401).json({ message: 'Unauthorized' })
