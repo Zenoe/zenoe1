@@ -7,8 +7,7 @@ const SYNTAX_VARIABLE_SECTION = 3
 const SYNTAX_KEYWORS_SECTION = 4
 const SYNTAX_SCRIPT = 5
 const SYNTAX_SECTION = 6
-
-const SPC_NUM = 4
+const SYNTAX_RESULT_SID = 7
 
 const createCheckResult = (errortype, level, message, row, col = 0) => {
   return ({ errortype, level, message, pos: { row, col } })
@@ -17,15 +16,62 @@ const createCheckResult = (errortype, level, message, row, col = 0) => {
 const isDescText = (_line) => {
   // fw_log, fw_expect, fw_step, log
   //
-  if (_line.search(/^ {4}(?:fw_log|fw_expect|fw_step|log) {4}/) === 0) return true
+  if (_line.search(/^ {2,4}(?:fw_log|fw_expect|fw_step|log) {2,4}/) === 0) return true
   else return false
 }
 
-const checkResultSidList = (_stepNum, _sidList, _checkSidList) => {
+const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
+  console.log('begin to checkResultSidList')
   const retList = []
-  if (_sidList.length !== _checkSidList.length) {
+  const _globSidList = _globSidInfo.sidList
+  if (_sidList.length !== _globSidList.length) {
     const message = 'global_result 的 result 数量不一致'
-    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', -1))
+    retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', -1))
+  }
+
+  for (let idx = 0; idx < _sidList.length; idx += 1) {
+    const sidInfo = _sidList[idx]
+    const sidPair = sidInfo.result.split('_')
+    console.log('sidPair:', sidPair[0], sidPair[1])
+    if (sidPair.length !== 2) {
+      const message = 'result 编号不合规范。应该满足1_1,2_1,这样的格式'
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+      continue
+    }
+    if (sidPair[0] !== _stepNum) {
+      const message = `result 编号${sidPair[0]}和当前步骤${_stepNum}不一致`
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+      continue
+    }
+    if (sidPair[1] !== `${idx + 1}`) {
+      const message = `result 编号${sidInfo.result}: ${sidPair[1]}要从1开始递增`
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+      continue
+    }
+
+    if (sidInfo.result !== _globSidList[idx]) {
+      const message = `result 编号${sidInfo.result}和 global_result: ${_globSidList[idx]} 没有顺序对应`
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', _globSidInfo.row))
+      break
+    }
+  }
+  if (retList.length === 0) {
+    console.log('>>checkResultSidList ok')
+  }
+  return retList
+}
+
+const spAroundEqCheck = (line, row) => {
+  console.log('spAroundEqCheck', row)
+  const retList = []
+  // 等号前后不允许空格
+  if (line.search(/ {1,3}=/) >= 0) {
+    const message = '等号前有空格'
+    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'error', row))
+  }
+  if (line.search(/= {1,3}/) >= 0) {
+    const message = '等号后有空格'
+    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'error', row))
   }
 
   return retList
@@ -50,7 +96,7 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     {
       if (_line.search(/^ {4}\S+.*/) !== 0) {
         const message = '每行脚本开始应该空出4个空格'
-        retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i))
+        retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'warning', i))
         console.log('4 space needed:', _line, i)
       }
     }
@@ -58,6 +104,19 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     if (isDescText(_line)) {
       continue
     }
+
+    // comma check todo
+    const fullComma = '，'
+    const fullCommaPos = _line.search(new RegExp(fullComma))
+    console.log('>>>>>', _line)
+    if (fullCommaPos >= 0) {
+      console.log('出现中文逗号')
+      retList.push(createCheckResult(SYNTAX_TYPE_COMMA, '出现中文逗号', 'error', i, fullCommaPos))
+    }
+
+    const _spCheckResult = spAroundEqCheck(_line, i)
+    console.log(_spCheckResult)
+    retList.concat(_spCheckResult)
     // check if there are continuous spaces, the number of whihc is neither 1 nor 4
     const _pos = _line.search(/(\S {5,}\S|\S {2,3}\S)/)
     if (_pos > 0) {
@@ -68,7 +127,8 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     const _matchResult = _line.match(/^ {4}\$\{result(\S+)\}/)
     if (_matchResult) {
       // get result number
-      resultSidList.push(_matchResult[1])
+      // resultSidList.push(_matchResult[1])
+      resultSidList.push({ line: _line, row: i, result: _matchResult[1] })
       continue
     }
 
@@ -80,14 +140,17 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
         output.push(matches[1])
       }
       console.log('global_result:', output)
-      checkResultSidList(curStepNum, resultSidList, output)
+      const _globResultInfo = { line: _line, sidList: output, row: i }
+      const _resultCheckRetList = checkResultSidList(curStepNum, resultSidList, _globResultInfo)
+      console.log(_resultCheckRetList)
+      retList.concat(_resultCheckRetList)
     }
   }
 
-  // console.log(retList)
+  console.log(retList)
   // check result sid
   //
-  console.log(resultSidList)
+  // console.log(resultSidList)
   return retList
 }
 
@@ -106,6 +169,7 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
     console.log('>>test case name checked ok')
   }
 
+  console.log('stepList:', _stepList)
   for (let i = 0; i < _stepList.length; i++) {
     const rowStepStart = _stepList[i].row
     let rowStepEnd = _rowEnd
@@ -143,7 +207,6 @@ async function checkRFSyntaxTool (_rfTxt) {
   let foundSection = false
   const sectionList = [sectionSettings, sectionTestCases, sectionVariables, sectionKeywords]
   const subSectionList = [subSectionDocument, subSectionTags, subSectionSetup, subSectionTeardown]
-  const fullComma = '，'
 
   const searchSection = (_sectionName, _line, _idx, _outSt, _outSecName) => {
     const pos = _line.indexOf(_sectionName)
@@ -197,18 +260,13 @@ async function checkRFSyntaxTool (_rfTxt) {
 
     // step #
     if (line.search(/^ *#/) >= 0) {
+      console.log('...............', line)
       const stepStart = line.search(/step *[1-9]+[0-9]*/) > 0
       if (stepStart > 0) {
         stepList.push({ line, row: idx, stepStart })
       }
       continue
     }
-
-    // comma check todo
-    // const fullCommaPos = line.search(new RegExp(fullComma))
-    // if (fullCommaPos >= 0) {
-    //   checkResultList.push(createCheckResult(SYNTAX_TYPE_COMMA, 'error', `出现中文逗号: row:${idx}:${fullCommaPos}`), idx + 1, fullCommaPos)
-    // }
   }
 
   // now begin to check

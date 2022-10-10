@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
+    "inspect": "cross-env NODE_PATH=. NODE_ENV=dev node --inspect=0.0.0.0:9229 app.js",
     "start": "cross-env NODE_PATH=. NODE_ENV=dev node app.js",
     "dev": "cross-env NODE_PATH=. NODE_ENV=dev nodemon --ignore log/ app.js",
     "prod": "cross-env NODE_PATH=. NODE_ENV=prod pm2 start app.js",
