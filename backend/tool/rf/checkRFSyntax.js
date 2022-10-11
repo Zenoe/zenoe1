@@ -1,3 +1,4 @@
+const { createCheckResult, isDescText, spAroundEqCheck, searchSection, findNextSec } = require('./helper')
 const { logger } = require('init')
 
 const SYNTAX_SETTING_SECTION = 0
@@ -8,17 +9,6 @@ const SYNTAX_KEYWORS_SECTION = 4
 const SYNTAX_SCRIPT = 5
 const SYNTAX_SECTION = 6
 const SYNTAX_RESULT_SID = 7
-
-const createCheckResult = (errortype, level, message, row, col = 0) => {
-  return ({ errortype, level, message, pos: { row, col } })
-}
-
-const isDescText = (_line) => {
-  // fw_log, fw_expect, fw_step, log
-  //
-  if (_line.search(/^ {2,4}(?:fw_log|fw_expect|fw_step|log) {2,4}/) === 0) return true
-  else return false
-}
 
 const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   console.log('begin to checkResultSidList')
@@ -61,21 +51,6 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   return retList
 }
 
-const spAroundEqCheck = (line, row) => {
-  console.log('spAroundEqCheck', row)
-  const retList = []
-  // 等号前后不允许空格
-  if (line.search(/ {1,3}=/) >= 0) {
-    const message = '等号前有空格'
-    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'error', row))
-  }
-  if (line.search(/= {1,3}/) >= 0) {
-    const message = '等号后有空格'
-    retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'error', row))
-  }
-
-  return retList
-}
 const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
   console.log('#check step', _rfTxtList[_rowStart])
   // get step number
@@ -83,7 +58,7 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
   const _stepNumMatch = _rfTxtList[_rowStart].match(/step *([1-9]+[0-9]*)/)
   const curStepNum = _stepNumMatch[1]
   // console.log(stepNumMatch[1])
-  const retList = []
+  let retList = []
   const resultSidList = []
   for (let i = _rowStart + 1; i < _rowEnd; i++) {
     const _line = _rfTxtList[i]
@@ -114,9 +89,9 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
       retList.push(createCheckResult(SYNTAX_TYPE_COMMA, '出现中文逗号', 'error', i, fullCommaPos))
     }
 
-    const _spCheckResult = spAroundEqCheck(_line, i)
+    const _spCheckResult = spAroundEqCheck(_line, i, SYNTAX_SCRIPT)
     console.log(_spCheckResult)
-    retList.concat(_spCheckResult)
+    retList = retList.concat(_spCheckResult)
     // check if there are continuous spaces, the number of whihc is neither 1 nor 4
     const _pos = _line.search(/(\S {5,}\S|\S {2,3}\S)/)
     if (_pos > 0) {
@@ -147,16 +122,12 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     }
   }
 
-  console.log(retList)
-  // check result sid
-  //
-  // console.log(resultSidList)
   return retList
 }
 
 /** _rowStart the line below the header,  _rowEnd is row of the next section */
 const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, _rowEnd) => {
-  const retList = []
+  let retList = []
   // case name
 
   // console.log(_rfTxtList);
@@ -175,14 +146,15 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
     let rowStepEnd = _rowEnd
     if (i < _stepList.length - 1) { rowStepEnd = _stepList[i + 1].row }
 
-    retList.concat(checkStepContent(_rfTxtList, rowStepStart, rowStepEnd))
+    const _tmp = checkStepContent(_rfTxtList, rowStepStart, rowStepEnd)
+    retList = retList.concat(_tmp)
   }
 
   return retList
 }
-async function checkRFSyntaxTool (_rfTxt) {
-  const checkResultList = []
 
+async function checkRFSyntaxTool (_rfTxt) {
+  let checkResultList = []
   const stMap = new Map()
   const keyWordsMap = new Map()
   const orderedSectionList = []
@@ -192,8 +164,6 @@ async function checkRFSyntaxTool (_rfTxt) {
   const stepList = []
   const rfTxtList = _rfTxt.split('\n')
 
-  // console.log('.............', rfTxtList[0])
-  // console.log('.............', rfTxtList[1])
   const sectionSettings = '*** Settings ***'
   const sectionTestCases = '*** Test Cases ***'
   const sectionVariables = '*** Variables ***'
@@ -208,150 +178,136 @@ async function checkRFSyntaxTool (_rfTxt) {
   const sectionList = [sectionSettings, sectionTestCases, sectionVariables, sectionKeywords]
   const subSectionList = [subSectionDocument, subSectionTags, subSectionSetup, subSectionTeardown]
 
-  const searchSection = (_sectionName, _line, _idx, _outSt, _outSecName) => {
-    const pos = _line.indexOf(_sectionName)
-    if (pos >= 0) {
-      _outSt.set(_sectionName, { line: _line, row: _idx })
-      _outSecName.push(_sectionName)
-      return true
-    }
-    return false
-  }
-  for (const [idx, line] of rfTxtList.entries()) {
-    for (const sec of sectionList) {
-      if (searchSection(sec, line, idx, stMap, orderedSectionList)) {
-        foundSection = true
-        break
+  return new Promise((resolve, reject) => {
+    try {
+      for (const [idx, line] of rfTxtList.entries()) {
+        for (const sec of sectionList) {
+          if (searchSection(sec, line, idx, stMap, orderedSectionList)) {
+            foundSection = true
+            break
+          }
+        }
+
+        for (const sec of subSectionList) {
+          if (searchSection(sec, line, idx, stMap, testCaseSectionList)) {
+            foundSection = true
+            break
+          }
+        }
+
+        if (foundSection) {
+          foundSection = false
+          continue
+        }
+
+        if (line.search(/^com_/) === 0) {
+          keyWordsMap.set(line, idx)
+        }
+
+        // fw_step
+        if (line.search(/^ *fw_step/) >= 0) {
+          fwStepList.push({ line, row: idx })
+          continue
+        }
+        // fw_expect
+        if (line.search(/^ *fw_expect/) >= 0) {
+          expList.push({ line, row: idx })
+          continue
+        }
+
+        // fw_log
+        if (line.search(/^ *fw_log/) >= 0) {
+          expList.push({ line, row: idx })
+          continue
+        }
+
+        // step #
+        if (line.search(/^ *#/) >= 0) {
+          const stepStart = line.search(/step *[1-9]+[0-9]*/) > 0
+          if (stepStart > 0) {
+            stepList.push({ line, row: idx, stepStart })
+          }
+          continue
+        }
       }
-    }
 
-    for (const sec of subSectionList) {
-      if (searchSection(sec, line, idx, stMap, testCaseSectionList)) {
-        foundSection = true
-        break
+      // now begin to check
+      logger.debug('check setting section')
+      for (const sec of orderedSectionList) {
+        console.log(sec)
+        const sectionLine = stMap.get(sec).line
+        const row = stMap.get(sec).row
+        const matchSectionLineRegex = new RegExp(`^${sec.replace(/\*/g, '\\*')} *$`)
+        if (sectionLine.search(matchSectionLineRegex) !== 0) {
+          const message = `${sec}前不能有空格，后不能有其它字符`
+          checkResultList.push(createCheckResult(SYNTAX_SECTION, 'error', message, row))
+        }
       }
-    }
 
-    if (foundSection) {
-      foundSection = false
-      continue
-    }
-
-    if (line.search(/^com_/) === 0) {
-      keyWordsMap.set(line, idx)
-    }
-
-    // fw_step
-    if (line.search(/^ *fw_step/) >= 0) {
-      fwStepList.push({ line, row: idx })
-      continue
-    }
-    // fw_expect
-    if (line.search(/^ *fw_expect/) >= 0) {
-      expList.push({ line, row: idx })
-      continue
-    }
-
-    // fw_log
-    if (line.search(/^ *fw_log/) >= 0) {
-      expList.push({ line, row: idx })
-      continue
-    }
-
-    // step #
-    if (line.search(/^ *#/) >= 0) {
-      console.log('...............', line)
-      const stepStart = line.search(/step *[1-9]+[0-9]*/) > 0
-      if (stepStart > 0) {
-        stepList.push({ line, row: idx, stepStart })
+      const isSettingSection = (txt) => (txt.search(/(^Library|^Resource|^Variables) *[a-zA-Z_][a-zA-Z_0-9]*/ === 0))
+      const rowSetting = stMap.get(sectionSettings).row
+      if (rowSetting === undefined || rowSetting !== 0) {
+        checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
+        console.log(checkResultList)
+        // return checkResultList
       }
-      continue
-    }
-  }
 
-  // now begin to check
-
-  logger.debug('check setting section')
-  console.log(orderedSectionList)
-  for (const sec of orderedSectionList) {
-    console.log(sec)
-    const sectionLine = stMap.get(sec).line
-    const row = stMap.get(sec).row
-    const matchSectionLineRegex = new RegExp(`^${sec.replace(/\*/g, '\\*')} *$`)
-    if (sectionLine.search(matchSectionLineRegex) !== 0) {
-      const message = `${sec}前不能有空格，后不能有其它字符`
-      checkResultList.push(createCheckResult(SYNTAX_SECTION, 'error', message, row))
-    }
-  }
-
-  // console.log(stMap)
-  const isSettingSection = (txt) => (txt.search(/(^Library|^Resource|^Variables) *[a-zA-Z_][a-zA-Z_0-9]*/ === 0))
-  const rowSetting = stMap.get(sectionSettings).row
-  if (rowSetting === undefined || rowSetting !== 0) {
-    checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
-    console.log(checkResultList)
-    // return checkResultList
-  }
-
-  const nextSection = orderedSectionList[1]
-  console.log('nextSection', nextSection)
-  logger.debug(`next section: ${nextSection}`)
-  if (!nextSection) {
-    checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords', -1))
-    return checkResultList
-  }
-
-  const lineTestCase = stMap.get(sectionTestCases)
-  const rowKeyWord = stMap.get(sectionKeywords)
-  const findNextSec = (sec, secList) => {
-    for (let i = 0; i < secList.length; i += 1) {
-      if (secList[i] === sec) {
-        return secList[i + 1]
+      const nextSection = orderedSectionList[1]
+      console.log('nextSection', nextSection)
+      logger.debug(`next section: ${nextSection}`)
+      if (!nextSection) {
+        checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords', -1))
+        resolve(checkResultList)
       }
+
+      const lineTestCase = stMap.get(sectionTestCases)
+      const rowKeyWord = stMap.get(sectionKeywords)
+
+      // logger.debug(`error: ${checkResultList}`)
+      let rowNextSection = 0
+      if (lineTestCase) {
+        logger.info('begin to check testCaseSection')
+        const rowStart = lineTestCase.row + 1
+        let rowEnd = rfTxtList.length
+        // its a testcase file
+        rowNextSection = lineTestCase.row
+        // find next section row
+        const _nextSec = findNextSec(sectionTestCases, orderedSectionList)
+        if (_nextSec && stMap.get(_nextSec)) {
+          // find next section
+          rowEnd = stMap.get(_nextSec).row
+        }
+
+        const testCaseCheckResult = checkTestCases(rfTxtList, stepList, testCaseSectionList, rowStart, rowEnd)
+        checkResultList = checkResultList.concat(testCaseCheckResult)
+      } else {
+        // its a common txt file
+        logger.info('begin to check keyWordsSection')
+        rowNextSection = rowKeyWord.row
+      }
+
+      for (let i = rowSetting + 1; i < rowNextSection; i += 1) {
+        if (isSettingSection(rfTxtList[i])) {
+          continue
+        } else {
+          checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'warning', `${rfTxtList[i]} 无法识别,或者不完整`, i))
+        }
+      }
+
+      // ----------------TestCases---------------------
+      if (stMap.get(sectionTestCases)) {
+        //
+      }
+      // ----------------KeyWord---------------------
+      // console.log(keyWordsMap)
+      // console.log(fwStepList)
+
+      console.log('endof checkRFSyntaxTool')
+      resolve(checkResultList)
+    } catch (err) {
+      reject(err)
     }
-  }
-
-  // logger.debug(`error: ${checkResultList}`)
-  let rowNextSection = 0
-  if (lineTestCase) {
-    logger.info('begin to check testCaseSection')
-    const rowStart = lineTestCase.row + 1
-    let rowEnd = rfTxtList.length
-    // its a testcase file
-    rowNextSection = lineTestCase.row
-    // find next section row
-    const _nextSec = findNextSec(sectionTestCases, orderedSectionList)
-    if (_nextSec && stMap.get(_nextSec)) {
-      // find next section
-      rowEnd = stMap.get(_nextSec).row
-    }
-
-    const testCaseCheckResult = checkTestCases(rfTxtList, stepList, testCaseSectionList, rowStart, rowEnd)
-    console.log('testcase errors: ', testCaseCheckResult)
-  } else {
-    // its a common txt file
-    logger.info('begin to check keyWordsSection')
-    rowNextSection = rowKeyWord.row
-  }
-
-  for (let i = rowSetting + 1; i < rowNextSection; i += 1) {
-    if (isSettingSection(rfTxtList[i])) {
-      continue
-    } else {
-      checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'warning', `${rfTxtList[i]} 无法识别,或者不完整`, i))
-    }
-  }
-
-  // ----------------TestCases---------------------
-  if (stMap.get(sectionTestCases)) {
-    //
-  }
-  // ----------------KeyWord---------------------
-  // console.log(keyWordsMap)
-  // console.log(fwStepList)
-
-  console.log('endof checkRFSyntaxTool')
-  return checkResultList
+  })
 }
 
 module.exports = {

@@ -56652,6 +56652,9 @@ Interface HundredGigabitEthernet 10/32:
             elif re.match("Last update: (.*)",value.strip()):
                 obj3 = re.match("Last update: (.*)",value.strip())
                 dict_value[key_1 + "/" + key_2+"/"+"Last update"] = obj3.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/" + "Last update_time"] = obj.group(1).strip()
             elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
                 obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
                 dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
@@ -56792,6 +56795,9 @@ Interface HundredGigabitEthernet 10/32:
             elif re.match("Last update: (.*)",value.strip()):
                 obj3 = re.match("Last update: (.*)",value.strip())
                 dict_value[key_1 + "/" + key_2+"/"+"Last update"] = obj3.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/" + "Last update_time"] = obj.group(1).strip()
             elif re.match("RX ID: (.*),\s*TX ID: (.*)", value.strip()):
                 obj_4 = re.match("RX ID: (.*),\s*TX ID: (.*)", value.strip())
                 dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
@@ -56955,6 +56961,294 @@ Interface HundredGigabitEthernet 10/32:
                         dict_value[title+"/"+list3[0].strip()] = list3[1].strip()
         if len(neighbor_list) > 0:
             dict_value[key_0 + "/neighbor_list"] = neighbor_list
+        return dict_value
+    def dut_get_show_isis_route_ipv6_flexalgo_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        for value in show_info_list:
+            if re.match("Area \((\S+)\):",value):
+                obj = re.match("Area \((\S+)\):",value)
+                dict_value["Area"] = obj.group(1).strip()
+                key_0 = obj.group(1).strip()
+            elif re.match("(.*summary):(.*)",value):
+                obj = re.match("(.*summary):(.*)",value)
+                dict_value[obj.group(1).strip()] = obj.group(2).strip()
+            elif re.match("\A(\S+)\s+(\S+)\s+\[(\S+)\]",value):
+                obj = re.match("\A(\S+)\s+(\S+)\s+\[(\S+)\]",value)
+                key_1 = obj.group(2).strip()
+                dict_value[key_0 + "/"+key_1 + "/code"] = obj.group(1).strip()
+                flag = 0
+            elif re.match("\s+via\s+(\S+), (.*), weight (\d+)",value):
+                flag = flag + 1
+                obj = re.match("\s+via\s+(\S+), (.*), weight (\d+)",value)
+                dict_value[key_0 + "/"+key_1 + "/via_"+str(flag)] = obj.group(1).strip()
+                dict_value[key_0 + "/"+key_1 + "/interface_" + str(flag)] = obj.group(2).strip()
+                dict_value[key_0 + "/"+key_1 + "/weight_" + str(flag)] = obj.group(3).strip()
+        return dict_value
+    def dut_get_show_isis_topology_flexalgo_num(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_1 = []
+        for value in show_info_list:
+            if re.match("Flex-Algo:(\S+)",value):
+                obj = re.match("Flex-Algo:(\S+)",value)
+                dict_value["Flex-Algo"] = obj.group(1).strip()
+            elif re.match("Area \((\S+)\):",value):
+                obj = re.match("Area \((\S+)\):",value)
+                key_1 = obj.group(1).strip()
+            elif re.match("IS-IS paths to (\S+) routers",value):
+                obj = re.match("IS-IS paths to (\S+) routers",value)
+                key_2 = obj.group(1).strip()
+            elif "System Id" in value:
+                flag = 1
+                if len(list_1) > 1 :
+                    show_1 = "\n".join(list_1)
+                    star,end,show_len_list,show_info_list_line = self.dut_common_get_linelist(show_1,"System Id",split_num=2)
+                    dict_value_2 = self.dut_show_autoget_form(star,end,"System Id",show_len_list,show_info_list_line)
+                    for k,v in dict_value_2.items():
+                        dict_value[key_1 + "/" + key_2 +"/" + k] = v
+                list_1 = []
+                list_1.append(value)
+            elif flag == 1:
+                list_1.append(value)
+        if len(list_1) > 1:
+            show_1 = "\n".join(list_1)
+            star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(show_1, "System Id",
+                                                                                         split_num=2)
+            dict_value_2 = self.dut_show_autoget_form(star, end, "System Id", show_len_list, show_info_list_line)
+            for k, v in dict_value_2.items():
+                dict_value[key_1 + "/" + key_2 + "/" + k] = v
+        return dict_value
+    def dut_get_show_isis_ipv6_topology_flexalgo_num(self,show_info):
+        return self.dut_get_show_isis_topology_flexalgo_num(show_info)
+    def dut_get_show_bgp_develop_vc(self,show_info):
+        dict_value = {}
+        show_info_list =self.dut_get_start_show_info(show_info)
+        flag = 0
+        flag_key = 0
+        for value in show_info_list:
+            if "vcifx" in value:
+                list_1 = value.strip().split()
+                flag = 1
+                flag_key = 1
+                continue
+            elif "flag" in value:
+                list_1 = value.strip().split()
+                flag = 1
+                continue
+            if flag == 1 :
+                list_2 = value.strip().split()
+                if flag_key == 1:
+                    key_1 = list_2[-1]
+                for i in range(len(list_2)):
+                    dict_value[key_1 + "/"+list_1[i]] = list_2[i]
+                    if list_1[i] == "flag":
+                        dict_value[key_1 + "/" + list_1[i] +"_list"] = str(list_2[i]).strip("|").split("|")
+                flag = 0
+                flag_key = 0
+            elif re.match("Bum\s+ssid:(\S+)\s+bsid:(\S+)",value.strip()):
+                obj = re.match("Bum\s+ssid:(\S+)\s+bsid:(\S+)",value.strip())
+                dict_value[key_1 + "/Bum/ssid"] = obj.group(1).strip()
+                dict_value[key_1 + "/Bum/bsid"] = obj.group(2).strip()
+            elif re.match("peer_type:(\d+)\s+role:(\d+)",value.strip()):
+                obj = re.match("peer_type:(\d+)\s+role:(\d+)",value.strip())
+                dict_value[key_1 + "/peer_type"] = obj.group(1).strip()
+                dict_value[key_1 + "/role"] = obj.group(2).strip()
+            elif re.match("Ver\s*:\s*(\d+)", value.strip()):
+                obj = re.match("Ver\s*:\s*(\d+)", value.strip())
+                dict_value[key_1 + "/Ver"] = obj.group(1).strip()
+            elif re.match("Ucast\s+ssid:(\S+)\s+bsid:(\S+)", value.strip()):
+                obj = re.match("Ucast\s+ssid:(\S+)\s+bsid:(\S+)", value.strip())
+                dict_value[key_1 + "/Ucast/ssid"] = obj.group(1).strip()
+                dict_value[key_1 + "/Ucast/bsid"] = obj.group(2).strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_ipprefix_ip_detai(self,show_info):
+        dict_value ={}
+        show_info_list_line = self.dut_get_start_show_info(show_info)
+        num = 0
+        for value in show_info_list_line:
+            if re.match("Route Distinguisher:(.*)",value.strip()):
+                obj2 = re.match("Route Distinguisher:(.*)",value.strip())
+                dict_value["Route Distinguisher" + str(num)] = obj2.group(1).strip()
+                key_1 = obj2.group(1).strip()
+                num = num + 1
+            elif re.match("BGP routing table entry for (\S+)/\d+",value.strip()):
+                obj5 =  re.match("BGP routing table entry for (\S+)/\d+",value.strip())
+                title = key_1 + "/" + obj5.group(1).strip()
+            elif re.match("Origin incomplete, (\S*metric) (\d+), localpref (\d+), weight (\d+), .*",value.strip()):
+                obj = re.match("Origin incomplete, (\S*metric) (\d+), localpref (\d+), weight (\d+), .*",value.strip())
+                dict_value[title + "/"+obj.group(1).strip() ] = obj.group(2).strip()
+                dict_value[title+"/metric"] = obj.group(2).strip()
+                dict_value[title + "/localpref"] = obj.group(3).strip()
+                dict_value[title + "/weight"] = obj.group(4).strip()
+            elif re.match("Origin incomplete, (\S*metric) (\d+), localpref (\d+),.*",value.strip()):
+                obj = re.match("Origin incomplete, (\S*metric) (\d+), localpref (\d+),.*",value.strip())
+                dict_value[title + "/" + obj.group(1).strip()] = obj.group(2).strip()
+                dict_value[title + "/metric"] = obj.group(2).strip()
+                dict_value[title + "/localpref"] = obj.group(3).strip()
+            elif re.match("Extended Community: RT:(\S+)",value.strip()):
+                obj2 = re.match("Extended Community: RT:(\S+)",value.strip())
+                dict_value[title+"/Extended Community/RT"] = obj2.group(1).strip()
+            elif re.match("Import to VRF:(.*)",value.strip()):
+                obj2 = re.match("Import to VRF:(.*)",value.strip())
+                dict_value[title+"/Import to VRF"] = obj2.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[title + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[title + "/Flags"] = obj_4.group(2).strip()
+                dict_value[title + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[title + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[title +  "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[title +  "/Flags"] = obj_4.group(2).strip()
+                dict_value[title +  "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[title +  "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("ESI: (\S+) GW IP: (\S+) label: (.*)",value.strip()):
+                obj3 = re.match("ESI: (\S+) GW IP: (\S+) label: (.*)",value.strip())
+                dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
+                dict_value[title + "/" + "GW IP"] = obj3.group(2).strip()
+                dict_value[title+"/"+"label"] = obj3.group(3).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj = re.match("Last update: (.*)",value.strip())
+                dict_value[title + "/" + "Last update"] = obj.group(1).strip()
+            elif "Total number of prefixes" in value:
+                obj4 = re.match("Total number of prefixes(.*)",value.strip())
+                dict_value["Total number of prefixes"] = obj4.group(1).strip()
+            elif "," in value :
+                list2 = value.split(",")
+                for list2_value in list2 :
+                    if list2_value.count(":") == 1 :
+                        list3 = list2_value.split(":")
+                        dict_value[title+"/"+list3[0].strip()] = list3[1].strip()
+        return dict_value
+    def dut_get_show_bgp_l2vpn_evpn_all_inclusivemulticast_ip_detail(self,show_info):
+        dict_value = {}
+        show_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_2 = []
+        num = 0
+        for value in show_list:
+            if re.match("Route Distinguisher:(.*)",value.strip()):
+                obj2 = re.match("Route Distinguisher:(.*)",value.strip())
+                dict_value["Route Distinguisher" + str(num)] = obj2.group(1).strip()
+                key_1 = obj2.group(1).strip()
+                num = num + 1
+            elif re.match("BGP routing table entry for (\S+)/\d+",value.strip()):
+                obj5 =  re.match("BGP routing table entry for (\S+)/\d+",value.strip())
+                key_1 =key_1 + "/"+obj5.group(1).strip()
+            elif re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(\S*metric (\d+)\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(3).strip()
+            elif re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value):
+                obj_2 = re.match("\s+(\S+) \(inaccessible\) from (\S+).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/metric"] = obj_2.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("\s+(\S+) from \S+ \((\S+)\).*", value):
+                obj_2 = re.match("\s+(\S+) from \S+ \((\S+)\).*", value)
+                key_2 = obj_2.group(1)
+                dict_value[key_1 + "/" + key_2 + "/from"] = obj_2.group(2).strip()
+            elif re.match("IGP instance id: (\d+)", value.strip()):
+                obj_5 = re.match("IGP instance id: (\d+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/IGP instance id"] = obj_5.group(1).strip()
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip()):
+                obj_3 = re.match("Origin (.*), \S*metric (\d+), localpref (\d+), (\S+), (\S+)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Origin"] = obj_3.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Origin/metric"] = obj_3.group(2).strip()
+                if "best" in value:
+                    dict_value[key_1 + "/" + key_2 + "/Origin/optimized"] = "best"
+            elif re.match("Extended Community: (.*)", value.strip()):
+                obj_4 = re.match("Extended Community: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Local IPv4 Router-ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Extended Community"] = obj_4.group(1).strip()
+            elif re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Prefix-SID: (.*) SID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Prefix-SID/SID"] = obj_4.group(2).strip()
+            elif re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip()):
+                obj_4 = re.match("Remote-Prefix-SID: (.*), Flags (.*), Endpoint Behavior (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Flags"] = obj_4.group(2).strip()
+                dict_value[key_1 + "/" + key_2 + "/Endpoint Behavior"] = obj_4.group(3).strip()
+                if re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip()):
+                    obj_4 = re.match("Remote-Prefix-SID: (.*) SSID (.*), Flags (.*)", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/Remote-Prefix-SID/SSID"] = obj_4.group(2).strip()
+            elif re.match("Originator: (.*), Cluster list: (.*)", value.strip()):
+                obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
+                obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
+                dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
+                dict_value[key_1 + "/" + key_2 + "/TX ID"] = obj_4.group(2).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj = re.match("Last update: (.*)",value.strip())
+                dict_value[key_1 + "/" + key_2  + "Last update"] = obj.group(1).strip()
+            elif "Total number of prefixes" in value:
+                obj4 = re.match("Total number of prefixes(.*)", value.strip())
+                dict_value[key_1 + "/" + key_2  +"/Total number of prefixes"] = obj4.group(1).strip()
+        return dict_value
+    def dut_get_show_portqueue_statistics_interface_multilink_num(self,show_info):
+        return self.dut_get_show_portqueue_statistics_interface_dutport(show_info)
+    def dut_get_show_evpn(self,show_info):
+        dict_value = {}
+        show_info_list = self.dut_get_start_show_info(show_info)
+        flag = 0
+        list_1 = []
+        for value in show_info_list:
+            if " rd " in value:
+                flag = 1
+                if len(list_1) > 1 :
+                    show_1 = "\n".join(list_1)
+                    title_name = ""
+                    if "vni " in show_1:
+                        title_name = "vni"
+                    elif "l2evi name" in show_1:
+                        title_name = "l2evi name"
+                    elif "name" in show_1:
+                        title_name = "name"
+                    star,end,show_len_list,show_info_list_line = self.dut_common_get_linelist(show_1,title_name,split_num=2)
+                    dict_value_2 = self.dut_show_autoget_form(star,end,title_name,show_len_list,show_info_list_line)
+                    for k,v in dict_value_2.items():
+                        dict_value[k] = v
+                list_1 = []
+                list_1.append(value)
+            elif re.match("Total number: (\d+)",value):
+                obj = re.match("Total number: (\d+)",value)
+                dict_value["Total number"] = obj.group(1)
+            elif flag == 1:
+                list_1.append(value)
+        if len(list_1) > 1:
+            show_1 = "\n".join(list_1)
+            if "vni " in show_1:
+                title_name = "vni"
+            elif "l2evi name" in show_1:
+                title_name = "l2evi name"
+            elif "name" in show_1:
+                title_name = "name"
+            star, end, show_len_list, show_info_list_line = self.dut_common_get_linelist(show_1, title_name,split_num=2)
+            dict_value_2 = self.dut_show_autoget_form(star, end, title_name, show_len_list, show_info_list_line)
+            for k, v in dict_value_2.items():
+                dict_value[k] = v
         return dict_value
 #实习
     def dut_get_show_wlan_hotbackup_ip(self,show_info):

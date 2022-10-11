@@ -4,7 +4,7 @@ const { findFileRecursivelySync } = require('utils/fs')
 const { AsyncError } = require('error/appErrors')
 const { logger } = require('init')
 const { generateRf } = require('tool/testCaseParse/xlsReader')
-const { checkRFSyntaxTool } = require('tool/checkRFSyntax')
+const { checkRFSyntaxTool } = require('tool/rf/checkRFSyntax')
 const { callPy } = require('tool/dutShow')
 
 const { ThridPartyError } = require('error/appErrors')
@@ -84,8 +84,13 @@ const convert2Rf = asyncHandler(async (req, res, next) => {
 const checkRFSyntax = asyncHandler(async (req, res, next) => {
   const { rfTxt } = req.body
   try {
-    await checkRFSyntaxTool(rfTxt)
+    const _result = await checkRFSyntaxTool(rfTxt)
+    res.json({
+      result: _result,
+      status: 1
+    })
   } catch (err) {
+    console.log('checkRFSyntax:', err)
     throw err
   }
 })

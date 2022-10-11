@@ -1,44 +1,43 @@
 const util = require('util')
 const mysql = require('mysql2')
-const logger = require('services/logger')
+const logger = require('init')
 
 const { dbConfig } = require('config')
 
 // const util = require('util')
 let db = {}
 
-class DBManager{
-  constructor(dbConfig){
+class DBManager {
+  constructor (dbConfig) {
     this.pool = mysql.createPool({
       host: dbConfig.hostname,
       user: dbConfig.user,
       password: dbConfig.password,
-      database: dbConfig.dbName,
-    });
+      database: dbConfig.dbName
+    })
   }
 
-  query (in_sql){
+  query (in_sql) {
     // this.pool.query('select 1 + 1', (err, rows) => { console.log('connected') });
     // unbound method
     const queryPromise = util.promisify(this.pool.query.bind(this.pool))
-    return queryPromise(in_sql);
+    return queryPromise(in_sql)
   }
 }
 
-
 mysqlconn = (in_config) => {
-  return new Promise((resolve, reject)=>{
+  return new Promise((resolve, reject) => {
     db = mysql.createConnection({
       host: in_config.hostname,
       user: in_config.user,
       password: in_config.password,
-      database: in_config.dbName,
+      database: in_config.dbName
     })
 
-    db.connect( (err) => {
-      if(err){
+    db.connect((err) => {
+      if (err) {
         reject(err)
-      }else{
+      } else {
         resolve('Mysql connected...')
       }
     })
@@ -61,5 +60,5 @@ mysqlconn = (in_config) => {
 // })
 
 module.exports = {
-  DBManager,
+  DBManager
 }

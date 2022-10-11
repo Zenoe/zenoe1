@@ -10,7 +10,8 @@ const RFSyntaxCheck = () => {
 
   const [loading, setLoading] = useState(false)
   const handleRFTxthange = (e) => {
-    setRFTxt(e.target.value)
+    // setRFTxt(e.target.value)
+    setRFTxt(e.target.value.replace('\ufeff', ''))
   }
 
   const selOnFocus = (e) => {
