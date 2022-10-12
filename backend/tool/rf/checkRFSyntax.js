@@ -1,4 +1,4 @@
-const { createCheckResult, isDescText, spAroundEqCheck, searchSection, findNextSec } = require('./helper')
+const { createCheckResult, isDescText, spAroundEqCheck, searchSection, checkSection, findNextSec } = require('./helper')
 const { logger } = require('init')
 
 const SYNTAX_SETTING_SECTION = 0
@@ -9,6 +9,7 @@ const SYNTAX_KEYWORS_SECTION = 4
 const SYNTAX_SCRIPT = 5
 const SYNTAX_SECTION = 6
 const SYNTAX_RESULT_SID = 7
+const SYNTAX_STRUCTURE = 8
 
 const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   console.log('begin to checkResultSidList')
@@ -16,7 +17,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   const _globSidList = _globSidInfo.sidList
   if (_sidList.length !== _globSidList.length) {
     const message = 'global_result 的 result 数量不一致'
-    retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', -1))
+    retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error'))
   }
 
   for (let idx = 0; idx < _sidList.length; idx += 1) {
@@ -46,7 +47,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
     }
   }
   if (retList.length === 0) {
-    console.log('>>checkResultSidList ok')
+    logger.debug('>>checkResultSidList ok')
   }
   return retList
 }
@@ -77,6 +78,32 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     }
 
     if (isDescText(_line)) {
+      if (_line.search(/( fw_step | fw_expect)/) >= 0) {
+        // not allow multiple line
+        const nextLine = _rfTxtList[i + 1]
+        if (nextLine) {
+          if (nextLine.search(/^ {4}\.\.\./) === 0) {
+            const message = 'fw_step、fw_expect内容不允许换行'
+            retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i + 1))
+            i += 1
+          }
+        }
+      } else {
+        while (true) {
+          // skip fw_log/log
+          const nextLine = _rfTxtList[i + 1]
+          if (nextLine) {
+            // check if the next line is the continuation of the previous line
+            if (nextLine.search(/^ {4}\.\.\./) === 0) {
+              i += 1
+            } else {
+              break
+            }
+          } else {
+            break
+          }
+        }
+      }
       continue
     }
 
@@ -114,11 +141,11 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
       while ((matches = regex.exec(_line))) {
         output.push(matches[1])
       }
-      console.log('global_result:', output)
+      logger.info('global_result:', output)
       const _globResultInfo = { line: _line, sidList: output, row: i }
       const _resultCheckRetList = checkResultSidList(curStepNum, resultSidList, _globResultInfo)
-      console.log(_resultCheckRetList)
-      retList.concat(_resultCheckRetList)
+      logger.debug(_resultCheckRetList)
+      retList = retList.concat(_resultCheckRetList)
     }
   }
 
@@ -153,7 +180,7 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
   return retList
 }
 
-async function checkRFSyntaxTool (_rfTxt) {
+async function checkRFSyntaxTool (_rfTxt, _rfType) {
   let checkResultList = []
   const stMap = new Map()
   const keyWordsMap = new Map()
@@ -171,12 +198,12 @@ async function checkRFSyntaxTool (_rfTxt) {
 
   const subSectionDocument = '[Documentation]'
   const subSectionTags = '[Tags]'
-  const subSectionSetup = '[Setup]'
+  // const subSectionSetup = '[Setup]'
   const subSectionTeardown = '[Teardown]'
 
   let foundSection = false
   const sectionList = [sectionSettings, sectionTestCases, sectionVariables, sectionKeywords]
-  const subSectionList = [subSectionDocument, subSectionTags, subSectionSetup, subSectionTeardown]
+  const subSectionList = [subSectionDocument, subSectionTags, subSectionTeardown]
 
   return new Promise((resolve, reject) => {
     try {
@@ -231,6 +258,9 @@ async function checkRFSyntaxTool (_rfTxt) {
         }
       }
 
+      const sectionCheckRes = checkSection(testCaseSectionList, _rfType, SYNTAX_STRUCTURE)
+      if (sectionCheckRes.length > 0) { resolve(sectionCheckRes) }
+
       // now begin to check
       logger.debug('check setting section')
       for (const sec of orderedSectionList) {
@@ -248,22 +278,19 @@ async function checkRFSyntaxTool (_rfTxt) {
       const rowSetting = stMap.get(sectionSettings).row
       if (rowSetting === undefined || rowSetting !== 0) {
         checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
-        console.log(checkResultList)
-        // return checkResultList
+        resolve(checkResultList)
       }
 
       const nextSection = orderedSectionList[1]
-      console.log('nextSection', nextSection)
       logger.debug(`next section: ${nextSection}`)
       if (!nextSection) {
-        checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords', -1))
+        checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords'))
         resolve(checkResultList)
       }
 
       const lineTestCase = stMap.get(sectionTestCases)
       const rowKeyWord = stMap.get(sectionKeywords)
 
-      // logger.debug(`error: ${checkResultList}`)
       let rowNextSection = 0
       if (lineTestCase) {
         logger.info('begin to check testCaseSection')

@@ -1,24 +1,25 @@
-import { StrictMode } from 'react';
-import ReactDOM from "react-dom/client";
-import { BrowserRouter } from 'react-router-dom';
+import { StrictMode } from 'react'
+import ReactDOM from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 
+import './index.css'
 // scroll bar
 // import 'simplebar/src/simplebar.css';
 
 // third-party
-import { Provider as ReduxProvider } from 'react-redux';
+import { Provider as ReduxProvider } from 'react-redux'
 
 // apex-chart
 // import 'assets/third-party/apex-chart.css';
 
 // project import
-import App from './App';
-import { store } from './store';
+import App from './App'
+import { store } from './store'
 // import reportWebVitals from './reportWebVitals';
 
 // ==============================|| MAIN - REACT DOM RENDER  ||============================== //
 
-const root = ReactDOM.createRoot(document.getElementById("container"));
+const root = ReactDOM.createRoot(document.getElementById('container'))
 root.render(
     <StrictMode>
         <ReduxProvider store={store}>
@@ -27,8 +28,7 @@ root.render(
             </BrowserRouter>
         </ReduxProvider>
     </StrictMode>
-);
-
+)
 
 // import React from "react";
 // import ReactDOM from "react-dom/client";

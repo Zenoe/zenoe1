@@ -3,7 +3,7 @@ ul {
     list-style-type: none;
     margin: 20px;
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
     color: blue;
 }
 .thiscontainer{
@@ -20,4 +20,10 @@ ul {
   /* flex: 1 1 auto; */
   text-align: center;
   margin: 5px;  /* and that, will result in a 10px gap */
+}
+
+.warnText{
+  color: red;
+  cursor: auto;
+  list-style: disc;
 }

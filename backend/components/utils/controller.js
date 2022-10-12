@@ -82,9 +82,9 @@ const convert2Rf = asyncHandler(async (req, res, next) => {
 })
 
 const checkRFSyntax = asyncHandler(async (req, res, next) => {
-  const { rfTxt } = req.body
+  const { rfTxt, rfType } = req.body
   try {
-    const _result = await checkRFSyntaxTool(rfTxt)
+    const _result = await checkRFSyntaxTool(rfTxt, rfType)
     res.json({
       result: _result,
       status: 1

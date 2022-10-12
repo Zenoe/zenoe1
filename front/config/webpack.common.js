@@ -2,7 +2,6 @@ const commonPaths = require('./common-paths')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 // React-Hot-Loader replacer
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 function resolveAt (dir) {
   return path.join(__dirname, '..', dir)
 }
@@ -102,9 +101,8 @@ const config = (env = 'dev') => ({
     new HtmlWebpackPlugin({
       template: 'public/index.html',
       favicon: 'public/favicon.ico'
-    }),
-    env === 'dev' && new ReactRefreshWebpackPlugin()
-  ].filter(Boolean) // *conditionally* use a plugin?
+    })
+  ]
 })
 
 module.exports = config

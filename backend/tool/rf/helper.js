@@ -1,5 +1,5 @@
 
-const createCheckResult = (errortype, level, message, row, col = 0) => {
+const createCheckResult = (errortype, message, level, row = -1, col = 0) => {
   return ({ errortype, level, message, pos: { row, col } })
 }
 
@@ -44,10 +44,27 @@ const findNextSec = (sec, secList) => {
   }
 }
 
+const checkSection = (subsecList, rfType, errorType) => {
+  console.log('00000000000', subsecList)
+  const retList = []
+  if (rfType === 'testcase') {
+    // must have
+    const subSectionList = ['[Documentation]', '[Tags]', '[Teardown]']
+    subSectionList.forEach(item => {
+      if (!subsecList.includes(item)) {
+        const message = `没有${item}`
+        retList.push(createCheckResult(errorType, message, 'error'))
+      }
+    })
+  }
+
+  return retList
+}
 module.exports = {
   createCheckResult,
   spAroundEqCheck,
   isDescText,
   searchSection,
+  checkSection,
   findNextSec
 }

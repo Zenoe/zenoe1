@@ -1,3 +1,5 @@
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
+
 const commonPaths = require('./common-paths')
 
 const devServer = require('./devServer')
@@ -53,7 +55,8 @@ const config = {
       SERVER_URL: JSON.stringify(globalVar.SERVER_URL),
       PRO_MODE: false,
       MOCK_MODE: false
-    })
+    }),
+    new ReactRefreshWebpackPlugin()
   ],
 
   devServer
