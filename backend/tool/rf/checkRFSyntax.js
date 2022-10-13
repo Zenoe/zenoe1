@@ -1,4 +1,4 @@
-const { createCheckResult, isDescText, spAroundEqCheck, searchSection, checkSection, findNextSec } = require('./helper')
+const { createCheckResult, collectResultSids, findRowOfGlobalResult, isDescText, spAroundEqCheck, searchSection, checkSection, isNextLineCurLine, findNextSec, combineLines } = require('./helper')
 const { logger } = require('init')
 
 const SYNTAX_SETTING_SECTION = 0
@@ -11,19 +11,21 @@ const SYNTAX_SECTION = 6
 const SYNTAX_RESULT_SID = 7
 const SYNTAX_STRUCTURE = 8
 
+let gModifyRFtxt = []
+let patchList = []
+
 const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
-  console.log('begin to checkResultSidList')
+  console.log('begin to check ResultSidList')
   const retList = []
   const _globSidList = _globSidInfo.sidList
   if (_sidList.length !== _globSidList.length) {
-    const message = 'global_result 的 result 数量不一致'
+    const message = `step: ${_stepNum} global_result 的 result 数量不一致`
     retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error'))
   }
 
   for (let idx = 0; idx < _sidList.length; idx += 1) {
     const sidInfo = _sidList[idx]
     const sidPair = sidInfo.result.split('_')
-    console.log('sidPair:', sidPair[0], sidPair[1])
     if (sidPair.length !== 2) {
       const message = 'result 编号不合规范。应该满足1_1,2_1,这样的格式'
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
@@ -32,30 +34,54 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
     if (sidPair[0] !== _stepNum) {
       const message = `result 编号${sidPair[0]}和当前步骤${_stepNum}不一致`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+      const diffObj = {}
+      diffObj.ori = gModifyRFtxt[sidInfo.row]
+
+      gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+
+      diffObj.mod = gModifyRFtxt[sidInfo.row]
+      patchList.push(diffObj)
       continue
     }
     if (sidPair[1] !== `${idx + 1}`) {
-      const message = `result 编号${sidInfo.result}: ${sidPair[1]}要从1开始递增`
+      const message = `result 编号${sidInfo.result}:  应该为${_stepNum}_${idx + 1}(从1开始递增)`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+      const diffObj = {}
+      diffObj.ori = gModifyRFtxt[sidInfo.row]
+
+      gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+
+      diffObj.mod = gModifyRFtxt[sidInfo.row]
+      patchList.push(diffObj)
       continue
     }
 
     if (sidInfo.result !== _globSidList[idx]) {
       const message = `result 编号${sidInfo.result}和 global_result: ${_globSidList[idx]} 没有顺序对应`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', _globSidInfo.row))
-      break
+
+      const _row = findRowOfGlobalResult(gModifyRFtxt, _globSidInfo.row, _globSidInfo.rowEnd, _globSidList[idx])
+      if (_row < 0) {
+        throw new Error('could not find row of global_result')
+      }
+      const diffObj = {}
+      diffObj.ori = gModifyRFtxt[_row]
+      // logger.debug(gModifyRFtxt[_globSidInfo.row])
+      gModifyRFtxt[_row] = gModifyRFtxt[_row].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+      diffObj.mod = gModifyRFtxt[_row]
+      patchList.push(diffObj)
+
+      logger.debug(gModifyRFtxt[_globSidInfo.row])
     }
   }
   if (retList.length === 0) {
-    logger.debug('>>checkResultSidList ok')
+    logger.debug('>>check ResultSidList ok')
   }
   return retList
 }
 
 const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
-  console.log('#check step', _rfTxtList[_rowStart])
   // get step number
-
   const _stepNumMatch = _rfTxtList[_rowStart].match(/step *([1-9]+[0-9]*)/)
   const curStepNum = _stepNumMatch[1]
   // console.log(stepNumMatch[1])
@@ -69,24 +95,20 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     }
     // console.log('begin to check _line', _line)
     // must start with 4 spaces
-    {
-      if (_line.search(/^ {4}\S+.*/) !== 0) {
-        const message = '每行脚本开始应该空出4个空格'
-        retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'warning', i))
-        console.log('4 space needed:', _line, i)
-      }
+    if (_line.search(/^ {4}\S+.*/) !== 0) {
+      const message = '每行脚本开始应该空出4个空格'
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'warning', i))
+      console.log('4 space needed:', _line, i)
     }
 
     if (isDescText(_line)) {
       if (_line.search(/( fw_step | fw_expect)/) >= 0) {
         // not allow multiple line
         const nextLine = _rfTxtList[i + 1]
-        if (nextLine) {
-          if (nextLine.search(/^ {4}\.\.\./) === 0) {
-            const message = 'fw_step、fw_expect内容不允许换行'
-            retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i + 1))
-            i += 1
-          }
+        if (isNextLineCurLine(nextLine)) {
+          const message = 'fw_step、fw_expect内容不允许换行'
+          retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i + 1))
+          i += 1
         }
       } else {
         while (true) {
@@ -94,7 +116,7 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
           const nextLine = _rfTxtList[i + 1]
           if (nextLine) {
             // check if the next line is the continuation of the previous line
-            if (nextLine.search(/^ {4}\.\.\./) === 0) {
+            if (isNextLineCurLine(nextLine)) {
               i += 1
             } else {
               break
@@ -110,14 +132,23 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     // comma check todo
     const fullComma = '，'
     const fullCommaPos = _line.search(new RegExp(fullComma))
-    console.log('>>>>>', _line)
     if (fullCommaPos >= 0) {
-      console.log('出现中文逗号')
       retList.push(createCheckResult(SYNTAX_TYPE_COMMA, '出现中文逗号', 'error', i, fullCommaPos))
+      const diffObj = {}
+      diffObj.ori = gModifyRFtxt[i]
+      gModifyRFtxt[i] = gModifyRFtxt[i].replaceAll(fullComma, ',')
+      diffObj.mod = gModifyRFtxt[i]
+      patchList.push(diffObj)
     }
 
     const _spCheckResult = spAroundEqCheck(_line, i, SYNTAX_SCRIPT)
-    console.log(_spCheckResult)
+    if (_spCheckResult.length > 0) {
+      const diffObj = {}
+      diffObj.ori = gModifyRFtxt[i]
+      gModifyRFtxt[i] = gModifyRFtxt[i].replaceAll(/ {1,3}=/g, '=').replaceAll(/= {1,3}/g, '=')
+      diffObj.mod = gModifyRFtxt[i]
+      patchList.push(diffObj)
+    }
     retList = retList.concat(_spCheckResult)
     // check if there are continuous spaces, the number of whihc is neither 1 nor 4
     const _pos = _line.search(/(\S {5,}\S|\S {2,3}\S)/)
@@ -125,27 +156,34 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
       const message = `${_pos}: 出现连续2或3个空格，或大于4个空格`
       retList.push(createCheckResult(SYNTAX_SCRIPT, message, 'warning', i))
     }
+
+    // collect result
     // ${result1_2}
-    const _matchResult = _line.match(/^ {4}\$\{result(\S+)\}/)
-    if (_matchResult) {
+    // const _matchResult = _line.match(/^ {4}\$\{result(\S+)\}/)
+    const resultPos = _line.search(/^ {4}\$\{result(\S+)\}/)
+    if (resultPos === 0) {
+      const output = collectResultSids(_line)
+
       // get result number
       // resultSidList.push(_matchResult[1])
-      resultSidList.push({ line: _line, row: i, result: _matchResult[1] })
+      for (const item of output) {
+        resultSidList.push({ line: _line, row: i, result: item })
+      }
       continue
     }
 
     if (_line.search(/^ {4}\$\{global_result\}/) === 0) {
       // global_result
-      let matches; const output = []
-      const regex = / {4}\$\{result(\S+)\}/g
-      while ((matches = regex.exec(_line))) {
-        output.push(matches[1])
-      }
-      logger.info('global_result:', output)
-      const _globResultInfo = { line: _line, sidList: output, row: i }
+      const { combineLine, lastRow } = combineLines(_rfTxtList, i)
+      const output = collectResultSids(combineLine)
+      logger.info(`global_result: ${output}`)
+      // const _globResultInfo = { line: _line, sidList: output, row: i }
+      const _globResultInfo = { line: _line, sidList: output, row: i, rowEnd: lastRow }
       const _resultCheckRetList = checkResultSidList(curStepNum, resultSidList, _globResultInfo)
       logger.debug(_resultCheckRetList)
       retList = retList.concat(_resultCheckRetList)
+
+      i = lastRow
     }
   }
 
@@ -157,9 +195,7 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
   let retList = []
   // case name
 
-  // console.log(_rfTxtList);
-  console.log(_rowStart)
-  console.log(_rfTxtList[_rowStart])
+  // console.log(_rfTxtList[_rowStart])
   if (_rfTxtList[_rowStart].search(/^[a-zA-Z_][-_a-zA-Z0-9.]* *$/) !== 0) {
     const message = '用例名应该单独一行，由大小写字母下划线开头，由大小写字母下划线，中划线，数字和小数点组成'
     retList.push(createCheckResult(SYNTAX_TESTCASE_SECTION, message, 'error', _rowStart))
@@ -190,6 +226,8 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
   const expList = []
   const stepList = []
   const rfTxtList = _rfTxt.split('\n')
+  patchList = []
+  gModifyRFtxt = [...rfTxtList]
 
   const sectionSettings = '*** Settings ***'
   const sectionTestCases = '*** Test Cases ***'
@@ -259,12 +297,12 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
       }
 
       const sectionCheckRes = checkSection(testCaseSectionList, _rfType, SYNTAX_STRUCTURE)
-      if (sectionCheckRes.length > 0) { resolve(sectionCheckRes) }
+      if (sectionCheckRes.length > 0) { resolve({ checkResultList: sectionCheckRes }) }
 
       // now begin to check
       logger.debug('check setting section')
       for (const sec of orderedSectionList) {
-        console.log(sec)
+        // console.log(sec)
         const sectionLine = stMap.get(sec).line
         const row = stMap.get(sec).row
         const matchSectionLineRegex = new RegExp(`^${sec.replace(/\*/g, '\\*')} *$`)
@@ -278,14 +316,14 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
       const rowSetting = stMap.get(sectionSettings).row
       if (rowSetting === undefined || rowSetting !== 0) {
         checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
-        resolve(checkResultList)
+        resolve({ checkResultList })
       }
 
       const nextSection = orderedSectionList[1]
       logger.debug(`next section: ${nextSection}`)
       if (!nextSection) {
         checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords'))
-        resolve(checkResultList)
+        resolve({ checkResultList })
       }
 
       const lineTestCase = stMap.get(sectionTestCases)
@@ -329,8 +367,8 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
       // console.log(keyWordsMap)
       // console.log(fwStepList)
 
-      console.log('endof checkRFSyntaxTool')
-      resolve(checkResultList)
+      console.log('endof checkRFSyntaxTool', checkResultList)
+      if (patchList.length > 0) { resolve({ checkResultList, modifyRFtxt: gModifyRFtxt, patchList }) } else { resolve({ checkResultList, modifyRFtxt: [], patchList }) }
     } catch (err) {
       reject(err)
     }

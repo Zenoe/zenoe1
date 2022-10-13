@@ -62,7 +62,6 @@ const convert2Rf = asyncHandler(async (req, res, next) => {
   //   uploadPath = PROJECT_DIR + 'upload/' + tmpfield
   // }
 
-  console.log(req.query)
   const { pkgName } = req.query
   try {
     await generateRf(uploadPath, pkgName)
@@ -84,9 +83,11 @@ const convert2Rf = asyncHandler(async (req, res, next) => {
 const checkRFSyntax = asyncHandler(async (req, res, next) => {
   const { rfTxt, rfType } = req.body
   try {
-    const _result = await checkRFSyntaxTool(rfTxt, rfType)
+    const { checkResultList, modifyRFtxt, patchList } = await checkRFSyntaxTool(rfTxt, rfType)
     res.json({
-      result: _result,
+      result: checkResultList,
+      modifyRFtxt: modifyRFtxt || [],
+      patchList: patchList || [],
       status: 1
     })
   } catch (err) {

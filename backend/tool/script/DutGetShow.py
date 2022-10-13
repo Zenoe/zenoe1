@@ -52615,6 +52615,12 @@ Vl10                      3.3.3.3         1           down
                 dict_value[title+"/"+"ESI"] = obj3.group(1).strip()
                 dict_value[title + "/" + "GW IP"] = obj3.group(2).strip()
                 dict_value[title+"/"+"label"] = obj3.group(3).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[title +"/"+"Last update"] = obj3.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip())
+                    dict_value[title + "/" + "Last update_time"] = obj.group(1).strip()
             elif "Total number of prefixes" in value:
                 obj4 = re.match("Total number of prefixes(.*)",value.strip())
                 dict_value["Total number of prefixes"] = obj4.group(1).strip()
@@ -56868,6 +56874,12 @@ Interface HundredGigabitEthernet 10/32:
                 obj_4 = re.match("Originator: (.*), Cluster list: (.*)", value.strip())
                 dict_value[key_1 + "/" + key_2 + "/Originator"] = obj_4.group(1).strip()
                 dict_value[key_1 + "/" + key_2 + "/Cluster list"] = obj_4.group(2).strip()
+            elif re.match("Last update: (.*)",value.strip()):
+                obj3 = re.match("Last update: (.*)",value.strip())
+                dict_value[key_1 + "/" + key_2+"/"+"Last update"] = obj3.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+",value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/" + "Last update_time"] = obj.group(1).strip()
             elif re.match("RX ID: (.*), TX ID: (.*)", value.strip()):
                 obj_4 = re.match("RX ID: (.*), TX ID: (.*)", value.strip())
                 dict_value[key_1 + "/" + key_2 + "/RX ID"] = obj_4.group(1).strip()
@@ -57118,6 +57130,9 @@ Interface HundredGigabitEthernet 10/32:
             elif re.match("Last update: (.*)",value.strip()):
                 obj = re.match("Last update: (.*)",value.strip())
                 dict_value[title + "/" + "Last update"] = obj.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+", value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+", value.strip())
+                    dict_value[title+ "/" + "Last update_time"] = obj.group(1).strip()
             elif "Total number of prefixes" in value:
                 obj4 = re.match("Total number of prefixes(.*)",value.strip())
                 dict_value["Total number of prefixes"] = obj4.group(1).strip()
@@ -57203,6 +57218,9 @@ Interface HundredGigabitEthernet 10/32:
             elif re.match("Last update: (.*)",value.strip()):
                 obj = re.match("Last update: (.*)",value.strip())
                 dict_value[key_1 + "/" + key_2  + "Last update"] = obj.group(1).strip()
+                if re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+", value.strip()):
+                    obj = re.match("Last update:\s*\S+\s+\S+\s+(\d+\s+\d+:\d+:\d+)\s+\d+", value.strip())
+                    dict_value[key_1 + "/" + key_2 + "/" + "Last update_time"] = obj.group(1).strip()
             elif "Total number of prefixes" in value:
                 obj4 = re.match("Total number of prefixes(.*)", value.strip())
                 dict_value[key_1 + "/" + key_2  +"/Total number of prefixes"] = obj4.group(1).strip()

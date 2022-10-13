@@ -11,14 +11,13 @@ const isDescText = (_line) => {
 }
 
 const spAroundEqCheck = (line, row, type) => {
-  console.log('spAroundEqCheck', row)
   const retList = []
   // 等号前后不允许空格
-  if (line.search(/ {1,3}=/) >= 0) {
+  if (line.search(/\S {1,3}=/) >= 0) {
     const message = '等号前有空格'
     retList.push(createCheckResult(type, message, 'error', row))
   }
-  if (line.search(/= {1,3}/) >= 0) {
+  if (line.search(/= {1,3}\S/) >= 0) {
     const message = '等号后有空格'
     retList.push(createCheckResult(type, message, 'error', row))
   }
@@ -44,8 +43,44 @@ const findNextSec = (sec, secList) => {
   }
 }
 
+const isNextLineCurLine = (nextLine) => {
+  if (!nextLine) return false
+  if (nextLine.search(/^ {4}\.\.\./) === 0) {
+    return true
+  }
+  return false
+}
+
+const combineLines = (rfTxtList, rowStart) => {
+  let i = rowStart
+  let retLine = rfTxtList[rowStart]
+  while (isNextLineCurLine(rfTxtList[i + 1])) {
+    retLine = `${retLine}${rfTxtList[i + 1].replace(/^ {4}\.\.\./, '')}`
+    i += 1
+  }
+  return { combineLine: retLine, lastRow: i }
+}
+
+const findRowOfGlobalResult = (gModifyRFtxt, row, rowEnd, containedSid) => {
+  for (let i = row; i <= rowEnd; i += 1) {
+    if (gModifyRFtxt[i].includes(containedSid)) {
+      return i
+    }
+  }
+  return -1
+}
+
+const collectResultSids = (_line) => {
+  const retList = []
+  const regex = / {4}\$\{result(\S+)\}/g
+  let matches
+  while ((matches = regex.exec(_line))) {
+    retList.push(matches[1])
+  }
+
+  return retList
+}
 const checkSection = (subsecList, rfType, errorType) => {
-  console.log('00000000000', subsecList)
   const retList = []
   if (rfType === 'testcase') {
     // must have
@@ -66,5 +101,9 @@ module.exports = {
   isDescText,
   searchSection,
   checkSection,
+  isNextLineCurLine,
+  combineLines,
+  findRowOfGlobalResult,
+  collectResultSids,
   findNextSec
 }

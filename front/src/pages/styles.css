@@ -27,3 +27,15 @@ ul {
   cursor: auto;
   list-style: disc;
 }
+
+.SuccessText{
+  color:green;
+  cursor: auto;
+  list-style: disc;
+}
+
+.errListContainer{
+  overflow-y: auto;
+  max-height:20vh;
+  margin-bottom: 8px;
+}
