@@ -86,6 +86,10 @@ const DCParamConverter = () => {
     // setData4Combox(_result.split(','))
   }
 
+  const preProcessCli = (_cli) => {
+    return _cli.replace('-', '').replace(/hundredGigabitEthernet +\d\/\d/, 'dutport')
+  }
+
   const convertParam = () => {
     setInformMsg('')
     setGuessRFStr('')
@@ -95,14 +99,13 @@ const DCParamConverter = () => {
       setInformMsg('请输入 cli 命令')
       return
     }
-    if (showInfo.length === 0) {
+    if (showInfo && showInfo.length === 0) {
       setInformMsg('请输入回显信息')
       return
     }
     setLoading(true)
-    requestGet('api/utils/convertparam', { cli: curCli, showInfo })
+    requestGet('api/utils/convertparam', { cli: preProcessCli(curCli), showInfo })
       .then(res => {
-        // console.log('convert ok');
         const { result } = res.data
         processConvertParamResult(result)
         setLoading(false)
@@ -110,6 +113,8 @@ const DCParamConverter = () => {
       })
       .catch(res => {
         console.log('convert error', res)
+        setData4Combox([])
+        setData4Tbl([])
         setLoading(false)
         setInformMsg('error')
       })
@@ -124,8 +129,8 @@ const DCParamConverter = () => {
         <Autocomplete
     /* disablePortal */
           autoHighlight
-          /* freeSolo */
-          autoSelect
+          freeSolo
+          /* autoSelect */
           id="combo-box-demo"
           options={allCliList}
           sx={{ width: 400 }}
