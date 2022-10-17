@@ -29,6 +29,10 @@ yarn-error.log*
 *.xls
 *.xlsx
 
+*.pyc
+
 *.bk
 local-data
 backend/upload
+
+DutGetShow.py

@@ -3,6 +3,7 @@ import { Button, Box, Divider, Stack, Autocomplete, TextField, Checkbox, Textare
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
+import { ipRegex } from '@/constants/commonvar'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
 import { json2ObjList } from '@/utils/projutils'
 import { LoadingButton } from '@mui/lab'
@@ -87,7 +88,7 @@ const DCParamConverter = () => {
   }
 
   const preProcessCli = (_cli) => {
-    return _cli.replace('-', '').replace(/hundredGigabitEthernet +\d\/\d/, 'dutport')
+    return _cli.replace('-', '').replace(/hundredGigabitEthernet +\d\/\d/, 'dutport').replace(ipRegex, ' ip ').trim()
   }
 
   const convertParam = () => {
@@ -156,7 +157,7 @@ const DCParamConverter = () => {
         <Box
           sx={{ color: 'blue' }}
         >
-          [-]:遇到要输入不同word的情况时,不需要输入特定word, 例如：show ip route vrf (VPNXXX),只要输入 show ip route vrf word <br/>
+          [-]:遇到要输入word或num时,直接输入word或num, 如：show ip route vrf word , show isis topology flex-algo num <br/>
           [-]:匹配到命令时，直接按回车就可
         </Box>
 
@@ -164,6 +165,7 @@ const DCParamConverter = () => {
       <Box id="inputShowResultId" sx={{ fontSize: 14, mt: 2 }}>
         <TextareaAutosize
           minRows={10}
+          maxRows={30}
           aria-label="maximum height"
           placeholder="输入cli 返回结果"
           value={showInfo}
@@ -173,7 +175,7 @@ const DCParamConverter = () => {
         />
       </Box>
 
-      <Box sx={{ m: 1 }}>返回参数形式</Box>
+      <Box sx={{ m: 1 }}>返回参数</Box>
       <Stack direction="row" spacing={2}>
       <BasicTable
         headCells={headCells}
@@ -205,7 +207,7 @@ const DCParamConverter = () => {
             id="combo-box-demo"
             options={data4Combox}
             sx={{ width: 700 }}
-            renderInput={(params) => <TextField {...params} label="结果搜索" />}
+            renderInput={(params) => <TextField {...params} label="参数搜索" />}
             getOptionLabel={(option) => option.title}
             renderOption={(props, option, { selected }) => (
               <li {...props}>
@@ -227,9 +229,7 @@ const DCParamConverter = () => {
             onFocus={selOnFocus}
           />
 
-        </Box>
-      </Stack>
-      <Box>原始输出:</Box>
+          <Box sx={{ m: 1 }}>原始输出:</Box>
       <TextField
         multiline
         minRows={10}
@@ -240,6 +240,8 @@ const DCParamConverter = () => {
         }}
         style={{ width: 700 }}
       />
+        </Box>
+      </Stack>
     </Box>
   )
 }

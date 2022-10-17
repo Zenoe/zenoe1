@@ -15,7 +15,7 @@ let gModifyRFtxt = []
 let patchList = []
 
 const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
-  console.log('begin to check ResultSidList')
+  logger.info('begin to check ResultSidList')
   const retList = []
   const _globSidList = _globSidInfo.sidList
   if (_sidList.length !== _globSidList.length) {
@@ -62,7 +62,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
 
       const _row = findRowOfGlobalResult(gModifyRFtxt, _globSidInfo.row, _globSidInfo.rowEnd, _globSidList[idx])
       if (_row < 0) {
-        throw new Error('could not find row of global_result')
+        throw new Error(`could not find row of global_result: ${idx} ,${_globSidList[idx]}`)
       }
       const diffObj = {}
       diffObj.ori = gModifyRFtxt[_row]
@@ -98,7 +98,7 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     if (_line.search(/^ {4}\S+.*/) !== 0) {
       const message = '每行脚本开始应该空出4个空格'
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'warning', i))
-      console.log('4 space needed:', _line, i)
+      logger.debug(`4 space needed: ${_line}, ${i}`)
     }
 
     if (isDescText(_line)) {
@@ -203,7 +203,6 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
     console.log('>>test case name checked ok')
   }
 
-  console.log('stepList:', _stepList)
   for (let i = 0; i < _stepList.length; i++) {
     const rowStepStart = _stepList[i].row
     let rowStepEnd = _rowEnd
