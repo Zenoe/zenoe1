@@ -88,7 +88,7 @@ const DCParamConverter = () => {
   }
 
   const preProcessCli = (_cli) => {
-    return _cli.replace('-', '').replace(/hundredGigabitEthernet +\d\/\d/, 'dutport').replace(ipRegex, ' ip ').trim()
+    return _cli.replaceAll('-', '').replace(/hundredGigabitEthernet +\d\/\d/, 'dutport').replace(ipRegex, ' ip ').trim()
   }
 
   const convertParam = () => {

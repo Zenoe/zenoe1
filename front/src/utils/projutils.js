@@ -17,8 +17,8 @@ const json2ObjList = (jsonObj) => {
       }
       // console.log(`Property ${key} is NOT from prototype chain`);
       // const trimKey = key.trim()
-      _retList4Combox.push({ title: `"${key}":${value}` })
-      _retList4Tbl.push({ key: `"${key}"`, value })
+      _retList4Combox.push({ title: `"${key}":"${value}"` })
+      _retList4Tbl.push({ key: `"${key}"`, value: `"${value}"` })
     }
   }
   return [_retList4Combox, _retList4Tbl]
