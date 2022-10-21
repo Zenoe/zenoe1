@@ -91,7 +91,7 @@ const checkSection = (subsecList, rfType, errorType) => {
         retList.push(createCheckResult(errorType, message, 'error'))
       }
     })
-  }
+  } // else if (rfType === 'keyword') {}
 
   return retList
 }

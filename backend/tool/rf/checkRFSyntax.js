@@ -219,6 +219,7 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
   let checkResultList = []
   const stMap = new Map()
   const keyWordsMap = new Map()
+  // contains sectionList (***abc***)
   const orderedSectionList = []
   const testCaseSectionList = []
   const fwStepList = []

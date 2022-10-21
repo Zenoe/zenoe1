@@ -1,3 +1,6 @@
+* [1,2,3...] => num
+show evpn mac routingtable evi num
+* (xxx) => word
 * test framework
 
 * formik-mui
