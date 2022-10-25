@@ -11,6 +11,7 @@ const DashboardDefault = Loadable(lazy(() => import('@/pages/Dashboard')));
 const TestCase2RF = Loadable(lazy(() => import('@/pages/testcase2rf')));
 const DeviceParamConverter = Loadable(lazy(() => import('@/pages/deviceparamconverter')));
 const RFSyntaxCheck = Loadable(lazy(() => import('@/pages/rfsyntaxcheck')));
+const RFKeyGen = Loadable(lazy(() => import('@/pages/rfkeygen')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -43,6 +44,10 @@ const MainRoutes = {
     {
       path: 'rfsyntaxcheck',
       element: <RFSyntaxCheck />
+    },
+    {
+      path: 'rfkeygen',
+      element: <RFKeyGen />
     }
   ]
 };

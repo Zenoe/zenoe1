@@ -9,6 +9,7 @@ import {
   SnippetsOutlined,
   ToolOutlined,
   CheckOutlined,
+  RightSquareOutlined,
 } from '@ant-design/icons';
 
 // icons
@@ -22,7 +23,6 @@ const icons = {
   SnippetsOutlined,
   ToolOutlined,
 };
-<SnippetsOutlined />
 // ==============================|| MENU ITEMS - UTILITIES ||============================== //
 
 const utilities = {
@@ -52,6 +52,13 @@ const utilities = {
       url: '/rfsyntaxcheck',
       icon: icons.CheckOutlined
     },
+    {
+      id: 'util-keygen',
+      title: 'RF-Key 生成',
+      type: 'item',
+      url: '/rfkeygen',
+      icon: RightSquareOutlined
+    }
     // {
     //     id: 'util-shadow',
     //     title: 'Shadow',
