@@ -1,4 +1,6 @@
-const RFKeyGen = ()=>{
+import { request } from '@/utils/request'
+
+const RFKeyGen = () => {
   return (
   <div>
 

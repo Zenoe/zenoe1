@@ -62,7 +62,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
 
       const _row = findRowOfGlobalResult(gModifyRFtxt, _globSidInfo.row, _globSidInfo.rowEnd, _globSidList[idx])
       if (_row < 0) {
-        throw new Error(`could not find row of global_result: ${idx} ,${_globSidList[idx]}`)
+        throw new Error(`could not find row of global_result: ${idx} ,${_globSidList[idx]}, ${gModifyRFtxt}`)
       }
       const diffObj = {}
       diffObj.ori = gModifyRFtxt[_row]

@@ -773,6 +773,7 @@ const allCliList=[
 'show ipv6 ospf database erouter advrouter ip',
 'show ipv6 ospf database intraprefix advrouter ip',
 'show mac bridgedomain num',
+'show rlog',
 'show wlan hotbackup ip',
 'show processes cpu',
 'show install detail',

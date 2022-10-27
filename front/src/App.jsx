@@ -1,9 +1,9 @@
 // project import
-import Routes from './routes';;
-import ThemeCustomization from './themes';
-import ScrollTop from '@/components/ScrollTop';
+import Routes from './routes'
+import ThemeCustomization from './themes'
+import ScrollTop from '@/components/ScrollTop'
 
-import { IntlProvider } from 'react-intl';
+import { IntlProvider } from 'react-intl'
 // ==============================|| APP - THEME, ROUTER, LOCAL  ||============================== //
 
 const App = () => (
@@ -14,6 +14,6 @@ const App = () => (
         </ScrollTop>
       </IntlProvider>
     </ThemeCustomization>
-);
+)
 
-export default App;
+export default App

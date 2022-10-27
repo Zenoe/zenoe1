@@ -4,7 +4,7 @@ module.exports = {
     'plugin:react/recommended'
   ],
   parserOptions: {
-    ecmaVersion: 6,
+    ecmaVersion: 9, // support spread op
     sourceType: 'module',
     ecmaFeatures: {
       jsx: true
