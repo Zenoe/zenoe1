@@ -61,13 +61,31 @@ const combineLines = (rfTxtList, rowStart) => {
   return { combineLine: retLine, lastRow: i }
 }
 
-const findRowOfGlobalResult = (gModifyRFtxt, row, rowEnd, containedSid) => {
-  for (let i = row; i <= rowEnd; i += 1) {
-    if (gModifyRFtxt[i].includes(containedSid)) {
-      return i
+const findRowOfGlobalResult = (gModifyRFtxt, row, rowEnd, containedSid, fromStr) => {
+  let startPos = 0
+  let i = row
+  if (fromStr !== '') {
+    for (; i <= rowEnd; i += 1) {
+      const pos = gModifyRFtxt[i].search(fromStr)
+      if (pos >= 0) {
+        startPos = pos + fromStr.length
+        break
+      }
     }
   }
-  return -1
+
+  let j = i
+  if (i > rowEnd) {
+    j = row
+  }
+  for (; j <= rowEnd; j += 1) {
+    const col = gModifyRFtxt[j].substring(startPos).search(containedSid)
+    if (col >= 0) {
+      return [j, col + startPos]
+    }
+    startPos = 0
+  }
+  return null
 }
 
 const collectResultSids = (_line) => {

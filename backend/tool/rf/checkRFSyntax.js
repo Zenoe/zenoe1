@@ -18,6 +18,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   logger.info('begin to check ResultSidList')
   const retList = []
   const _globSidList = _globSidInfo.sidList
+  const _correctGlobSidList = [..._globSidList]
   if (_sidList.length !== _globSidList.length) {
     const message = `step: ${_stepNum} global_result 的 result 数量不一致`
     retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error'))
@@ -60,15 +61,19 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       const message = `result 编号${sidInfo.result}和 global_result: ${_globSidList[idx]} 没有顺序对应`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', _globSidInfo.row))
 
-      const _row = findRowOfGlobalResult(gModifyRFtxt, _globSidInfo.row, _globSidInfo.rowEnd, _globSidList[idx])
-      if (_row < 0) {
+      const _fromStr = idx > 0 ? _correctGlobSidList[idx - 1] : ''
+
+      const matchedPos = findRowOfGlobalResult(gModifyRFtxt, _globSidInfo.row, _globSidInfo.rowEnd, _globSidList[idx], _fromStr)
+      if (matchedPos === null) {
         throw new Error(`could not find row of global_result: ${idx} ,${_globSidList[idx]}, ${gModifyRFtxt}`)
       }
+      const [row, col] = matchedPos
       const diffObj = {}
-      diffObj.ori = gModifyRFtxt[_row]
+      diffObj.ori = gModifyRFtxt[row]
       // logger.debug(gModifyRFtxt[_globSidInfo.row])
-      gModifyRFtxt[_row] = gModifyRFtxt[_row].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
-      diffObj.mod = gModifyRFtxt[_row]
+      gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+      _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+      diffObj.mod = gModifyRFtxt[row]
       patchList.push(diffObj)
 
       logger.debug(gModifyRFtxt[_globSidInfo.row])
