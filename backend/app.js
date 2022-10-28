@@ -15,7 +15,6 @@ const utilRoutes = require('./routes/utilRoutes')
 
 const cors = require('cors')
 const { errorHandler, asyncErrorHandler } = require('middleware/errorHandler')
-const { log } = require('util')
 
 const app = express()
 

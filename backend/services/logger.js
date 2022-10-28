@@ -1,10 +1,10 @@
 const { appConfig } = require('config')
 
 const pino = require('pino')
-const streams = [
-  { stream: process.stdout },
-  { stream: pino.destination(`${__dirname}/logger.log`) }
-]
+// const streams = [
+//   { stream: process.stdout },
+//   { stream: pino.destination(`${__dirname}/logger.log`) }
+// ]
 
 const levels = {
   emerg: 80,

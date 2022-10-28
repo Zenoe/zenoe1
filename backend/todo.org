@@ -2,3 +2,12 @@
 Helmet
 when nginx service failed
 websocket
+
+0|app      | Error: Invalid URL
+0|app      | Error: Invalid URL
+0|app      | (node:27078) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 data listeners added to [Socket]. Use emitter.setMaxListeners() to increase limit
+0|app      | (Use `node --trace-warnings ...` to show where the warning was created)
+0|app      | (node:32498) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 data listeners added to [Socket]. Use emitter.setMaxListeners() to increase limit
+0|app      | (Use `node --trace-warnings ...` to show where the warning was created)
+0|app      | (node:3661) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 data listeners added to [Socket]. Use emitter.setMaxListeners() to increase limit
+0|app      | (Use `node --trace-warnings ...` to show where the warning was created)

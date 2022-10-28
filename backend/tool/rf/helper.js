@@ -72,7 +72,7 @@ const findRowOfGlobalResult = (gModifyRFtxt, row, rowEnd, containedSid) => {
 
 const collectResultSids = (_line) => {
   const retList = []
-  const regex = / {4}\$\{result(\S+)\}/g
+  const regex = / {2,}\$\{result(\S+)\}/g
   let matches
   while ((matches = regex.exec(_line))) {
     retList.push(matches[1])
