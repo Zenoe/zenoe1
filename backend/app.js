@@ -15,10 +15,17 @@ const utilRoutes = require('./routes/utilRoutes')
 
 const cors = require('cors')
 const { errorHandler, asyncErrorHandler } = require('middleware/errorHandler')
+const { requestMethods } = require('middleware/requestMethods')
+const { optional } = require('joi')
 
 const app = express()
+// app.use(requestMethods)
+
+const cookieParser = require('cookie-parser')
+app.use(cookieParser())
 
 logger.info('start app server')
+// need cookieParser middleware before we can do anything with cookies
 
 const accessLogStream = rfs.createStream(`${appConfig.logdir}/access.log`, {
   interval: '1d', // rotate daily

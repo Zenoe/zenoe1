@@ -63,26 +63,17 @@ const DCParamConverter = () => {
     const _result = result.replace(/\n$/, '').replace(/'/g, '"')
     setRawResult(_result)
     // console.log(_result);
-    try {
-      const jsonList = _result.split('\n')
-      // const jsonResult = JSON.parse(jsonList[2])
-      // setData4Combox(json2list(jsonResult))
-      // return
-      // console.log(jsonList);
-      for (const _jsonStr of jsonList) {
+    const jsonList = _result.split('\n')
+    for (const _jsonStr of jsonList) {
+      try {
         const jsonResult = JSON.parse(_jsonStr)
         // console.log(jsonResult);
-        if (Array.isArray(jsonResult)) {
-          // console.log('is array', list2ObjList(jsonResult));
-          // allKVList.push(...list2ObjList(jsonResult))
-        } else {
-          const [retList4Combox, retList4Tbl] = json2ObjList(jsonResult)
-          setData4Combox(retList4Combox)
-          setData4Tbl(retList4Tbl)
-        }
+        const [retList4Combox, retList4Tbl] = json2ObjList(jsonResult)
+        setData4Combox(retList4Combox)
+        setData4Tbl(retList4Tbl)
+      } catch (err) {
+        console.log(_jsonStr, 'not a json str')
       }
-    } catch (e) {
-      console.error('parse json failed', e)
     }
     // setData4Combox(_result.split(','))
   }

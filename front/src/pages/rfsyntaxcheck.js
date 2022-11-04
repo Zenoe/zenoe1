@@ -53,6 +53,7 @@ const RFSyntaxCheck = () => {
       rfType = 'keyword'
     } else {
       setErrorMsg('脚本既不包含*** Test Cases ***，也不包含*** Keywords ***')
+      return
     }
     request('api/utils/checkrfsyntax', { rfTxt, rfType })
       .then(res => {
