@@ -256,6 +256,7 @@ const allCliList=[
 'show vxlan routeactive ipv6',
 'show vxlan routeactive ipv6 vni num',
 'show bgp l2vpn evpn all macip',
+'show bgp l2vpn evpn all maci',
 'show ipv6 route',
 'show ipv6 neighbors detail overlayrouter num',
 'show vxlan routebgp ipv6 vni num',

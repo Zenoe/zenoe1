@@ -1,52 +1,53 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
-import { alpha } from '@mui/material/styles';
-import {IconButton, Box, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Toolbar, Typography, Paper} from '@mui/material';
-import Checkbox from '@mui/material/Checkbox';
-import Tooltip from '@mui/material/Tooltip';
-import { visuallyHidden } from '@mui/utils';
+import * as React from 'react'
+import PropTypes from 'prop-types'
+import { alpha } from '@mui/material/styles'
+import { IconButton, Box, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TableSortLabel, Toolbar, Typography, Paper } from '@mui/material'
+import Checkbox from '@mui/material/Checkbox'
+import Tooltip from '@mui/material/Tooltip'
+import { visuallyHidden } from '@mui/utils'
 
-function descendingComparator(a, b, orderBy) {
+function descendingComparator (a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
-    return -1;
+    return -1
   }
   if (b[orderBy] > a[orderBy]) {
-    return 1;
+    return 1
   }
-  return 0;
+  return 0
 }
 
-function getComparator(order, orderBy) {
+function getComparator (order, orderBy) {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
+    : (a, b) => -descendingComparator(a, b, orderBy)
 }
 
 // This method is created for cross-browser compatibility, if you don't
 // need to support IE11, you can use Array.prototype.sort() directly
-function stableSort(array, comparator) {
-  const stabilizedThis = array.map((el, index) => [el, index]);
+function stableSort (array, comparator) {
+  const stabilizedThis = array.map((el, index) => [el, index])
   stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
+    const order = comparator(a[0], b[0])
     if (order !== 0) {
-      return order;
+      return order
     }
-    return a[1] - b[1];
-  });
-  return stabilizedThis.map((el) => el[0]);
+    return a[1] - b[1]
+  })
+  return stabilizedThis.map((el) => el[0])
 }
 
-function EnhancedTableHead(props) {
+function EnhancedTableHead (props) {
   const { headCells, order, orderBy, rowCount, onRequestSort } =
-    props;
+    props
   const createSortHandler = (property) => (event) => {
-    onRequestSort(event, property);
-  };
+    onRequestSort(event, property)
+  }
 
   return (
     <TableHead>
       <TableRow>
-        {headCells ? headCells.map((headCell) => (
+        {headCells
+          ? headCells.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? 'right' : 'left'}
@@ -59,42 +60,45 @@ function EnhancedTableHead(props) {
               onClick={createSortHandler(headCell.id)}
             >
               {headCell.label}
-              {orderBy === headCell.id ? (
+              {orderBy === headCell.id
+                ? (
                 <Box component="span" sx={visuallyHidden}>
                   {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                 </Box>
-              ) : null}
+                  )
+                : null}
             </TableSortLabel>
           </TableCell>
-        )) : null}
+          ))
+          : null}
       </TableRow>
     </TableHead>
-  );
+  )
 }
 
 EnhancedTableHead.propTypes = {
   onRequestSort: PropTypes.func.isRequired,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
   orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
-};
+  rowCount: PropTypes.number.isRequired
+}
 
-export default function BasicTable({ headCells, rows, ...rest }) {
-  const [order, setOrder] = React.useState('asc');
-  const [orderBy, setOrderBy] = React.useState('key');
-  const [selected, setSelected] = React.useState([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(20);
+export default function BasicTable ({ headCells, rows, ...rest }) {
+  const [order, setOrder] = React.useState('asc')
+  const [orderBy, setOrderBy] = React.useState('key')
+  const [selected, setSelected] = React.useState([])
+  const [page, setPage] = React.useState(0)
+  const [rowsPerPage, setRowsPerPage] = React.useState(20)
 
   const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
-    setOrder(isAsc ? 'desc' : 'asc');
-    setOrderBy(property);
-  };
+    const isAsc = orderBy === property && order === 'asc'
+    setOrder(isAsc ? 'desc' : 'asc')
+    setOrderBy(property)
+  }
 
   const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
-    let newSelected = [];
+    const selectedIndex = selected.indexOf(name)
+    let newSelected = []
 
     if (selectedIndex === -1) {
       // newSelected = newSelected.concat(selected, name);
@@ -109,27 +113,27 @@ export default function BasicTable({ headCells, rows, ...rest }) {
       // remove in-rows selection
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
+        selected.slice(selectedIndex + 1)
+      )
     }
 
-    setSelected(newSelected);
-  };
+    setSelected(newSelected)
+  }
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    setPage(newPage)
+  }
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    setRowsPerPage(parseInt(event.target.value, 10))
+    setPage(0)
+  }
 
-  const isSelected = (name) => selected.indexOf(name) !== -1;
+  const isSelected = (name) => selected.indexOf(name) !== -1
 
   // Avoid a layout jump when reaching the last page with empty rows.
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
+    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0
 
   return (
     <Box sx={{ width: 700 }}>
@@ -154,8 +158,8 @@ export default function BasicTable({ headCells, rows, ...rest }) {
               {stableSort(rows, getComparator(order, orderBy))
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
-                  const isItemSelected = isSelected(row.key);
-                  const labelId = `enhanced-table-checkbox-${index}`;
+                  const isItemSelected = isSelected(row.key)
+                  const labelId = `enhanced-table-checkbox-${index}`
 
                   return (
                     <TableRow
@@ -177,13 +181,13 @@ export default function BasicTable({ headCells, rows, ...rest }) {
                       </TableCell>
                       <TableCell align="left">{row.value}</TableCell>
                     </TableRow>
-                  );
+                  )
                 })}
               {emptyRows > 0 && (
                 <TableRow
                   style={{
                     /* height: (dense ? 33 : 53) * emptyRows, */
-                    height: (28) * emptyRows,
+                    height: (28) * emptyRows
                   }}
                 >
                   <TableCell colSpan={6} />
@@ -203,6 +207,5 @@ export default function BasicTable({ headCells, rows, ...rest }) {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
     </Box>
-  );
+  )
 }
-

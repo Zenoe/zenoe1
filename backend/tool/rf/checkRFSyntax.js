@@ -72,7 +72,11 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       diffObj.ori = gModifyRFtxt[row]
       // logger.debug(gModifyRFtxt[_globSidInfo.row])
       gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
-      _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+      try {
+        _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+      } catch (e) {
+        throw new Error(`${e}, ${gModifyRFtxt}`)
+      }
       diffObj.mod = gModifyRFtxt[row]
       patchList.push(diffObj)
 
