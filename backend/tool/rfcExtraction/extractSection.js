@@ -4,7 +4,7 @@ const sectionTitleRegex = /^(\d+\.)+/
 const metaData = {
   sectionTitleRegex,
   skipRegex: /^(\d+\.)+ +(?:Terminology|Conventions|Limitations)/,
-  tailText: /(?:Contributors|Acknowledgements)/
+  tailText: /(?:Contributors|Acknowledgements|Acknowledgments)/
 }
 
 // const getSentense = (_lstLine, _curLineNo, _keyword) => {
@@ -24,8 +24,21 @@ const metaData = {
 //   }
 // }
 const isTextLine = (_lineText) => {
-  // must have two words seperated by one space
-  return _lineText.match(/\w+ \w+/)
+  if (_lineText.match(/^[^a-zA-Z]*$/)) return false
+  if (_lineText.match(/^ {4,}/)) return false
+  // more than 1 place where there are more than 1 continous spaces in betwen non-space
+  // matchAll returns an iterator, need to be spread to get the length
+  // (?=\S) : look ahread
+  if ([..._lineText.matchAll(/\S {2,}(?=\S)/g)].length > 1) return false
+  // more than 1 spaces among words, but not after a period
+  if (_lineText.match(/[^.\s] {2,}\S/)) return false
+
+  if (_lineText.match(/\w+ \w+/)) return true
+  if (_lineText.match(/\S+[,.:;]/)) return true
+
+  // warning
+  console.error('>>>>>>>>>>>>>>>>>>>>>>unknown pattern line:', _lineText)
+  return true
 }
 
 const isEmptyLine = (_lineText) => {
@@ -63,6 +76,19 @@ async function extractSection (_text) {
         if (isEmptyLine(lineText)) {
           if (paragraphBegin) {
             if (lineObjList.length > 0) {
+              const lstParagraph = lineObjList[lineObjList.length - 1].content
+              if (lstParagraph.length > 0) {
+                const lastParagraph = lstParagraph[lstParagraph.length - 1]
+                if (lastParagraph) {
+                  // check last character of last paragraph
+                  if (lastParagraph[lastParagraph.length - 1] !== '.') {
+                    // not peroid indicates the next tobe-added paragraph is part of last one
+                    lstParagraph[lstParagraph.length - 1] += ` ${paragraph}`
+                    paragraphBegin = false
+                    continue
+                  }
+                }
+              }
               lineObjList[lineObjList.length - 1].content.push(paragraph)
               paragraph = ''
             }
@@ -101,7 +127,6 @@ async function extractSection (_text) {
               content: []
             })
 
-            curSection = sectionNo
             if (lineObjList.length > 1) {
               lineObjList[lineObjList.length - 2].sectionEndLineNo = lineNo - 1
             }
@@ -117,7 +142,7 @@ async function extractSection (_text) {
           }
           if (isTextLine(lineText)) {
             paragraphBegin = true
-            paragraph += lineText.trim()
+            paragraph += ` ${lineText.trim()}`
           }
           // } else {
           //   paragraphBegin = false
