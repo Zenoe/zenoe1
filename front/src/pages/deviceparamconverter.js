@@ -178,7 +178,7 @@ const DCParamConverter = () => {
         headCells={headCells}
         /* rows={ [{key:'1',value:'vvv'}, {key:'1',value:'333'}] } */
         rows={data4Tbl}
-        style={{ width: 700 }}
+        style={{ width: 700, whiteSpace: 'pre' }}
       />
     {/*     <Box id="inputShowResultId" sx={{fontSize: 14}}> */}
     {/*       <TextField */}

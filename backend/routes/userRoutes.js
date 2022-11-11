@@ -3,14 +3,14 @@ const setCookie = require('../middleware/setCookie')
 const {
   userLogin,
   registerUser,
-  registerUserSchema
+  registerSchemaMware
 } = require('components/users/controller.js')
 
 const { protect } = require('../middleware/authMiddleware.js')
 // const { default: setCookie } = require('../middleware/setCookie.js')
 
 const router = express.Router()
-router.route('/').post(registerUserSchema, registerUser)
+router.route('/').post(registerSchemaMware, registerUser)
 // set a cookie
 router.use('/login', setCookie)
 router.post('/login', userLogin)

@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Joi = require('joi')
 const User = require('./model.js')
 const generateToken = require('utils/generateToken.js')
-const validateRequest = require('middleware/validate-request')
+const validateSchema = require('middleware/validate-request')
 
 const { ApplicationError } = require('error/appErrors')
 // @description     Auth the user
@@ -28,14 +28,14 @@ const userLogin = asyncHandler(async (req, res) => {
   }
 })
 
-const registerUserSchema = (req, res, next) => {
+const registerSchemaMware = (req, res, next) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(2).required()
     // confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
   })
-  validateRequest(req, next, schema)
+  validateSchema(req, next, schema)
 }
 
 // @description     Register new user
@@ -103,4 +103,4 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 })
 
-module.exports = { userLogin, updateUserProfile, registerUser, registerUserSchema }
+module.exports = { userLogin, updateUserProfile, registerUser, registerSchemaMware }
