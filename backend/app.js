@@ -8,22 +8,16 @@ const { appConfig } = require('./config')
 
 const { logger } = require('./init')
 // const people = require('./routes/people')
-const auth = require('./routes/auth')
-const userRoutes = require('./routes/userRoutes')
-const vizRoute = require('./routes/vizRoute')
-const utilRoutes = require('./routes/utilRoutes')
 
 const cors = require('cors')
 const { errorHandler, asyncErrorHandler } = require('middleware/errorHandler')
-const { requestMethods } = require('middleware/requestMethods')
-const { optional } = require('joi')
+const checkReqMethod = require('middleware/checkReqMethod')
 
 const app = express()
-// app.use(requestMethods)
+app.use(checkReqMethod)
 
 const cookieParser = require('cookie-parser')
 app.use(cookieParser())
-
 logger.info('start app server')
 // need cookieParser middleware before we can do anything with cookies
 
@@ -57,10 +51,7 @@ app.use(cors({
   origin: appConfig.cors
 }))
 
-// routes
-app.use('/api/users', userRoutes)
-app.use('/api/viz', vizRoute)
-app.use('/api/utils', utilRoutes)
+require('./startup/routes')(app)
 
 app.use(errorHandler)
 

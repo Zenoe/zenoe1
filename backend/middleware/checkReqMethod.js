@@ -1,5 +1,6 @@
-module.exports = limitReqMethod
-function limitReqMethod (req, res, next) {
+module.exports = checkReqMethod
+
+function checkReqMethod (req, res, next) {
   // NOTE: Exclude TRACE and TRACK methods to avoid XST attacks.
   const allowedMethods = [
     'OPTIONS',

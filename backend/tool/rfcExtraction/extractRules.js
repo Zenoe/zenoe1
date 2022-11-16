@@ -8,7 +8,17 @@ const lstKeyword = [
   'SHOULD NOT',
   'RECOMMENDED',
   'MAY',
-  'OPTIONAL'
+  'OPTIONAL',
+  'must',
+  'must not',
+  'required',
+  'shall',
+  'shall not',
+  'should',
+  'should not',
+  'recommended',
+  'may',
+  'optional'
 ]
 
 module.exports = {

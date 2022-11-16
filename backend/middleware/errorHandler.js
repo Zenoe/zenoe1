@@ -31,7 +31,7 @@ function errorHandler (err, req, res, next) {
 }
 
 function asyncErrorHandler (err) {
-  logger.error(`asyncErrorHandler: ${err.message}`)
+  logger.error(`asyncErrorHandler: ${err.message}, ${err.stack}`)
   if (err.res) { err.res.status(500).json({ message: err.message }) }
   // process.exit(1)
 }

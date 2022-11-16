@@ -9,8 +9,8 @@ import {
   SnippetsOutlined,
   ToolOutlined,
   CheckOutlined,
-  RightSquareOutlined,
-} from '@ant-design/icons';
+  RightSquareOutlined
+} from '@ant-design/icons'
 
 // icons
 const icons = {
@@ -21,8 +21,8 @@ const icons = {
   AppstoreAddOutlined,
   CheckOutlined,
   SnippetsOutlined,
-  ToolOutlined,
-};
+  ToolOutlined
+}
 // ==============================|| MENU ITEMS - UTILITIES ||============================== //
 
 const utilities = {
@@ -53,12 +53,19 @@ const utilities = {
       icon: icons.CheckOutlined
     },
     {
-      id: 'util-keygen',
-      title: 'RF-Key 生成',
+      id: 'util-rfctool',
+      title: 'RFC辅助工具',
       type: 'item',
-      url: '/rfkeygen',
-      icon: RightSquareOutlined
+      url: '/rfctool',
+      icon: icons.ToolOutlined
     }
+    // {
+    //   id: 'util-keygen',
+    //   title: 'RF-Key 生成(todo)',
+    //   type: 'item',
+    //   url: '/rfkeygen',
+    //   icon: RightSquareOutlined
+    // }
     // {
     //     id: 'util-shadow',
     //     title: 'Shadow',
@@ -75,6 +82,6 @@ const utilities = {
     //     breadcrumbs: false
     // }
   ]
-};
+}
 
-export default utilities;
+export default utilities

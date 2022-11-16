@@ -12,6 +12,7 @@ const TestCase2RF = Loadable(lazy(() => import('@/pages/testcase2rf')));
 const DeviceParamConverter = Loadable(lazy(() => import('@/pages/deviceparamconverter')));
 const RFSyntaxCheck = Loadable(lazy(() => import('@/pages/rfsyntaxcheck')));
 const RFKeyGen = Loadable(lazy(() => import('@/pages/rfkeygen')));
+const RFCTool = Loadable(lazy(() => import('@/pages/rfctool')));
 
 // ==============================|| MAIN ROUTING ||============================== //
 
@@ -48,6 +49,10 @@ const MainRoutes = {
     {
       path: 'rfkeygen',
       element: <RFKeyGen />
+    },
+    {
+      path: 'rfctool',
+      element: <RFCTool />
     }
   ]
 };
