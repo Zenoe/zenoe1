@@ -205,8 +205,8 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
   // case name
 
   // console.log(_rfTxtList[_rowStart])
-  if (_rfTxtList[_rowStart].search(/^[a-zA-Z_][-_a-zA-Z0-9.]* *$/) !== 0) {
-    const message = '用例名应该单独一行，由大小写字母下划线开头，由大小写字母下划线，中划线，数字和小数点组成'
+  if (_rfTxtList[_rowStart].search(/^[a-zA-Z_][\u4e00-\u9fa5-_a-zA-Z0-9.]* *$/) !== 0) {
+    const message = '用例名应该单独一行，由大小写字母下划线开头，由大小写字母,中文,下划线，中划线，数字和小数点组成'
     retList.push(createCheckResult(SYNTAX_TESTCASE_SECTION, message, 'error', _rowStart))
   } else {
     console.log('>>test case name checked ok')

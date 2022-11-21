@@ -5,21 +5,22 @@ const rfcSchema = mongoose.Schema(
       type: String,
       required: true
     },
-    sectionTitle: {
+    section: {
       type: String,
       required: true,
       unique: true
     },
     translateFrom: {
       type: String,
-      required: true
+      required: true,
+      default: 'azure'
     },
-    cnText: {
+    translationText: {
       type: String,
       required: false,
       default: ''
     },
-    enText: {
+    paragraph: {
       type: String,
       required: true,
       default: ''

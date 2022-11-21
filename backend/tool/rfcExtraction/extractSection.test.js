@@ -6,7 +6,6 @@ const { translate } = require('./translate/bing')
 
 const { zoSleep } = require('../../utils/utils')
 const util = require('util')
-const { log } = require('console')
 
 const readFilePromise = util.promisify(readFile)
 

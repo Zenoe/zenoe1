@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Modal, Box, Button, Divider, Grid, Stack, Typography, TextField, TextareaAutosize } from '@mui/material'
+import { Modal, Box, Button, Menu, MenuItem, Divider, Grid, TextareaAutosize } from '@mui/material'
+import Checkbox from '@mui/material/Checkbox'
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import Alert from '@mui/material/Alert'
 import { LoadingButton } from '@mui/lab'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
@@ -30,12 +32,30 @@ const RFSyntaxCheck = () => {
     overflowY: 'auto',
     p: 4
   }
-
+  const [anchorEl, setAnchorEl] = useState(null)
+  const [checkOptions, setCheckOptions] = useState({
+    result: true,
+    space: true,
+    comma: true,
+    emptyline: true,
+    structure: true
+  })
+  const open = Boolean(anchorEl)
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget)
+  }
+  const handleAnchorClose = () => {
+    setAnchorEl(null)
+  }
   const handleRFTxthange = (e) => {
     // setRFTxt(e.target.value)
     setRFTxt(e.target.value.replace('\ufeff', ''))
   }
 
+  const resultCheckChange = (e, v) => {
+    console.log(e.target.getAttribute('data-optiontype'))
+    console.log(e, v)
+  }
   const checkSyntax = () => {
     setCheckResult([])
     setModifyRFtxt('')
@@ -93,6 +113,46 @@ const RFSyntaxCheck = () => {
     } else {
       return null
     }
+  }
+
+  const checkOptionMenuItemJsx = () => {
+    const lstOption = [
+      {
+        caption: 'result编号检查',
+        optiontype: 'result'
+      },
+      {
+        caption: '空格检查',
+        optiontype: 'space'
+      },
+      {
+        caption: '逗号检查',
+        optiontype: 'comma'
+      },
+      {
+        caption: '换行检查',
+        optiontype: 'newling'
+      },
+      {
+        caption: '结构检查',
+        optiontype: 'structure'
+      }
+    ]
+    const lstjsx = []
+    for (const opt of lstOption) {
+      lstjsx.push(
+        <MenuItem key={opt.optiontype}>
+          <Checkbox
+            inputProps={{ 'data-optiontype': opt.optiontype }}
+            onChange={resultCheckChange}
+          >
+          </Checkbox>
+          { opt.caption }
+        </MenuItem>
+      )
+    }
+
+    return lstjsx
   }
 
   const modalJsx = () => {
@@ -154,10 +214,28 @@ const RFSyntaxCheck = () => {
         endIcon={<ChangeCircleIcon />}
         loadingPosition="end"
         variant="contained"
+        sx={{
+          width: '120px',
+          mr: 2
+        }}
       >
         Check
       </LoadingButton>
-
+      <Button
+        variant="contained"
+        sx={{ width: '120px' }}
+        onClick={handleClick}
+        endIcon={<KeyboardArrowDownIcon />}
+      >
+        检查选项
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleAnchorClose}
+      >
+        {checkOptionMenuItemJsx()}
+      </Menu>
     </>
   )
 }

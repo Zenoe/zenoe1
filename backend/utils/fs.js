@@ -4,6 +4,24 @@ const archiver = require('archiver')
 
 const { logger } = require('init')
 
+function checkFileExists (filepath) {
+  return new Promise((resolve, reject) => {
+    fs.access(filepath, fs.constants.F_OK, error => {
+      resolve(!error)
+    })
+  })
+}
+
+// function checkFileExistsSync (filepath) {
+//   let flag = true
+//   try {
+//     fs.accessSync(filepath, fs.constants.F_OK)
+//   } catch (e) {
+//     flag = false
+//   }
+//   return flag
+// }
+
 /* 读取dir下的所有文件 */
 const findFileRecursivelySync = function (dir, recursive = true, excludes = []) {
   const result = []
@@ -46,6 +64,7 @@ function zipDirectory (sourceDir, outPath) {
 }
 
 module.exports = {
+  checkFileExists,
   findFileRecursivelySync,
   zipDirectory
 }

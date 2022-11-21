@@ -1,7 +1,7 @@
 const axios = require('axios')
 const { v4: uuidv4 } = require('uuid')
 
-const key = '95317469bf1d4338ac63337361de3d04'
+const key = process.env.azurekey
 const endpoint = 'https://api.cognitive.microsofttranslator.com'
 
 // location, also known as region.

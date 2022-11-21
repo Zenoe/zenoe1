@@ -5,7 +5,7 @@ const morgan = require('morgan')
 const path = require('path')
 const { appConfig } = require('./config')
 // require('./database')
-
+require('dotenv').config()
 const { logger } = require('./init')
 // const people = require('./routes/people')
 

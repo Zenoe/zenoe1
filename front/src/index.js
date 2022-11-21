@@ -21,13 +21,13 @@ import { store } from './store'
 
 const root = ReactDOM.createRoot(document.getElementById('container'))
 root.render(
-    <StrictMode>
+  // <StrictMode>
         <ReduxProvider store={store}>
             <BrowserRouter basename="/tools">
                 <App />
             </BrowserRouter>
         </ReduxProvider>
-    </StrictMode>
+  // </StrictMode>
 )
 
 // import React from "react";
