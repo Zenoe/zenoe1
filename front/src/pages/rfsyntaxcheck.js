@@ -34,11 +34,8 @@ const RFSyntaxCheck = () => {
   }
   const [anchorEl, setAnchorEl] = useState(null)
   const [checkOptions, setCheckOptions] = useState({
-    result: true,
-    space: true,
-    comma: true,
-    emptyline: true,
-    structure: true
+    result: false
+    // structure: true
   })
   const open = Boolean(anchorEl)
   const handleClick = (event) => {
@@ -52,9 +49,12 @@ const RFSyntaxCheck = () => {
     setRFTxt(e.target.value.replace('\ufeff', ''))
   }
 
-  const resultCheckChange = (e, v) => {
+  const handleOptCheckChange = (e, v) => {
     console.log(e.target.getAttribute('data-optiontype'))
-    console.log(e, v)
+    setCheckOptions({
+      ...checkOptions,
+      [e.target.getAttribute('data-optiontype')]: v
+    })
   }
   const checkSyntax = () => {
     setCheckResult([])
@@ -73,9 +73,10 @@ const RFSyntaxCheck = () => {
       rfType = 'keyword'
     } else {
       setErrorMsg('脚本既不包含*** Test Cases ***，也不包含*** Keywords ***')
+      setLoading(false)
       return
     }
-    request('api/utils/checkrfsyntax', { rfTxt, rfType })
+    request('api/utils/checkrfsyntax', { rfTxt, rfType, checkOptions })
       .then(res => {
         // console.log('convert ok');
         const { result, modifyRFtxt, patchList } = res.data
@@ -118,25 +119,13 @@ const RFSyntaxCheck = () => {
   const checkOptionMenuItemJsx = () => {
     const lstOption = [
       {
-        caption: 'result编号检查',
+        caption: '只检查result编号',
         optiontype: 'result'
-      },
-      {
-        caption: '空格检查',
-        optiontype: 'space'
-      },
-      {
-        caption: '逗号检查',
-        optiontype: 'comma'
-      },
-      {
-        caption: '换行检查',
-        optiontype: 'newling'
-      },
-      {
-        caption: '结构检查',
-        optiontype: 'structure'
       }
+      // {
+      //   caption: '结构检查',
+      //   optiontype: 'structure'
+      // }
     ]
     const lstjsx = []
     for (const opt of lstOption) {
@@ -144,7 +133,8 @@ const RFSyntaxCheck = () => {
         <MenuItem key={opt.optiontype}>
           <Checkbox
             inputProps={{ 'data-optiontype': opt.optiontype }}
-            onChange={resultCheckChange}
+            onChange={handleOptCheckChange}
+            checked={checkOptions[opt.optiontype]}
           >
           </Checkbox>
           { opt.caption }
@@ -223,7 +213,7 @@ const RFSyntaxCheck = () => {
       </LoadingButton>
       <Button
         variant="contained"
-        sx={{ width: '120px' }}
+        sx={{ width: '120px', display: 'none' }}
         onClick={handleClick}
         endIcon={<KeyboardArrowDownIcon />}
       >

@@ -14,6 +14,19 @@ const SYNTAX_STRUCTURE = 8
 let gModifyRFtxt = []
 let patchList = []
 
+const isResultUnderLineFormat = (_sidList) => {
+  const allUnderLineFormat = _sidList.every(i => i.result.split('_').length === 2)
+  if (allUnderLineFormat === true) {
+    return true
+  } else {
+    const allNotUnderLineFormat = _sidList.every(i => i.result.split('_').length === 1)
+    if (allNotUnderLineFormat === true) {
+      return false
+    } else {
+      return undefined
+    }
+  }
+}
 const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   logger.info('begin to check ResultSidList')
   const retList = []
@@ -22,39 +35,49 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   if (_sidList.length !== _globSidList.length) {
     const message = `step: ${_stepNum} global_result 的 result 数量不一致`
     retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error'))
+    return retList
+  }
+
+  const underLineFormat = isResultUnderLineFormat(_sidList)
+  if (underLineFormat === undefined) {
+    const message = 'result 编号不合规范。应该满足1_1,1_2,2_1或者1,2,3,这样的格式'
+    retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', -1))
+    return retList
   }
 
   for (let idx = 0; idx < _sidList.length; idx += 1) {
     const sidInfo = _sidList[idx]
     const sidPair = sidInfo.result.split('_')
-    if (sidPair.length !== 2) {
-      const message = 'result 编号不合规范。应该满足1_1,2_1,这样的格式'
-      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
-      continue
-    }
-    if (sidPair[0] !== _stepNum) {
-      const message = `result 编号${sidPair[0]}和当前步骤${_stepNum}不一致`
-      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
-      const diffObj = {}
-      diffObj.ori = gModifyRFtxt[sidInfo.row]
+    if (underLineFormat) {
+      if (sidPair[0] !== _stepNum) {
+        const message = `result 编号${sidPair[0]}和当前步骤${_stepNum}不一致`
+        retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+        const diffObj = {}
+        diffObj.ori = gModifyRFtxt[sidInfo.row]
 
-      gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+        gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
 
-      diffObj.mod = gModifyRFtxt[sidInfo.row]
-      patchList.push(diffObj)
-      continue
+        diffObj.mod = gModifyRFtxt[sidInfo.row]
+        patchList.push(diffObj)
+        continue
+      }
     }
-    if (sidPair[1] !== `${idx + 1}`) {
+
+    const resultNumber = sidPair[1] || sidPair[0]
+    if (resultNumber !== `${idx + 1}`) {
       const message = `result 编号${sidInfo.result}:  应该为${_stepNum}_${idx + 1}(从1开始递增)`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
       const diffObj = {}
       diffObj.ori = gModifyRFtxt[sidInfo.row]
 
-      gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
-
+      if (underLineFormat) {
+        gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+      } else {
+        gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${idx + 1}`)
+      }
       diffObj.mod = gModifyRFtxt[sidInfo.row]
       patchList.push(diffObj)
-      continue
+      // continue
     }
 
     if (sidInfo.result !== _globSidList[idx]) {
@@ -71,12 +94,14 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       const diffObj = {}
       diffObj.ori = gModifyRFtxt[row]
       // logger.debug(gModifyRFtxt[_globSidInfo.row])
-      gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
-      try {
+      if (underLineFormat) {
+        gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
         _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
-      } catch (e) {
-        throw new Error(`${e}, ${gModifyRFtxt}`)
+      } else {
+        gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${idx + 1}`)
+        _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${idx + 1}`)
       }
+
       diffObj.mod = gModifyRFtxt[row]
       patchList.push(diffObj)
 
@@ -224,7 +249,12 @@ const checkTestCases = (_rfTxtList, _stepList, _testCaseSectionList, _rowStart, 
   return retList
 }
 
-async function checkRFSyntaxTool (_rfTxt, _rfType) {
+const shouldResove = (_option, _resolve, _data) => {
+  if (_option) {
+    _resolve(_data)
+  }
+}
+async function checkRFSyntaxTool (_rfTxt, _rfType, _checkOption) {
   let checkResultList = []
   const stMap = new Map()
   const keyWordsMap = new Map()
@@ -306,7 +336,7 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
       }
 
       const sectionCheckRes = checkSection(testCaseSectionList, _rfType, SYNTAX_STRUCTURE)
-      if (sectionCheckRes.length > 0) { resolve({ checkResultList: sectionCheckRes }) }
+      if (sectionCheckRes.length > 0) { shouldResove(_checkOption.result, resolve, { checkResultList: sectionCheckRes }) }
 
       // now begin to check
       logger.debug('check setting section')
@@ -325,14 +355,14 @@ async function checkRFSyntaxTool (_rfTxt, _rfType) {
       const rowSetting = stMap.get(sectionSettings).row
       if (rowSetting === undefined || rowSetting !== 0) {
         checkResultList.push(createCheckResult(SYNTAX_SETTING_SECTION, 'error', `首行应该是: ${sectionSettings}`, rowSetting))
-        resolve({ checkResultList })
+        shouldResove(_checkOption.result, resolve, { checkResultList })
       }
 
       const nextSection = orderedSectionList[1]
       logger.debug(`next section: ${nextSection}`)
       if (!nextSection) {
         checkResultList.push(createCheckResult(SYNTAX_SECTION, 'warning', '无Test Cases或KeyWords'))
-        resolve({ checkResultList })
+        shouldResove(_checkOption.result, resolve, { checkResultList })
       }
 
       const lineTestCase = stMap.get(sectionTestCases)
