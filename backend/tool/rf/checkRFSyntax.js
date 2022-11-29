@@ -31,6 +31,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   logger.info('begin to check ResultSidList')
   const retList = []
   const _globSidList = _globSidInfo.sidList
+  const _correctSidList = [..._sidList.map(i => i.result)]
   const _correctGlobSidList = [..._globSidList]
   if (_sidList.length !== _globSidList.length) {
     const message = `step: ${_stepNum} global_result 的 result 数量不一致`
@@ -45,6 +46,8 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
     return retList
   }
 
+  // row of resultx or resultx_y
+  let lastResultRow = -1
   for (let idx = 0; idx < _sidList.length; idx += 1) {
     const sidInfo = _sidList[idx]
     const sidPair = sidInfo.result.split('_')
@@ -65,20 +68,59 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
 
     const resultNumber = sidPair[1] || sidPair[0]
     if (resultNumber !== `${idx + 1}`) {
-      const message = `result 编号${sidInfo.result}:  应该为${_stepNum}_${idx + 1}(从1开始递增)`
-      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
       const diffObj = {}
       diffObj.ori = gModifyRFtxt[sidInfo.row]
 
+      const _fromIdx = idx > 0 ? _correctSidList[idx - 1] : ''
+
+      let idStr = `${idx + 1}`
+      let _fromStr = `result${_fromIdx}`
+
       if (underLineFormat) {
-        gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
-      } else {
-        gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${idx + 1}`)
+        idStr = `${_stepNum}_${idx + 1}`
+        _fromStr = `${_stepNum}_result${_fromIdx}`
       }
+      const message = `result 编号${sidInfo.result}:  应该为${idStr}(从1开始递增)`
+      retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+
+      let fromPos = 0
+      if (lastResultRow === sidInfo.row) {
+        fromPos = gModifyRFtxt[sidInfo.row].indexOf(_fromIdx) + _fromStr.length
+      }
+
+      gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, idStr)
+      _correctSidList[idx] = idStr
+
+      // if (underLineFormat) {
+      //   const message = `result 编号${sidInfo.result}:  应该为${_stepNum}_${idx + 1}(从1开始递增)`
+      //   retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+
+      //   const _fromStr = `result${_stepNum}_${_fromIdx}`
+      //   let fromPos = 0
+      //   if (lastResultRow === sidInfo.row) {
+      //     fromPos = gModifyRFtxt[sidInfo.row].indexOf(_fromIdx) + _fromStr.length
+      //   } else {
+      //     lastResultRow = sidInfo.row
+      //   }
+
+      //   gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+      //   // gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
+      //   _correctSidList[idx] = `${_stepNum}_${idx + 1}`
+      // } else {
+      //   const message = `result 编号${sidInfo.result}:  应该为${idx + 1}(从1开始递增)`
+      //   retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
+
+      //   const _fromStr = `result${_fromIdx}`
+      //   const fromPos = gModifyRFtxt[sidInfo.row].indexOf(_fromIdx) + _fromStr.length
+      //   gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, `${idx + 1}`)
+      //   // gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${idx + 1}`)
+      //   _correctSidList[idx] = `${idx + 1}`
+      // }
       diffObj.mod = gModifyRFtxt[sidInfo.row]
       patchList.push(diffObj)
       // continue
     }
+    lastResultRow = sidInfo.row
 
     if (sidInfo.result !== _globSidList[idx]) {
       const message = `result 编号${sidInfo.result}和 global_result: ${_globSidList[idx]} 没有顺序对应`
