@@ -10,8 +10,8 @@ const { downloadFile } = require('utils/utils')
 
 const rfcAdd = asyncHandler(async (req, res) => {
   const { rfcId } = req.body
-  const savedFile = `${process.env.PWD}/components/rfc/rfcTxtLocal/${rfcId}.txt`
-  const url = `https://www.rfc-editor.org/rfc/${rfcId}.txt`
+  const savedFile = `${process.env.PWD}/components/rfc/rfcTxtLocal/rfc${rfcId}.txt`
+  const url = `https://www.rfc-editor.org/rfc/rfc${rfcId}.txt`
 
   const fileExist = await checkFileExists(savedFile)
 
@@ -31,8 +31,12 @@ const rfcAdd = asyncHandler(async (req, res) => {
   const rfcSection = lstRfcSection[1]
   rfcSection.rfcId = rfcId
   console.log(rfcSection)
-  const rfc = await Rfc.create(rfcSection)
-  logger.info(`add rfc: ${rfc._id}`)
+  try {
+    const rfc = await Rfc.create(rfcSection)
+    logger.info(`insert rfc: ${rfc._id}`)
+  } catch (e) {
+    // throw new TrivialError(`insert rfc failed: ${e.message}`)
+  }
   res.json({})
 })
 

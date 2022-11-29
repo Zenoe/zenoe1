@@ -1,22 +1,20 @@
 
-const {connectDB} = require('database')
-const {DBManager} = require('database/mysql');
-const {LogManager} = require('services/logger')
+const { connectMongo } = require('database/mongo')
+const { LogManager } = require('services/logger')
 const { dbConfig } = require('config')
-const {appConfig} = require('config')
+const { appConfig } = require('config')
 
-connectDB();
-const dbManager = new DBManager(dbConfig)
-const logManager = new LogManager(appConfig)
-const logger = logManager.getLogger()
+connectMongo(dbConfig)
+const logger = new LogManager(appConfig).getLogger()
 
+// const { connectMysql } = require('database/mysql')
+// const mysqlIns = new connectMysql(dbConfig)
 // todo mv to test
-// dbManager.query('select 1 * 1').then((res)=>{
+// mysqlIns.query('select 1 * 1').then((res)=>{
 //   console.log(res);
 // }).catch(err=>{
 //   console.log('err', err);
 // })
-
 
 module.exports = {
   logger

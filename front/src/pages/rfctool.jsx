@@ -27,7 +27,7 @@ export default function RFCTool () {
   }
   useEffect(() => {
     // requestRFC('rfc5316')
-    requestRFC('rfc3630')
+    requestRFC('3630')
     console.log('xx')
   }, [])
 

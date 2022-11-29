@@ -3,7 +3,8 @@ const rfcSchema = mongoose.Schema(
   {
     rfcId: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
     section: {
       type: String,

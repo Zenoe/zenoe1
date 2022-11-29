@@ -8,9 +8,9 @@ module.exports = {
   env: {
     node: true,
     es6: true
-  }
+  },
 
-//   "rules": {
-//     Additional, per-project rules...
-//   }
+  rules: {
+    camelcase: 'off'
+  }
 }

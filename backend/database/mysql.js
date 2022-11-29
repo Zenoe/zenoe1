@@ -1,13 +1,9 @@
 const util = require('util')
 const mysql = require('mysql2')
-const logger = require('init')
-
-const { dbConfig } = require('config')
 
 // const util = require('util')
-let db = {}
 
-class DBManager {
+class connectMysql {
   constructor (dbConfig) {
     this.pool = mysql.createPool({
       host: dbConfig.hostname,
@@ -25,33 +21,25 @@ class DBManager {
   }
 }
 
-mysqlconn = (in_config) => {
-  return new Promise((resolve, reject) => {
-    db = mysql.createConnection({
-      host: in_config.hostname,
-      user: in_config.user,
-      password: in_config.password,
-      database: in_config.dbName
-    })
+// let db = {}
+// const mysqlconn = (in_config) => {
+//   return new Promise((resolve, reject) => {
+//     db = mysql.createConnection({
+//       host: in_config.hostname,
+//       user: in_config.user,
+//       password: in_config.password,
+//       database: in_config.dbName
+//     })
 
-    db.connect((err) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve('Mysql connected...')
-      }
-    })
-  })
-}
-
-// const callFunction=async()=>{
-//   try{
-//     const result = await dbConn.connect(cfg.db)
-//   }catch(err){
-//     console.log(err)
-//   }
+//     db.connect((err) => {
+//       if (err) {
+//         reject(err)
+//       } else {
+//         resolve('Mysql connected...')
+//       }
+//     })
+//   })
 // }
-// callFunction ()
 
 // mysqlconn(dbConfig).then(res => {
 //   console.log('connect ok', res);
@@ -60,5 +48,5 @@ mysqlconn = (in_config) => {
 // })
 
 module.exports = {
-  DBManager
+  connectMysql
 }

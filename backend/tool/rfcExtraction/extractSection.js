@@ -206,7 +206,6 @@ const translationSection = async (_filename) => {
     // console.log(lstSectionObj)
     const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
     return lstFeature
-    console.log(lstFeature.length)
     return
     // console.log(lstFeature[0])
     // console.log(lstFeature[1])

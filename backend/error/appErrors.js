@@ -1,45 +1,44 @@
 class ApplicationError extends Error {
-  constructor(message, details = {}) {
-    super();
-    this.name = 'ApplicationError';
-    this.message = message || 'An application error occured';
-    this.details = details;
+  constructor (message, details = {}) {
+    super()
+    this.name = 'ApplicationError'
+    this.message = message || 'An application error occured'
+    this.details = details
   }
 }
 
-class ThridPartyError extends Error {
-  constructor(message, details = {}) {
-    super();
-    this.name = 'ThirdPartyError';
-    this.message = message || 'A Thrid party component error occured';
-    this.details = details;
+class TrivialError extends Error {
+  constructor (message, details = {}) {
+    super()
+    this.name = 'trivial'
+    this.message = message || ''
   }
 }
 
 class AsyncError extends Error {
-  constructor(res, message, details = {}) {
-    super();
-    this.name = 'AsyncError';
-    this.res = res;
-    this.message = message;
-    this.details = details;
+  constructor (res, message, details = {}) {
+    super()
+    this.name = 'AsyncError'
+    this.res = res
+    this.message = message
+    this.details = details
   }
 }
 
 class UnauthorizedError extends ApplicationError {
-  constructor(message, details) {
-    super(message, details);
-    this.name = 'UnauthorizedError';
-    this.message = message || 'Unauthorized';
+  constructor (message, details) {
+    super(message, details)
+    this.name = 'UnauthorizedError'
+    this.message = message || 'Unauthorized'
   }
 }
 
 module.exports = {
   ApplicationError,
-  ThridPartyError,
+  TrivialError,
   UnauthorizedError,
-  AsyncError,
-};
+  AsyncError
+}
 // catch (err) {
 //   if (err instanceof Errors.BadRequest)
 //     return res.status(HttpStatus.BAD_REQUEST).send({ message: err.message }); // 400

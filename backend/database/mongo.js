@@ -1,9 +1,7 @@
-// Connection file to mongo db
-const { dbConfig } = require('config')
 const { mongoose } = require('mongoose')
-const connectDB = async () => {
+const connectMongo = async (_dbconfig) => {
   try {
-    const conn = await mongoose.connect(dbConfig.MONGO_URI, {
+    const conn = await mongoose.connect(_dbconfig.MONGO_URI, {
       // without auth section, connection return 'Authentication failed'
       auth: {
         username: 'admin',
@@ -22,7 +20,7 @@ const connectDB = async () => {
   }
 }
 
-// export default connectDB;
+// export default connectMongo;
 module.exports = {
-  connectDB
+  connectMongo
 }
