@@ -11,6 +11,7 @@ module.exports = {
   },
 
   rules: {
-    camelcase: 'off'
+    camelcase: 'off',
+    'no-restricted-syntax': ["error", "IfStatement > ExpressionStatement > AssignmentExpression"]
   }
 }

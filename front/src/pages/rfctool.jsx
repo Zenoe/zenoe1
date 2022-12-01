@@ -62,7 +62,7 @@ export default function RFCTool () {
         <Grid item xs={12} md={6} >
           <Box
             sx={{ border: '1px red solid' }}
-          >xs=6 md=8</Box>
+          ></Box>
         </Grid>
 
         <Grid

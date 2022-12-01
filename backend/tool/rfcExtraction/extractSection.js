@@ -33,16 +33,19 @@ const metaData = {
 //     }
 //   }
 // }
-const isTextLine = (_lineText, _lineno) => {
+const isTextLine = (_lineText, _lineno, _lstLine) => {
+  /* passin line is not empty line */
   if (_lineText.match(/^[^a-zA-Z]*$/)) return false
-  // if (_lineText.match(/^ {7,}/)) return false
-  // if(_lineText.match(/(?:--|->|<-|-\||\|-/)/))return false
-  const specialSign = /(?: +-|-+|\| |\|\||__|_\||\|_|=>|<=|===|--|->|-\||\|-)/
+
+  const specialSign = /(?:\+-|-\+|\| |\|\||__|_\||\|_|=>|<=|===|--|->|-\||\|-)/
   if (_lineText.match(specialSign)) return false
   // more than 1 place where there are more than 1 continous spaces in betwen non-space
   // matchAll returns an iterator, need to be spread to get the length
   // (?=\S) : look ahread
   if ([..._lineText.matchAll(/\S {2,}(?=\S)/g)].length > 1) return false
+
+  if (_lineText.match(/^ {14,}/)) return false
+  if (_lineText.match(/\w+ {5,}\w+/)) return false
 
   if (_lineText.match(/\w+ \w+/)) return true
   if (_lineText.match(/\S+[,.:;]/)) return true
@@ -75,6 +78,16 @@ const skipFooterHeader = (_lstLine, _curLineNo) => {
   return lineNo
 }
 
+const extractTextInParagraph = (_curLineNo, _lstLine) => {
+  let curLine = _curLineNo
+  while (curLine < _lstLine.length) {
+    if (isEmptyLine(_lstLine[curLine])) {
+      return curLine
+    }
+    ++curLine
+  }
+}
+
 async function extractSection (_text) {
   // console.log(arguments.callee.toString())
   const lineObjList = []
@@ -98,10 +111,15 @@ async function extractSection (_text) {
                   // check last character of last paragraph
                   if (footerSkip && lastParagraph[lastParagraph.length - 1] !== '.') {
                     // not peroid indicates the next tobe-added paragraph is part of last one
-                    lstParagraph[lstParagraph.length - 1] += ` ${paragraph}`
-                    paragraphBegin = false
-                    footerSkip = false
-                    continue
+                    //                   Figure 1: RSVP in Hosts and Routers
+
+                    // Quality of service is implemented for a particular data flow by
+                    if (!isEmptyLine(textLineList[lineNo - 1]) && lstParagraph[lstParagraph.length - 1].indexOf('==') !== 0) {
+                      lstParagraph[lstParagraph.length - 1] += ` ${paragraph}`
+                      paragraphBegin = false
+                      footerSkip = false
+                      continue
+                    }
                   }
                 }
               }
@@ -114,10 +132,6 @@ async function extractSection (_text) {
         }
         if (lineText.match(metaData.sectionTitleRegex)) {
           // console.log(lineText)
-          // if (lineText.search(/\.\.\.s*\d+s*$/) > 0) {
-          //   // belongs to Table of Contents, skip
-          //   continue
-          // }
           if (textLineList[lineNo + 1].match(/^\s*$/)) {
             const trimedLineText = lineText.trim()
             if (trimedLineText.match(metaData.skipRegex)) {
@@ -131,7 +145,7 @@ async function extractSection (_text) {
               break
             }
             if (trimedLineText.includes('Introduction')) {
-              console.log('textBodyBegin', trimedLineText)
+              // console.log('textBodyBegin', trimedLineText)
               textBodyBegin = true
             }
             lineObjList.push({
@@ -156,9 +170,21 @@ async function extractSection (_text) {
             footerSkip = true
             continue
           }
-          if (isTextLine(lineText, lineNo)) {
+          if (isTextLine(lineText, lineNo, textLineList)) {
             paragraphBegin = true
             paragraph += ` ${lineText.trimLeft()}`
+          } else {
+            if (textBodyBegin) {
+              // extract non-text paragraph
+              const curRow = lineNo
+              // search below curRow for lines until empty line is met
+              const endRow = extractTextInParagraph(lineNo, textLineList)
+              paragraphBegin = false
+              // == indicates non-text
+              const nonTextParagraph = `==\n${textLineList.slice(curRow, endRow).join('\n')}`
+              lineObjList[lineObjList.length - 1].content.push(nonTextParagraph)
+              lineNo = endRow
+            }
           }
           // } else {
           //   paragraphBegin = false
