@@ -6,7 +6,7 @@ const rfcSchema = mongoose.Schema(
       required: true,
       unique: true
     },
-    section: {
+    sectionName: {
       type: String,
       required: true,
       unique: true
@@ -16,19 +16,20 @@ const rfcSchema = mongoose.Schema(
       required: true,
       default: 'azure'
     },
-    translationText: {
-      type: String,
-      required: false,
-      default: ''
-    },
-    paragraph: {
-      type: String,
-      required: true,
-      default: ''
-    }
+    content: [
+      {
+        type: String
+      }
+    ],
+    enContent: [
+      {
+        type: String
+      }
+    ]
   },
   {
-    timestamps: true
+    timestamps: true,
+    versionKey: false
   }
 )
 

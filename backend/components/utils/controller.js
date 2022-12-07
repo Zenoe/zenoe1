@@ -105,6 +105,7 @@ const convertParam = asyncHandler(async (req, res, next) => {
     // console.log(_result[1]);
     // logger is async, it won't get _result here
     // logger.info(`receive from py:${_result[1]}`)
+    logger.info(`successful for cli: ${cli}`)
     _result[0].kill('SIGTERM')
     res.json({
       result: _result[1],

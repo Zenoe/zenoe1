@@ -9,26 +9,48 @@ import { request } from '@/utils/request'
 import { LoadingButton } from '@mui/lab'
 
 export default function RFCTool () {
-  const [rfcContent, setRfcContent] = useState(null)
-  const [rfcId, setRfcId] = useState('')
+  const [rfcContent, setRfcContent] = useState([])
+  const [rfcId, setRfcId] = useState('3630')
   const [loading, setLoading] = useState(false)
 
   const requestRFC = (rfcId) => {
-    request('api/rfc/rfcadd', { rfcId }).then(rfcResult => {
-      console.log('receive rfc:', rfcResult)
-    })
+    // request('api/rfc/rfcadd', { rfcId }).then(rfcResult => {
+    //   console.log('receive rfc:', rfcResult)
+    // })
+    return request('api/rfc/rfcadd', { rfcId })
   }
 
   const handleRfcIdChange = (e) => {
     setRfcId(e.target.value)
   }
-  const handleSearchRfc = () => {
-    requestRFC(rfcId.replace(/^[a-zA-Z]*/, ''))
+
+  const handleSearchRfc = async () => {
+    setLoading(true)
+    const rfc = await requestRFC(rfcId.replace(/^[a-zA-Z]*/, ''))
+    // console.log(rfc)
+    setRfcContent(rfc.data)
+    setLoading(false)
   }
+
+  const rfcContentJsx = () => {
+    if (!rfcContent) return null
+    const retJsx = []
+    for (const [secIdx, sec] of rfcContent.entries()) {
+      const { sectionName, content, enContent } = sec
+      const secJsx = [<Box key={-1}>{sectionName}</Box>]
+      for (const [idx, paragraph] of content.entries()) {
+        secJsx.push(<Box key={idx}>{paragraph}</Box>)
+      }
+
+      retJsx.push(<Box key={secIdx}>{ secJsx }</Box>)
+      // console.log(sectionName, content)
+    }
+
+    return retJsx
+  }
+
   useEffect(() => {
-    // requestRFC('rfc5316')
-    requestRFC('3630')
-    console.log('xx')
+    // requestRFC('3630')
   }, [])
 
   return (
@@ -43,6 +65,7 @@ export default function RFCTool () {
         <span>RFC编号:</span>
           <TextField
             placeholder="2345"
+            value={rfcId}
             onChange={handleRfcIdChange}
           >
           </TextField>
@@ -60,9 +83,9 @@ export default function RFCTool () {
             columnSpacing={{ xs: 0, sm: 1, lg: 2 }}
       >
         <Grid item xs={12} md={6} >
-          <Box
-            sx={{ border: '1px red solid' }}
-          ></Box>
+          <Box style={{ whiteSpace: 'pre' }}>
+            { rfcContentJsx() }
+          </Box>
         </Grid>
 
         <Grid

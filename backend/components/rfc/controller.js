@@ -10,8 +10,25 @@ const { downloadFile } = require('utils/utils')
 
 const rfcAdd = asyncHandler(async (req, res) => {
   const { rfcId } = req.body
+  // rfcId = `rfc${rfcId}`
   const savedFile = `${process.env.PWD}/components/rfc/rfcTxtLocal/rfc${rfcId}.txt`
   const url = `https://www.rfc-editor.org/rfc/rfc${rfcId}.txt`
+
+  // search from db first
+  // if doesn't exist then go download from the internet
+  //
+  const rfcExists = await Rfc.findOne({ rfcId })
+
+  if (rfcExists) {
+    console.log('findOne')
+    // const rfcContent = await Rfc.find({}).select({ rfcId, _id: 0, createAt: 0, updatedAt: 0 })
+    // const rfcContent = await Rfc.find({}).select({ rfcId })
+    const rfcContent = await Rfc.find({ rfcId }, { _id: 0, rfcId: 0, createAt: 0, updatedAt: 0 })
+    logger.debug('get content from db')
+    console.log(rfcContent)
+    res.json(rfcContent)
+    return
+  }
 
   const fileExist = await checkFileExists(savedFile)
 
@@ -28,15 +45,18 @@ const rfcAdd = asyncHandler(async (req, res) => {
 
   const lstRfcSection = await translationSection(savedFile)
 
-  const rfcSection = lstRfcSection[1]
-  rfcSection.rfcId = rfcId
-  console.log(rfcSection)
-  try {
-    const rfc = await Rfc.create(rfcSection)
-    logger.info(`insert rfc: ${rfc._id}`)
-  } catch (e) {
-    // throw new TrivialError(`insert rfc failed: ${e.message}`)
+  // logger.debug(lstRfcSection)
+  for (const sec of lstRfcSection) {
+    sec.rfcId = rfcId
+    try {
+      const rfc = await Rfc.create(sec)
+      logger.info(`insert rfc: ${rfc._id}`)
+    } catch (e) {
+      logger.debug(e)
+      // throw new TrivialError(`insert rfc failed: ${e.message}`)
+    }
   }
+
   res.json({})
 })
 

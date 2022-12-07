@@ -181,7 +181,7 @@ async function extractSection (_text) {
               const endRow = extractTextInParagraph(lineNo, textLineList)
               paragraphBegin = false
               // == indicates non-text
-              const nonTextParagraph = `==\n${textLineList.slice(curRow, endRow).join('\n')}`
+              const nonTextParagraph = `\n\r${textLineList.slice(curRow, endRow).join('\n')}`
               lineObjList[lineObjList.length - 1].content.push(nonTextParagraph)
               lineNo = endRow
             }
@@ -229,18 +229,12 @@ const translationSection = async (_filename) => {
     const content = await readFilePromise(_filename, 'utf8')
     // console.log(content)
     const lstSectionObj = await extractSection(content)
+    console.log(lstSectionObj)
+    return lstSectionObj
     // console.log(lstSectionObj)
     const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
     return lstFeature
-    return
-    // console.log(lstFeature[0])
-    // console.log(lstFeature[1])
-    // console.log(lstFeature[2])
     // return
-    // console.log(lstFeature[0].paragraph)
-    // console.log(lstFeature[0].keyword)
-    // const transResult = await translate(lstFeature[0].paragraph)
-    // console.log(transResult)
     for (const feature of lstFeature) {
       const result = await translate(feature.paragraph)
       const [translationResult] = JSON.parse(result)
