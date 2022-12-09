@@ -11,12 +11,12 @@ function zoSleep (ms) {
 const finished = promisify(stream.finished)
 
 async function downloadFile (fileUrl, outputLocationPath) {
-  const writer = require('fs').createWriteStream(outputLocationPath)
   return axios({
     method: 'get',
     url: fileUrl,
     responseType: 'stream'
   }).then(response => {
+    const writer = require('fs').createWriteStream(outputLocationPath)
     response.data.pipe(writer)
     return finished(writer) // this is a Promise
   })

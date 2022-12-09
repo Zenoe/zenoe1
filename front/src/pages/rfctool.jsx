@@ -2,16 +2,29 @@ import * as React from 'react'
 import { useState, useEffect } from 'react'
 import Grid from '@mui/material/Grid'
 import Box from '@mui/material/Box'
-import { TextField, Button } from '@mui/material'
-import SubmitButton from '@/components/FormsUI/SubmitButton'
+import { TextField, Paper, Button } from '@mui/material'
+import { styled } from '@mui/material/styles'
 import { request } from '@/utils/request'
-
+import PadBox from '@/components/PadBox'
 import { LoadingButton } from '@mui/lab'
 
 export default function RFCTool () {
   const [rfcContent, setRfcContent] = useState([])
   const [rfcId, setRfcId] = useState('3630')
   const [loading, setLoading] = useState(false)
+
+  const PreBox = styled(PadBox)(({ theme }) => ({
+    // fontFamily change the behaviour of space display
+    fontFamily: 'monospace',
+    overflowX: 'scroll',
+    overflowY: 'hidden',
+    whiteSpace: 'pre'
+  }))
+
+  const RfcTextBox = styled(PadBox)(({ theme }) => ({
+    // color: theme.palette.text.secondary,
+    marginBottom: theme.spacing(2)
+  }))
 
   const requestRFC = (rfcId) => {
     // request('api/rfc/rfcadd', { rfcId }).then(rfcResult => {
@@ -33,13 +46,19 @@ export default function RFCTool () {
   }
 
   const rfcContentJsx = () => {
-    if (!rfcContent) return null
     const retJsx = []
+    if (!Array.isArray(rfcContent)) {
+      return <Box>{ rfcContent }</Box>
+    }
     for (const [secIdx, sec] of rfcContent.entries()) {
       const { sectionName, content, enContent } = sec
       const secJsx = [<Box key={-1}>{sectionName}</Box>]
       for (const [idx, paragraph] of content.entries()) {
-        secJsx.push(<Box key={idx}>{paragraph}</Box>)
+        if (paragraph[0] === '\n') {
+          secJsx.push(<PreBox key={idx}>{paragraph}</PreBox>)
+        } else {
+          secJsx.push(<RfcTextBox key={idx}>{paragraph}</RfcTextBox>)
+        }
       }
 
       retJsx.push(<Box key={secIdx}>{ secJsx }</Box>)
@@ -83,15 +102,19 @@ export default function RFCTool () {
             columnSpacing={{ xs: 0, sm: 1, lg: 2 }}
       >
         <Grid item xs={12} md={6} >
-          <Box style={{ whiteSpace: 'pre' }}>
+          <Paper>
+          <PadBox space={1}>
             { rfcContentJsx() }
-          </Box>
+          </PadBox>
+      </Paper>
         </Grid>
 
         <Grid
           item xs={12} md={6}
         >
+          <Paper>
           <Box>xs=6 md=4</Box>
+      </Paper>
         </Grid>
       </Grid>
     </>

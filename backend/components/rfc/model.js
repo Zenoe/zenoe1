@@ -3,13 +3,13 @@ const rfcSchema = mongoose.Schema(
   {
     rfcId: {
       type: String,
-      required: true,
-      unique: true
+      required: true
+      // unique: true   // this attr triggers index being created
     },
     sectionName: {
       type: String,
-      required: true,
-      unique: true
+      required: true
+      // unique: true
     },
     translateFrom: {
       type: String,

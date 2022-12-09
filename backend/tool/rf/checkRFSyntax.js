@@ -169,6 +169,10 @@ const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
     if (_line.search(/^ *$/) === 0) {
       continue
     }
+    // pass if it's commentation
+    if (_line.search(/^ *#/) === 0) {
+      continue
+    }
     // console.log('begin to check _line', _line)
     // must start with 4 spaces
     if (_line.search(/^ {4}\S+.*/) !== 0) {

@@ -7,7 +7,6 @@ const util = require('util')
 
 const readFilePromise = util.promisify(readFile)
 // const { logger } = require('init')
-
 // const sectionTitleRegex = /^ {0,6}(\d+\.)+/
 // const sectionTitleRegex = /^(\d+\.)+/
 const sectionTitleRegex = /^ {0,6}(\d+\.)+\d*/
@@ -114,7 +113,7 @@ async function extractSection (_text) {
                     //                   Figure 1: RSVP in Hosts and Routers
 
                     // Quality of service is implemented for a particular data flow by
-                    if (!isEmptyLine(textLineList[lineNo - 1]) && lstParagraph[lstParagraph.length - 1].indexOf('==') !== 0) {
+                    if (!isEmptyLine(textLineList[lineNo - 1]) && lstParagraph[lstParagraph.length - 1].indexOf('\n\r') !== 0) {
                       lstParagraph[lstParagraph.length - 1] += ` ${paragraph}`
                       paragraphBegin = false
                       footerSkip = false

@@ -20,12 +20,11 @@ const rfcAdd = asyncHandler(async (req, res) => {
   const rfcExists = await Rfc.findOne({ rfcId })
 
   if (rfcExists) {
-    console.log('findOne')
     // const rfcContent = await Rfc.find({}).select({ rfcId, _id: 0, createAt: 0, updatedAt: 0 })
     // const rfcContent = await Rfc.find({}).select({ rfcId })
     const rfcContent = await Rfc.find({ rfcId }, { _id: 0, rfcId: 0, createAt: 0, updatedAt: 0 })
-    logger.debug('get content from db')
-    console.log(rfcContent)
+    // logger.debug('get content from db')
+    // logger.debug(rfcContent)
     res.json(rfcContent)
     return
   }
@@ -37,7 +36,9 @@ const rfcAdd = asyncHandler(async (req, res) => {
       await downloadFile(url, savedFile)
       logger.info(`${rfcId} downloaded`)
     } catch (err) {
-      logger.debug(`download failed: ${err.cause}`)
+      logger.warn(`download failed: ${err}`)
+      res.json('rfc not found')
+      return
     }
   } else {
     logger.debug('file exists')
@@ -50,14 +51,14 @@ const rfcAdd = asyncHandler(async (req, res) => {
     sec.rfcId = rfcId
     try {
       const rfc = await Rfc.create(sec)
-      logger.info(`insert rfc: ${rfc._id}`)
+      // logger.info(`insert rfc: ${rfc._id}`)
     } catch (e) {
       logger.debug(e)
       // throw new TrivialError(`insert rfc failed: ${e.message}`)
     }
   }
 
-  res.json({})
+  res.json(lstRfcSection)
 })
 
 module.exports = { rfcAdd }
