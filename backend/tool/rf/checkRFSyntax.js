@@ -33,11 +33,6 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
   const _globSidList = _globSidInfo.sidList
   const _correctSidList = [..._sidList.map(i => i.result)]
   const _correctGlobSidList = [..._globSidList]
-  if (_sidList.length !== _globSidList.length) {
-    const message = `step: ${_stepNum} global_result 的 result 数量不一致`
-    retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error'))
-    return retList
-  }
 
   const underLineFormat = isResultUnderLineFormat(_sidList)
   if (underLineFormat === undefined) {
@@ -62,7 +57,7 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
 
         diffObj.mod = gModifyRFtxt[sidInfo.row]
         patchList.push(diffObj)
-        continue
+        // continue
       }
     }
 
@@ -91,39 +86,14 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, idStr)
       _correctSidList[idx] = idStr
 
-      // if (underLineFormat) {
-      //   const message = `result 编号${sidInfo.result}:  应该为${_stepNum}_${idx + 1}(从1开始递增)`
-      //   retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
-
-      //   const _fromStr = `result${_stepNum}_${_fromIdx}`
-      //   let fromPos = 0
-      //   if (lastResultRow === sidInfo.row) {
-      //     fromPos = gModifyRFtxt[sidInfo.row].indexOf(_fromIdx) + _fromStr.length
-      //   } else {
-      //     lastResultRow = sidInfo.row
-      //   }
-
-      //   gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
-      //   // gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${_stepNum}_${idx + 1}`)
-      //   _correctSidList[idx] = `${_stepNum}_${idx + 1}`
-      // } else {
-      //   const message = `result 编号${sidInfo.result}:  应该为${idx + 1}(从1开始递增)`
-      //   retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', sidInfo.row))
-
-      //   const _fromStr = `result${_fromIdx}`
-      //   const fromPos = gModifyRFtxt[sidInfo.row].indexOf(_fromIdx) + _fromStr.length
-      //   gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].substring(0, fromPos) + gModifyRFtxt[sidInfo.row].substring(fromPos).replace(sidInfo.result, `${idx + 1}`)
-      //   // gModifyRFtxt[sidInfo.row] = gModifyRFtxt[sidInfo.row].replace(sidInfo.result, `${idx + 1}`)
-      //   _correctSidList[idx] = `${idx + 1}`
-      // }
       diffObj.mod = gModifyRFtxt[sidInfo.row]
       patchList.push(diffObj)
-      // continue
     }
     lastResultRow = sidInfo.row
 
-    if (sidInfo.result !== _globSidList[idx]) {
-      const message = `result 编号${sidInfo.result}和 global_result: ${_globSidList[idx]} 没有顺序对应`
+    // if (sidInfo.result !== _globSidList[idx]) {
+    if (_correctSidList[idx] !== _globSidList[idx]) {
+      const message = `result 编号${_correctSidList[idx]}和 global_result: ${_globSidList[idx]} 没有顺序对应`
       retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', _globSidInfo.row))
 
       const _fromStr = idx > 0 ? _correctGlobSidList[idx - 1] : ''
@@ -137,11 +107,21 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       diffObj.ori = gModifyRFtxt[row]
       // logger.debug(gModifyRFtxt[_globSidInfo.row])
       if (underLineFormat) {
-        gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
-        _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+        if (_correctGlobSidList[idx] === undefined) {
+          gModifyRFtxt[row] = gModifyRFtxt[row] + `    $\{result${_stepNum}_${idx + 1}}`
+          _correctGlobSidList[idx] = `${_stepNum}_${idx + 1}`
+        } else {
+          gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+          _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${_stepNum}_${idx + 1}`)
+        }
       } else {
-        gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${idx + 1}`)
-        _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${idx + 1}`)
+        if (_correctGlobSidList[idx] === undefined) {
+          gModifyRFtxt[row] = gModifyRFtxt[row] + `    $\{result${idx + 1}}`
+          _correctGlobSidList[idx] = `${idx + 1}`
+        } else {
+          gModifyRFtxt[row] = gModifyRFtxt[row].substring(0, col) + gModifyRFtxt[row].substring(col).replace(_globSidList[idx], `${idx + 1}`)
+          _correctGlobSidList[idx] = _correctGlobSidList[idx].replace(_globSidList[idx], `${idx + 1}`)
+        }
       }
 
       diffObj.mod = gModifyRFtxt[row]
@@ -150,6 +130,25 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
       logger.debug(gModifyRFtxt[_globSidInfo.row])
     }
   }
+  if (_sidList.length < _globSidList.length) {
+    const lastGlobSid = _correctGlobSidList[_sidList.length - 1]
+    const lastGlobSidRegexp = new RegExp(`({result${lastGlobSid}}).*`)
+    // remove substring from lastGlobSid(in included) to end
+    let i = _globSidInfo.row
+    let bFoundLastSid = false
+    for (; i <= _globSidInfo.rowEnd; i++) {
+      if (!bFoundLastSid && gModifyRFtxt[i].search(lastGlobSidRegexp) > 0) {
+        gModifyRFtxt[i] = gModifyRFtxt[i].replace(lastGlobSidRegexp, '$1')
+        bFoundLastSid = true
+        continue
+      }
+      if (bFoundLastSid) {
+        // remove extra global sid item
+        gModifyRFtxt[i] = ''
+      }
+    }
+  }
+
   if (retList.length === 0) {
     logger.debug('>>check ResultSidList ok')
   }
