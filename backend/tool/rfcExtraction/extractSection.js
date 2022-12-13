@@ -1,5 +1,4 @@
 const { appendFile, readFile, writeFile } = require('fs')
-const path = require('path')
 const { lstKeyword } = require('./extractRules')
 const { translate } = require('./translate/bing')
 const { zoSleep } = require('../../utils/utils')
@@ -11,6 +10,7 @@ const readFilePromise = util.promisify(readFile)
 // const sectionTitleRegex = /^(\d+\.)+/
 const sectionTitleRegex = /^ {0,6}(\d+\.)+\d*/
 const metaData = {
+  abstracRegex: /^ *Abstract *$/,
   sectionTitleRegex,
   skipRegex: /^(\d+\.)+ +(?:Terminology|Conventions|Limitations)/,
   tailText: /(?:Contributors|Acknowledgements|Acknowledgments|APPENDIX)/
@@ -87,6 +87,22 @@ const extractTextInParagraph = (_curLineNo, _lstLine) => {
   }
 }
 
+const extractAbastact = (_curLineNo, _lstLine, _titleLeadingSpcNum) => {
+  const titleRegex = new RegExp(`^ {${_titleLeadingSpcNum},${_titleLeadingSpcNum}}\\w+`)
+  let i = _curLineNo
+  let paragraph = ''
+  const lstParagraph = []
+  while (_lstLine[i].search(titleRegex) !== 0) {
+    if (paragraph !== '' && isEmptyLine(_lstLine[i])) {
+      lstParagraph.push(paragraph)
+      paragraph = ''
+    } else {
+      paragraph += _lstLine[i]
+    }
+    i++
+  }
+  return [i, lstParagraph]
+}
 async function extractSection (_text) {
   // console.log(arguments.callee.toString())
   const lineObjList = []
@@ -94,12 +110,34 @@ async function extractSection (_text) {
   let textBodyBegin = false
   let paragraphBegin = false
   let skipContent = false
+  let bAbstract = false
   let paragraph = ''
+  let titleLeadingSpcNum = 0
   return new Promise((resolve, reject) => {
     try {
       let footerSkip = false
       for (let lineNo = 0; lineNo < textLineList.length; lineNo += 1) {
         const lineText = textLineList[lineNo]
+        if (!textBodyBegin && lineText.search(metaData.abstracRegex) === 0) {
+          while (lineText[titleLeadingSpcNum] === ' ') {
+            titleLeadingSpcNum++
+          }
+          bAbstract = true
+          lineObjList.push({
+            lineNo,
+            // sectionName: trimedLineText.substring(sectionMatch[0].length).trim(),
+            sectionName: 'Abstract',
+            sectionEndLineNo: -1
+          })
+          continue
+        }
+        if (bAbstract) {
+          //
+          const [nextLineNo, abstract] = extractAbastact(lineNo, textLineList, titleLeadingSpcNum)
+          bAbstract = false
+          lineNo = nextLineNo
+          lineObjList[lineObjList.length - 1].content = abstract
+        }
         if (isEmptyLine(lineText)) {
           if (paragraphBegin) {
             if (lineObjList.length > 0) {
@@ -130,7 +168,6 @@ async function extractSection (_text) {
           continue
         }
         if (lineText.match(metaData.sectionTitleRegex)) {
-          // console.log(lineText)
           if (textLineList[lineNo + 1].match(/^\s*$/)) {
             const trimedLineText = lineText.trim()
             if (trimedLineText.match(metaData.skipRegex)) {
@@ -185,9 +222,6 @@ async function extractSection (_text) {
               lineNo = endRow
             }
           }
-          // } else {
-          //   paragraphBegin = false
-          // }
         }
       }
 
@@ -221,34 +255,31 @@ async function extractByKeyword (_lstKeyword, _lstSectionObj) {
 }
 
 const translationSection = async (_filename) => {
-  const readFilePromise = util.promisify(readFile)
-  let rfcName = path.basename(_filename)
-  rfcName = rfcName.substring(0, rfcName.lastIndexOf('.'))
+  // let rfcName = path.basename(_filename)
+  // rfcName = rfcName.substring(0, rfcName.lastIndexOf('.'))
   try {
     const content = await readFilePromise(_filename, 'utf8')
     // console.log(content)
     const lstSectionObj = await extractSection(content)
-    console.log(lstSectionObj)
     return lstSectionObj
     // console.log(lstSectionObj)
-    const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
-    return lstFeature
-    // return
-    for (const feature of lstFeature) {
-      const result = await translate(feature.paragraph)
-      const [translationResult] = JSON.parse(result)
-      const cnText = translationResult.translations[0].text
-      const row = `${feature.section}, ${feature.keyword},"${feature.paragraph.replaceAll('"', '""')}", "${cnText.replaceAll('"', '""')}\n`
-      // const row = `${feature.section}, ${feature.keyword},"${feature.paragraph.replaceAll('"', '""')}"}\n`
-      appendFile(`${rfcName}.csv`, row, function (err) {
-        if (err) {
-          console.log('append:', feature.paragraph, 'failed')
-          throw err
-        }
-        console.log('append:', feature.section)
-      })
-      await zoSleep(1500)
-    }
+    // const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
+    // return lstFeature
+    // for (const feature of lstFeature) {
+    //   const result = await translate(feature.paragraph)
+    //   const [translationResult] = JSON.parse(result)
+    //   const cnText = translationResult.translations[0].text
+    //   const row = `${feature.section}, ${feature.keyword},"${feature.paragraph.replaceAll('"', '""')}", "${cnText.replaceAll('"', '""')}\n`
+    //   // const row = `${feature.section}, ${feature.keyword},"${feature.paragraph.replaceAll('"', '""')}"}\n`
+    //   appendFile(`${rfcName}.csv`, row, function (err) {
+    //     if (err) {
+    //       console.log('append:', feature.paragraph, 'failed')
+    //       throw err
+    //     }
+    //     console.log('append:', feature.section)
+    //   })
+    //   await zoSleep(1500)
+    // }
     // console.log(transResult)
   } catch (err) {
     console.log(err)
