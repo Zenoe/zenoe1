@@ -3,16 +3,11 @@ const Joi = require('joi')
 const Rfc = require('./model.js')
 const validateSchema = require('middleware/validate-request')
 const { logger } = require('init')
-
-const { checkFileExists } = require('utils/fs')
-const { translationSection } = require('tool/rfcExtraction/extractSection')
-const { downloadFile } = require('utils/utils')
+const { getRfcSections } = require('./service')
 
 const rfcAdd = asyncHandler(async (req, res) => {
   const { rfcId } = req.body
   // rfcId = `rfc${rfcId}`
-  const savedFile = `${process.env.PWD}/components/rfc/rfcTxtLocal/rfc${rfcId}.txt`
-  const url = `https://www.rfc-editor.org/rfc/rfc${rfcId}.txt`
 
   // search from db first
   // if doesn't exist then go download from the internet
@@ -29,22 +24,11 @@ const rfcAdd = asyncHandler(async (req, res) => {
     return
   }
 
-  const fileExist = await checkFileExists(savedFile)
-
-  if (!fileExist) {
-    try {
-      await downloadFile(url, savedFile)
-      logger.info(`${rfcId} downloaded`)
-    } catch (err) {
-      logger.warn(`download failed: ${err}`)
-      res.json('rfc not found')
-      return
-    }
-  } else {
-    logger.debug('file exists')
+  const lstRfcSection = await getRfcSections(rfcId)
+  if (lstRfcSection === null) {
+    res.json('rfc not found')
+    return
   }
-
-  const lstRfcSection = await translationSection(savedFile)
 
   // logger.debug(lstRfcSection)
   for (const sec of lstRfcSection) {

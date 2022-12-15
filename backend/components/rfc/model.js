@@ -25,6 +25,11 @@ const rfcSchema = mongoose.Schema(
       {
         type: String
       }
+    ],
+    spec: [
+      {
+        type: String
+      }
     ]
   },
   {

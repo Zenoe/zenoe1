@@ -39,6 +39,13 @@ const utilities = {
     },
 
     {
+      id: 'utilAutoRf',
+      title: 'RF脚本自动生成',
+      type: 'item',
+      url: '/autorf',
+      icon: icons.SnippetsOutlined
+    },
+    {
       id: 'utilDeviceParameterConverter',
       title: '设备传参工具',
       type: 'item',

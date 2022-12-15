@@ -261,6 +261,21 @@ const translationSection = async (_filename) => {
     const content = await readFilePromise(_filename, 'utf8')
     // console.log(content)
     const lstSectionObj = await extractSection(content)
+    for (const sec of lstSectionObj) {
+      for (const para of sec.content) {
+        if (para.indexOf('\n\r') !== 0) {
+          const result = await translate(para)
+          const [translationResult] = JSON.parse(result)
+          const cnText = translationResult.translations[0].text
+          if (sec.enContent === undefined) {
+            sec.enContent = []
+          }
+          sec.enContent.push(cnText)
+          console.log(cnText)
+          await zoSleep(1000)
+        }
+      }
+    }
     return lstSectionObj
     // console.log(lstSectionObj)
     // const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
