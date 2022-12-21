@@ -790,6 +790,7 @@ const allCliList=[
 'show ip rdfilter',
 'show evpn l2eviname word dftimer state',
 'show ip flow cache dev num slot num',
+'show ptp config',
 'show wlan hotbackup ip',
 'show processes cpu',
 'show install detail',

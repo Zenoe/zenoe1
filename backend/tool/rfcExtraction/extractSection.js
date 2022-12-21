@@ -1,7 +1,9 @@
+const path = require('path')
 const { appendFile, readFile, writeFile } = require('fs')
 const { lstKeyword } = require('./extractRules')
 const { translate } = require('./translate/bing')
-const { zoSleep } = require('../../utils/utils')
+const { zoSleep, retryExe } = require('../../utils/utils')
+const { logger } = require('init')
 const util = require('util')
 
 const readFilePromise = util.promisify(readFile)
@@ -103,6 +105,7 @@ const extractAbastact = (_curLineNo, _lstLine, _titleLeadingSpcNum) => {
   }
   return [i, lstParagraph]
 }
+
 async function extractSection (_text) {
   // console.log(arguments.callee.toString())
   const lineObjList = []
@@ -254,29 +257,76 @@ async function extractByKeyword (_lstKeyword, _lstSectionObj) {
   })
 }
 
-const translationSection = async (_filename) => {
+const translationSection = async (_filename, _sectionName, _contentId) => {
   // let rfcName = path.basename(_filename)
   // rfcName = rfcName.substring(0, rfcName.lastIndexOf('.'))
+  let sectionName = ''
+  let contentId = -1
+  let finishTrans = true
+  let rfcId = path.basename(_filename)
+  if (rfcId.startsWith('rfc')) {
+    rfcId = rfcId.slice(3)
+  }
+  rfcId = rfcId.substring(0, rfcId.lastIndexOf('.'))
+
+  let beginSection = false
+  let beginContent = false
+  if (_sectionName === '') {
+    beginSection = true
+    beginContent = true
+  }
   try {
     const content = await readFilePromise(_filename, 'utf8')
     // console.log(content)
     const lstSectionObj = await extractSection(content)
     for (const sec of lstSectionObj) {
-      for (const para of sec.content) {
-        if (para.indexOf('\n\r') !== 0) {
-          const result = await translate(para)
-          const [translationResult] = JSON.parse(result)
-          const cnText = translationResult.translations[0].text
-          if (sec.enContent === undefined) {
-            sec.enContent = []
+      sectionName = sec.sectionName
+      if (!beginSection) {
+        if (sectionName === _sectionName) {
+          beginSection = true
+        } else {
+          continue
+        }
+      }
+      for (const [idx, para] of sec.content.entries()) {
+        contentId = idx
+        if (!beginContent) {
+          if (contentId === _contentId) {
+            beginContent = true
+            logger.info(`begin translate at ${_sectionName}: ${_contentId}`)
+          } else {
+            continue
           }
-          sec.enContent.push(cnText)
-          console.log(cnText)
-          await zoSleep(1000)
+        }
+        if (para.indexOf('\n\r') !== 0) {
+          try {
+            // const result = await translate(para)
+            const result = await retryExe(translate, [para])
+            const [translationResult] = JSON.parse(result)
+            const cnText = translationResult.translations[0].text
+            if (sec.cnContent === undefined) {
+              sec.cnContent = []
+            }
+            sec.cnContent.push(cnText)
+            console.log(cnText)
+            await zoSleep(1000)
+          } catch (error) {
+            finishTrans = false
+            // saveRestorePt(rfcId, sec.sectionName, contentId)
+            // throw error
+            logger.warn(error.message)
+            // save rfcid and section id
+            //
+          }
+        } else {
+          if (sec.cnContent === undefined) {
+            sec.cnContent = []
+          }
+          sec.cnContent.push(para)
         }
       }
     }
-    return lstSectionObj
+    return [lstSectionObj, { rfcId, sectionName, contentId, finishTrans }]
     // console.log(lstSectionObj)
     // const lstFeature = await extractByKeyword(lstKeyword, lstSectionObj)
     // return lstFeature

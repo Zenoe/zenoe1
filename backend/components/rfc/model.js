@@ -21,7 +21,7 @@ const rfcSchema = mongoose.Schema(
         type: String
       }
     ],
-    enContent: [
+    cnContent: [
       {
         type: String
       }

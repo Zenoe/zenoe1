@@ -7,7 +7,7 @@ import { styled } from '@mui/material/styles'
 import { request } from '@/utils/request'
 import PadBox from '@/components/PadBox'
 import { LoadingButton } from '@mui/lab'
-
+import { twoColJsx } from '@/utils/uiutils'
 export default function RFCTool () {
   const [rfcContent, setRfcContent] = useState([])
   const [rfcId, setRfcId] = useState('9086')
@@ -45,23 +45,67 @@ export default function RFCTool () {
     setLoading(false)
   }
 
+  const sectionJsx = (secList) => {
+    if (secList.length === 0) {
+      return null
+    }
+
+    const ret = []
+    for (const sec of secList) {
+      // ret.push(twoColJsx([sec.sectionName, sec.sectionName]))
+      ret.push(twoColJsx({ text: sec.sectionName }, { text: sec.sectionName }))
+      for (let i = 0; i < sec.content.length; i++) {
+        const comp = sec.content[i][0] === '\n' ? PreBox : RfcTextBox
+        ret.push(twoColJsx({ text: sec.content[i], comp }, { text: sec.cnContent[i], comp }))
+      }
+    }
+
+    return ret
+  }
+
   const rfcContentJsx = () => {
     const retJsx = []
     if (!Array.isArray(rfcContent)) {
       return <Box>{ rfcContent }</Box>
     }
     for (const [secIdx, sec] of rfcContent.entries()) {
-      const { sectionName, content, enContent } = sec
-      const secJsx = [<Box key={-1}>{sectionName}</Box>]
+      const { sectionName, content, cnContent } = sec
+
+      // const secJsx = [<Box key={-1}>{sectionName}</Box>]
+      // const secJsx = [
+      //   <Grid item key={-1} xs={12} md={6}>
+      //     <RfcTextBox >{sectionName}</RfcTextBox>
+      //     <RfcTextBox >{sectionName}</RfcTextBox>
+      //   </Grid>
+      //   // <Grid item xs={12} md={6}>
+      //   //     <RfcTextBox >{sectionName}</RfcTextBox>
+      //   // </Grid>
+      // ]
+      const secJsx = []
       for (const [idx, paragraph] of content.entries()) {
         if (paragraph[0] === '\n') {
-          secJsx.push(<PreBox key={idx}>{paragraph}</PreBox>)
+          secJsx.push(
+            <Grid item key={idx} xs={12} md={6}>
+              <PreBox >{paragraph}</PreBox>
+              <PreBox >{cnContent[idx]}</PreBox>
+            </Grid>
+          )
         } else {
-          secJsx.push(<RfcTextBox key={idx}>{paragraph}</RfcTextBox>)
+          secJsx.push(
+            <Grid item xs={12} md={6}>
+            <RfcTextBox key={idx}>{paragraph}</RfcTextBox>
+            <RfcTextBox key={idx}>{cnContent[idx]}</RfcTextBox>
+            </Grid>
+          )
+          // secJsx.push(<RfcTextBox key={idx}>{paragraph}</RfcTextBox>)
         }
       }
 
-      retJsx.push(<Box key={secIdx}>{ secJsx }</Box>)
+      retJsx.push(
+      <Grid container columnSpacing={{ xs: 0, sm: 1, lg: 2 }} >
+        { secJsx }
+      </Grid>
+      )
       // console.log(sectionName, content)
     }
 
@@ -98,25 +142,28 @@ export default function RFCTool () {
           Search RFC
         </LoadingButton>
       </Box>
-      <Grid container
-            columnSpacing={{ xs: 0, sm: 1, lg: 2 }}
-      >
-        <Grid item xs={12} md={6} >
-          <Paper>
-          <PadBox space={1}>
-            { rfcContentJsx() }
-          </PadBox>
-      </Paper>
-        </Grid>
 
-        <Grid
-          item xs={12} md={6}
-        >
-          <Paper>
-          <Box>xs=6 md=4</Box>
-      </Paper>
-        </Grid>
-      </Grid>
+      <Box>
+        {sectionJsx(rfcContent)}
+        {/* {rfcContentJsx()} */}
+      </Box>
+      {/* <Grid container columnSpacing={{ xs: 0, sm: 1, lg: 2 }} > */}
+      {/*   <Grid item xs={12} > */}
+      {/*     <Box > */}
+      {/*       { rfcContentJsx() } */}
+      {/*     </Box> */}
+      {/*   </Grid> */}
+
+      {/*   <Grid */}
+      {/*     item xs={12} md={6} */}
+      {/*   > */}
+      {/*     <Paper> */}
+      {/*       <PadBox space={1}> */}
+      {/*         { rfcContentJsx() } */}
+      {/*       </PadBox> */}
+      {/* </Paper> */}
+      {/*   </Grid> */}
+      {/* </Grid> */}
     </>
   )
 }

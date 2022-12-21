@@ -2,7 +2,49 @@ const { checkFileExists } = require('utils/fs')
 const { translationSection } = require('tool/rfcExtraction/extractSection')
 const { downloadFile } = require('utils/utils')
 
+const Rfc = require('./model.js')
+const TransRestorePtModel = require('./transRestorePtModel')
+
 const { logger } = require('init')
+
+const getRfc = async (rfcId) => {
+  const rfcContent = await Rfc.find({ rfcId }, { _id: 0, rfcId: 0, createAt: 0, updatedAt: 0 })
+  // const rfcContent = await Rfc.find({}).select({ rfcId, _id: 0, createAt: 0, updatedAt: 0 })
+
+  // return [] if empty
+  return rfcContent
+}
+
+const saveRestorePt = async ({ rfcId, sectionName, contentId, finishTrans }) => {
+  return await TransRestorePtModel.findOneAndUpdate({
+    rfcId
+  },
+  {
+    $set: {
+      rfcId,
+      sectionName,
+      contentId,
+      finishTrans
+    }
+  },
+  { upsert: true }
+  )
+}
+
+const getRestorePt = async (rfcId) => {
+  console.log('getRestorePt:', rfcId)
+  return await TransRestorePtModel.findOne(
+    {
+      rfcId
+    },
+    {
+      _id: 0,
+      sectionName: 1,
+      contentId: 1,
+      finishTrans: 1
+    }
+  )
+}
 
 const getRfcSections = async (rfcId) => {
   const url = `https://www.rfc-editor.org/rfc/rfc${rfcId}.txt`
@@ -21,8 +63,23 @@ const getRfcSections = async (rfcId) => {
     logger.debug('file exists')
   }
 
-  const lstRfcSection = await translationSection(savedFile)
+  let sectionName = ''
+  let contentId = '0'
+  const oldRestorePt = await getRestorePt(rfcId)
+  if (oldRestorePt && oldRestorePt.finishTrans === false) {
+    sectionName = oldRestorePt.sectionName
+    contentId = oldRestorePt.contentId
+  }
+
+  const [lstRfcSection, restorePt] = await translationSection(savedFile, sectionName, contentId)
+
+  await saveRestorePt(restorePt)
+
   return lstRfcSection
 }
 
-module.exports = { getRfcSections }
+const saveRfc = async (sec) => {
+  await Rfc.create(sec)
+}
+
+module.exports = { saveRfc, getRfcSections, getRfc, getRestorePt }

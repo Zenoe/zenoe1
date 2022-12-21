@@ -21,7 +21,30 @@ async function downloadFile (fileUrl, outputLocationPath) {
     return finished(writer) // this is a Promise
   })
 }
+
+const retryExe = async (fn, args, thisprt = null, interval = 1000, retry = 3) => {
+  let i = 0
+  let ret
+  while (i < retry) {
+    i++
+    try {
+      ret = await fn.apply(thisprt, args)
+      if (ret) {
+        return ret
+      } else {
+        await zoSleep(interval)
+      }
+    } catch (e) {
+      await zoSleep(interval)
+    }
+    console.log('retryExe', i)
+  }
+
+  return ret
+}
+
 module.exports = {
+  retryExe,
   zoSleep,
   downloadFile
 }

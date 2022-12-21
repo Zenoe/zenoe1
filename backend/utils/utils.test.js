@@ -1,4 +1,4 @@
-const { downloadFile } = require('./utils')
+const { downloadFile, retryExe } = require('./utils')
 
 // downloadFile('https://www.rfc-editor.org/rfc/rfc5316.txt', './rfc5316.txt')
 //   .then(res => {
@@ -17,4 +17,18 @@ const test = async () => {
   }
 }
 
-test()
+// test()
+
+const retryExeTest = async () => {
+  const testFun = (a, b, c) => {
+    console.log(a, b, c)
+    if (a === b) {
+      return true
+    } else {
+      return false
+    }
+  }
+  retryExe(testFun, [1, 2, 3])
+}
+
+retryExeTest()
