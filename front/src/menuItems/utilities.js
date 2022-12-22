@@ -1,18 +1,14 @@
-// assets
 import {
   AppstoreAddOutlined,
   AntDesignOutlined,
   BarcodeOutlined,
-  BgColorsOutlined,
   FontSizeOutlined,
   LoadingOutlined,
   SnippetsOutlined,
   ToolOutlined,
-  CheckOutlined,
-  RightSquareOutlined
+  CheckOutlined
 } from '@ant-design/icons'
 
-// icons
 const icons = {
   FontSizeOutlined,
   BarcodeOutlined,
@@ -23,7 +19,6 @@ const icons = {
   SnippetsOutlined,
   ToolOutlined
 }
-// ==============================|| MENU ITEMS - UTILITIES ||============================== //
 
 const utilities = {
   id: 'utilities',
@@ -37,7 +32,6 @@ const utilities = {
       url: '/testcase2rf',
       icon: icons.SnippetsOutlined
     },
-
     {
       id: 'utilAutoRf',
       title: 'RF脚本自动生成',
@@ -72,21 +66,6 @@ const utilities = {
     //   type: 'item',
     //   url: '/rfkeygen',
     //   icon: RightSquareOutlined
-    // }
-    // {
-    //     id: 'util-shadow',
-    //     title: 'Shadow',
-    //     type: 'item',
-    //     url: '/shadow',
-    //     icon: icons.BarcodeOutlined
-    // },
-    // {
-    //     id: 'ant-icons',
-    //     title: 'Ant Icons',
-    //     type: 'item',
-    //     url: '/icons/ant',
-    //     icon: icons.AntDesignOutlined,
-    //     breadcrumbs: false
     // }
   ]
 }

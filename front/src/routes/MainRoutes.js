@@ -4,17 +4,16 @@ import { lazy } from 'react';
 import Loadable from '@/components/Loadable';
 import MainLayout from '@/layout/MainLayout';
 
-// render - dashboard
 const DashboardDefault = Loadable(lazy(() => import('@/pages/Dashboard')));
 
-// render - utilities
 const TestCase2RF = Loadable(lazy(() => import('@/pages/testcase2rf')));
+const AutoRF = Loadable(lazy(() => import('@/pages/autorf')));
 const DeviceParamConverter = Loadable(lazy(() => import('@/pages/deviceparamconverter')));
 const RFSyntaxCheck = Loadable(lazy(() => import('@/pages/rfsyntaxcheck')));
 const RFKeyGen = Loadable(lazy(() => import('@/pages/rfkeygen')));
 const RFCTool = Loadable(lazy(() => import('@/pages/rfctool')));
 
-// ==============================|| MAIN ROUTING ||============================== //
+const Devices = Loadable(lazy(() => import('@/pages/devices')));
 
 const MainRoutes = {
   path: '/',
@@ -39,6 +38,10 @@ const MainRoutes = {
       element: <TestCase2RF />
     },
     {
+      path: 'autorf',
+      element: <AutoRF />
+    },
+    {
       path: 'deviceparamconverter',
       element: <DeviceParamConverter />
     },
@@ -53,6 +56,10 @@ const MainRoutes = {
     {
       path: 'rfctool',
       element: <RFCTool />
+    },
+    {
+      path: 'devices',
+      element: <Devices />
     }
   ]
 };

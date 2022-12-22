@@ -1,11 +1,10 @@
 // project import
-import dashboard from './dashboard';
-import utilities from './utilities';
-
-// ==============================|| MENU ITEMS ||============================== //
+import dashboard from './dashboard'
+import utilities from './utilities'
+import devices from './devices'
 
 const menuItems = {
-    items: [dashboard, utilities ]
-};
+  items: [dashboard, utilities, devices]
+}
 
-export default menuItems;
+export default menuItems

@@ -33,18 +33,6 @@ const AutoRf = () => {
         setConvertMsg('生成RF脚本失败')
       })
   }
-  useEffect(() => {
-    requestGet('api/utils/filelist').then(res => {
-    })
-  }, [])
-
-  useEffect(() => {
-    setPkgNameList(fileList.filter(i => i.includes('TP.xls')).map(i => mybasename(i)))
-  }, [fileList])
-
-  useEffect(() => {
-    if (pkgNameList.length > 0) { setCurPkgName(pkgNameList[0]) } else { setCurPkgName('') }
-  }, [pkgNameList])
 
   return (
     <Box>
