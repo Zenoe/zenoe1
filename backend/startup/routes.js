@@ -4,6 +4,7 @@ const userRoutes = require('routes/userRoutes')
 const vizRoute = require('routes/vizRoute')
 const utilRoutes = require('routes/utilRoutes')
 const rfcRoutes = require('routes/rfcRoutes')
+const autoRFRoutes = require('routes/autoRFRoutes')
 
 module.exports = function (app) {
   app.use(express.json())
@@ -11,4 +12,5 @@ module.exports = function (app) {
   app.use('/api/viz', vizRoute)
   app.use('/api/utils', utilRoutes)
   app.use('/api/rfc', rfcRoutes)
+  app.use('/api/autorf', autoRFRoutes)
 }

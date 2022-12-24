@@ -50,7 +50,7 @@ const RFSyntaxCheck = () => {
   }
 
   const handleOptCheckChange = (e, v) => {
-    console.log(e.target.getAttribute('data-optiontype'))
+    // console.log(e.target.getAttribute('data-optiontype'))
     setCheckOptions({
       ...checkOptions,
       [e.target.getAttribute('data-optiontype')]: v
