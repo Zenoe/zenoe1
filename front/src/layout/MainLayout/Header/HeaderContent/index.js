@@ -1,52 +1,52 @@
-import {useState} from 'react';
+import { useState } from 'react'
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'
 // material-ui
-import { Box, IconButton, Link, Tooltip, Typography, useMediaQuery } from '@mui/material';
-import { GithubOutlined } from '@ant-design/icons';
+import { Box, IconButton, Tooltip, Typography, useMediaQuery } from '@mui/material'
+import { GithubOutlined } from '@ant-design/icons'
 
-import Avatar from '@mui/material/Avatar';
+import Avatar from '@mui/material/Avatar'
 
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MenuIcon from '@mui/icons-material/Menu';
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import MenuIcon from '@mui/icons-material/Menu'
 
 import defaultAvatar from '@/static/images/avatar/default.png'
 
 // project import
-import Search from './Search';
+import Search from './Search'
 // import Profile from './Profile';
-import Notification from './Notification';
+import Notification from './Notification'
 // import MobileSection from './MobileSection';
 
 // ==============================|| HEADER - CONTENT ||============================== //
 
-const settings = [['Profile', '/profile'], ['Dashboard','/dashboard'], ['Logout', '/logout']];
-const HeaderContent = ({userInfo}) => {
-  const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'));
+const settings = [['Profile', '/profile'], ['Dashboard', '/dashboard'], ['Logout', '/logout']]
+const HeaderContent = ({ userInfo }) => {
+  const matchesXs = useMediaQuery((theme) => theme.breakpoints.down('md'))
 
-  const [anchorElNav, setAnchorElNav] = useState(null);
-  const [anchorElUser, setAnchorElUser] = useState(null);
+  const [anchorElNav, setAnchorElNav] = useState(null)
+  const [anchorElUser, setAnchorElUser] = useState(null)
 
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
+    setAnchorElNav(event.currentTarget)
+  }
   const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
-  };
+    setAnchorElUser(event.currentTarget)
+  }
 
   const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
-  };
+    setAnchorElNav(null)
+  }
 
   const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
+    console.log('handleCloseUserMenu')
+    setAnchorElUser(null)
+  }
 
-
-    return (
+  return (
         <>
             {!matchesXs && <Search />}
             {matchesXs && <Box sx={{ width: '100%', ml: 1 }} />}
@@ -64,8 +64,8 @@ const HeaderContent = ({userInfo}) => {
             {/* </IconButton> */}
 
             {/* <Notification /> */}
-          {userInfo ?
-          <Box sx={{ flexGrow: 0 }}>
+          {userInfo
+            ? <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 <Avatar alt="Remy Sharp" src={defaultAvatar}
@@ -79,12 +79,12 @@ const HeaderContent = ({userInfo}) => {
               anchorEl={anchorElUser}
               anchorOrigin={{
                 vertical: 'top',
-                horizontal: 'right',
+                horizontal: 'right'
               }}
               keepMounted
               transformOrigin={{
                 vertical: 'top',
-                horizontal: 'right',
+                horizontal: 'right'
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
@@ -97,10 +97,10 @@ const HeaderContent = ({userInfo}) => {
                 </MenuItem>
               ))}
             </Menu>
-          </Box> :
-            <IconButton
+          </Box>
+            : <IconButton
                 component={Link}
-                href="/tools/login"
+                to="/login"
                 disableRipple
                 color="secondary"
                 title="Login"
@@ -112,7 +112,7 @@ const HeaderContent = ({userInfo}) => {
             {/* {!matchesXs && <Profile />} */}
             {/* {matchesXs && <MobileSection />} */}
         </>
-    );
-};
+  )
+}
 
-export default HeaderContent;
+export default HeaderContent

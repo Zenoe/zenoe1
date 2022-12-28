@@ -4,9 +4,11 @@ const { LogManager } = require('services/logger')
 const { dbConfig } = require('config')
 const { appConfig } = require('config')
 
-connectMongo(dbConfig)
 const logger = new LogManager(appConfig).getLogger()
 
+const initDB = async () => {
+  await connectMongo(dbConfig)
+}
 // const { connectMysql } = require('database/mysql')
 // const mysqlIns = new connectMysql(dbConfig)
 // todo mv to test
@@ -17,5 +19,6 @@ const logger = new LogManager(appConfig).getLogger()
 // })
 
 module.exports = {
+  initDB,
   logger
 }

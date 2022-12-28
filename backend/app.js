@@ -6,7 +6,7 @@ const path = require('path')
 const { appConfig } = require('./config')
 // require('./database')
 require('dotenv').config()
-const { logger } = require('./init')
+const { initDB, logger } = require('./init')
 // const people = require('./routes/people')
 
 const cors = require('cors')
@@ -62,5 +62,13 @@ process.on('unhandledRejection', error => {
 process.on('uncaughtException', error => {
   asyncErrorHandler(error)
 })
-const port = process.env.NODE_ENV === 'pro' ? (process.env.PORT || 80) : appConfig.port
-app.listen(port, () => console.log('Server listening on port ' + port))
+
+const port = process.env.NODE_ENV === 'pro'
+  ? (process.env.PORT || 80)
+  : appConfig.port
+
+// (add an extra ;) unexpected newline between function and ( of function call
+;(async () => {
+  await initDB()
+  app.listen(port, (/* err */) => console.log(`Server listening on ${port} `))
+})()

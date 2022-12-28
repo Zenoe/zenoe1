@@ -23,6 +23,10 @@ const LoginRoutes = {
     {
       path: 'register',
       element: <Register />
+    },
+    {
+      path: 'logout',
+      element: <Logout />
     }
   ]
 }

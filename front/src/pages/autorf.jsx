@@ -63,9 +63,9 @@ const AutoRf = () => {
     return () => document.removeEventListener('keydown', keydownHandler)
   }, [keydownHandler])
 
-  const cliRFPair = (_stepId) => {
+  const cliRFPair = (_stepId, _desc) => {
     const cliTextFieldAttr = {
-      placeholder: '#cli',
+      placeholder: _desc || '#cli',
       inputProps: { 'data-stepid': _stepId },
       onFocus: onCliTextFieldFocus,
       onChange: onCliTextFieldChange
@@ -78,9 +78,16 @@ const AutoRf = () => {
     )
   }
   return (
-    <Box>
+    <>
+      <Box
+        sx={{ fontWeight: '700', color: '#5EA85D' }}
+      >Step:</Box>
       { cliRFPair(1) }
-    </Box>
+      <Box
+        sx={{ fontWeight: '700', color: '#5EA85D' }}
+      >Expect:</Box>
+      { cliRFPair(1, 'show xxx') }
+    </>
   )
 }
 

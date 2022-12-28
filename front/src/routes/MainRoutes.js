@@ -3,6 +3,7 @@ import { lazy } from 'react';
 // project import
 import Loadable from '@/components/Loadable';
 import MainLayout from '@/layout/MainLayout';
+import RequireAuth from '@/RequireAuth'
 
 const DashboardDefault = Loadable(lazy(() => import('@/pages/Dashboard')));
 
@@ -59,7 +60,9 @@ const MainRoutes = {
     },
     {
       path: 'devices',
-      element: <Devices />
+      element: <RequireAuth>
+                 <Devices />
+               </RequireAuth>
     }
   ]
 };
