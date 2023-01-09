@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import PadBox from '@/components/PadBox'
 import { Button, Box, Grid } from '@mui/material'
 
 import BaseTable from '@/components/table/BaseTable'
@@ -34,6 +35,11 @@ const Devices = () => {
 
   return (
     <Box>
+      <PadBox sx={{ margin: 'auto', width: 400, border: '1px solid red' }}>
+        <Button>add</Button>
+        <Button>del</Button>
+
+      </PadBox>
       <BaseTable
         headCells={headCells}
         rows={data4Tbl}

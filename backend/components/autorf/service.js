@@ -15,7 +15,7 @@ function extractCli (rawString) {
   // const prompt = '#'
 
   // remove prompt: PE1(config)#
-  const prefixReg2 = /^.*# /
+  const prefixReg2 = /^.*# */
   newStr = newStr.replace(prefixReg2, '')
 
   const suffixReg = /[\'|\"],$/
@@ -50,6 +50,11 @@ function generateArgs (rfArgArray) {
 function generateRF (cliArray) {
   // 4 spaces
   const seperator = '    '
+  const rfSettings = `*** Settings ***
+Resource          ../../lib/lib_source.txt
+Resource          common.txt
+Resource          executeCli.txt\n\n
+*** Test Cases ***\n\n`
   let rfDocument = `${seperator}[Documentation]${seperator}`
   // executeCli    ${dut}    config    vrf definition ${vrfName}    rd ${rd}
   let rfStr = `${seperator}executeCli${seperator}\${dut}`
@@ -58,7 +63,8 @@ function generateRF (cliArray) {
     rfStr += `${seperator}${cli}`
   }
 
-  return rfDocument + rfStr
+  // return rfDocument + rfStr
+  return rfSettings + rfStr
 }
 
 const cli2rf = (rawStr) => {

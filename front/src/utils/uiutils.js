@@ -7,6 +7,7 @@ export function renderOrNot (v, jsx) {
 
 export function twoColJsx (obj1, obj2) {
   const props1 = obj1.compAttr || {}
+  const props2 = obj2.compAttr || {}
   return (
     <Grid container columnSpacing={{ xs: 0, sm: 1, lg: 2 }} >
       <Grid item xs={12} md={6}>
@@ -16,7 +17,7 @@ export function twoColJsx (obj1, obj2) {
       </Grid>
       <Grid item xs={12} md={6}>
         {obj2.comp
-          ? <obj2.comp>{ obj2.text }</obj2.comp>
+          ? <obj2.comp { ...props2 }>{ obj2.text }</obj2.comp>
           : obj2.text }
 
       </Grid>

@@ -34,7 +34,7 @@ const utilities = {
     },
     {
       id: 'utilAutoRf',
-      title: 'RF脚本自动生成',
+      title: 'cli转RF',
       type: 'item',
       url: '/autorf',
       icon: icons.SnippetsOutlined
@@ -52,14 +52,14 @@ const utilities = {
       type: 'item',
       url: '/rfsyntaxcheck',
       icon: icons.CheckOutlined
-    },
-    {
-      id: 'util-rfctool',
-      title: 'RFC辅助工具',
-      type: 'item',
-      url: '/rfctool',
-      icon: icons.ToolOutlined
     }
+    // {
+    //   id: 'util-rfctool',
+    //   title: 'RFC辅助工具',
+    //   type: 'item',
+    //   url: '/rfctool',
+    //   icon: icons.ToolOutlined
+    // }
     // {
     //   id: 'util-keygen',
     //   title: 'RF-Key 生成(todo)',

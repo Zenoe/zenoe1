@@ -20,6 +20,9 @@ config.appcfg = {
   env: 'dev',
   hostname: '10.110.198.50',
   JWT_SECRET: '123asdjkl',
+  // JWT_EXPIRE: '1h',
+  // JWT_EXPIRE: '10', // 10ms, string withou unit default as millisecond
+  JWT_EXPIRE: 10, // 10s
   cors: ['http://10.110.198.50:3009'],
   loggerLevel: 'debug'
 }
