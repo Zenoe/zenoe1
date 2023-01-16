@@ -3,6 +3,9 @@ import { Button, Box, Divider, Stack, Autocomplete, TextField, Checkbox, Textare
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank'
 import CheckBoxIcon from '@mui/icons-material/CheckBox'
 
+import Alert from '@mui/material/Alert'
+
+import { LeftRight } from '@/utils/uiutils'
 import { ipRegex } from '@/constants/commonvar'
 import ChangeCircleIcon from '@mui/icons-material/ChangeCircle'
 import { json2ObjList } from '@/utils/projutils'
@@ -34,6 +37,7 @@ const DCParamConverter = () => {
   const [loading, setLoading] = useState(false)
   const [informMsg, setInformMsg] = useState('')
   const [guessRFStr, setGuessRFStr] = useState('')
+  const [guessRFStr2, setGuessRFStr2] = useState('')
 
   const [rawResult, setRawResult] = useState('')
 
@@ -48,6 +52,7 @@ const DCParamConverter = () => {
   const handleKVResultChange = (e, v) => {
     const _yinfo = v.map(i => (i.title)).join(',')
     setGuessRFStr(`\${result}    dut_judge_show    cmd_str=${curCli}    yinfo={${_yinfo}}    alias=dut1`)
+    setGuessRFStr2(`\${result}    dut_judge_retry_show    cmd_str=${curCli}    yinfo={${_yinfo}}    alias=dut1`)
   }
 
   const selOnFocus = (e) => {
@@ -149,7 +154,10 @@ const DCParamConverter = () => {
           运行
         </LoadingButton>
         <Box>
-          {informMsg}
+          {informMsg === 'error'
+            ? <Alert severity="error">{informMsg}</Alert>
+            : <Alert severity="info">{informMsg}</Alert>
+          }
         </Box>
         <Box
           sx={{ color: 'blue' }}
@@ -157,8 +165,8 @@ const DCParamConverter = () => {
           [-]:遇到要输入word或num时,直接输入word或num, 如：show ip route vrf word , show isis topology flex-algo num <br/>
           [-]:匹配到命令时，直接按回车就可
         </Box>
-
       </Stack>
+
       <Box id="inputShowResultId" sx={{ fontSize: 14, mt: 2 }}>
         <TextareaAutosize
           minRows={10}
@@ -168,33 +176,20 @@ const DCParamConverter = () => {
           value={showInfo}
           onChange={handleShowInfoChange}
           onFocus={selOnFocus}
-          style={{ width: 700 }}
+          style={{ width: '100%' }}
         />
       </Box>
 
       <Box sx={{ m: 1 }}>返回参数</Box>
-      <Stack direction="row" spacing={2}>
-      <BasicTable
-        headCells={headCells}
-        /* rows={ [{key:'1',value:'vvv'}, {key:'1',value:'333'}] } */
-        rows={data4Tbl}
-        style={{ width: 700, whiteSpace: 'pre' }}
-      />
-    {/*     <Box id="inputShowResultId" sx={{fontSize: 14}}> */}
-    {/*       <TextField */}
-    {/*         id="outlined-multiline-flexible" */}
-    {/* /\* label="返回参数形式" *\/ */}
-    {/*         multiline */}
-    {/*         minRows={10} */}
-    {/*         value={data4Combox.join('\n')} */}
-    {/*         onChange={handleChange} */}
-    {/*         InputProps={{ */}
-    {/*           readOnly: true, */}
-    {/*         }} */}
-    {/*         style={{ width: 700 }} */}
 
-    {/*       /> */}
-    {/*     </Box> */}
+      {/* <Stack direction="row" spacing={2}> */}
+      <LeftRight>
+        <BasicTable
+          headCells={headCells}
+          /* rows={ [{key:'1',value:'vvv'}, {key:'1',value:'333'}] } */
+          rows={data4Tbl}
+          style={{ whiteSpace: 'pre' }}
+        />
 
         <Box>
           <Autocomplete
@@ -203,7 +198,6 @@ const DCParamConverter = () => {
             disableListWrap
             id="combo-box-demo"
             options={data4Combox}
-            sx={{ width: 700 }}
             renderInput={(params) => <TextField {...params} label="参数搜索" />}
             getOptionLabel={(option) => option.title}
             renderOption={(props, option, { selected }) => (
@@ -222,10 +216,15 @@ const DCParamConverter = () => {
           <Box sx={{ m: 1 }} >猜你需要:</Box>
           <TextField
             value={guessRFStr}
-            sx={{ width: 700 }}
+            sx={{ width: '100%' }}
             onFocus={selOnFocus}
           />
 
+          <TextField
+            value={guessRFStr2}
+            sx={{ width: '100%' }}
+            onFocus={selOnFocus}
+          />
           <Box sx={{ m: 1 }}>原始输出:</Box>
       <TextField
         multiline
@@ -235,10 +234,12 @@ const DCParamConverter = () => {
         InputProps={{
           readOnly: true
         }}
-        style={{ width: 700 }}
+        style={{ width: '100%' }}
       />
         </Box>
-      </Stack>
+              </LeftRight>
+
+      {/* </Stack> */}
     </Box>
   )
 }

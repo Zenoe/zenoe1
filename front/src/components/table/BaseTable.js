@@ -126,7 +126,6 @@ export default function BaseTable ({ headCells, rows, ...rest }) {
   }))
 
   const tblCells = (row) => {
-    console.log(tableCellClasses.head)
     const ret = []
     for (const prop in row) {
       ret.push(<StyledTableCell key={prop}>
@@ -173,8 +172,6 @@ export default function BaseTable ({ headCells, rows, ...rest }) {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
                   const isItemSelected = isSelected(row.key)
-                  const labelId = `enhanced-table-checkbox-${index}`
-
                   return (
                     <StyledTableRow
                       hover

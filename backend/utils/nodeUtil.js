@@ -1,6 +1,10 @@
 const generateRoutes = (_router, _routetbl) => {
   for (const route of _routetbl) {
-    route.method.call(_router, route.endpoint, route.controller)
+    if (route.middleware) {
+      route.method.call(_router, route.endpoint, route.middleware, route.controller)
+    } else {
+      route.method.call(_router, route.endpoint, route.controller)
+    }
   }
 }
 

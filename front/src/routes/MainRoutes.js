@@ -14,7 +14,7 @@ const RFSyntaxCheck = Loadable(lazy(() => import('@/pages/rfsyntaxcheck')));
 const RFKeyGen = Loadable(lazy(() => import('@/pages/rfkeygen')));
 const RFCTool = Loadable(lazy(() => import('@/pages/rfctool')));
 
-const Devices = Loadable(lazy(() => import('@/pages/devices')));
+const Devices = Loadable(lazy(() => import('@/pages/device')));
 
 const MainRoutes = {
   path: '/',

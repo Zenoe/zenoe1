@@ -24,3 +24,21 @@ export function twoColJsx (obj1, obj2) {
     </Grid>
   )
 }
+
+export function LeftRight (props) {
+  const { children } = props
+  if (!children || children.length !== 2) {
+    console.error('LeftRight should have exactly 2 children')
+    return null
+  }
+  return (
+    <Grid container columnSpacing={{ xs: 0, sm: 1, lg: 2 }} >
+      <Grid item xs={12} md={6}>
+        {children[0]}
+      </Grid>
+      <Grid item xs={12} md={6}>
+        {children[1]}
+      </Grid>
+    </Grid>
+  )
+}

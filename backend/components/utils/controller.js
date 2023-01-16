@@ -113,6 +113,7 @@ const convertParam = asyncHandler(async (req, res, next) => {
     })
   } catch (e) {
     // console.log('throw e');
+    logger.error(e)
     throw new ThridPartyError('python script returns error')
   }
 })

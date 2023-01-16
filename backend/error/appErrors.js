@@ -25,6 +25,16 @@ class AsyncError extends Error {
   }
 }
 
+class ThridPartyError extends Error {
+  constructor (res, message, details = {}) {
+    super()
+    this.name = 'ThridPartyError'
+    this.res = res
+    this.message = message
+    this.details = details
+  }
+}
+
 class UnauthorizedError extends ApplicationError {
   constructor (message, details) {
     super(message, details)
@@ -36,6 +46,7 @@ class UnauthorizedError extends ApplicationError {
 module.exports = {
   ApplicationError,
   TrivialError,
+  ThridPartyError,
   UnauthorizedError,
   AsyncError
 }

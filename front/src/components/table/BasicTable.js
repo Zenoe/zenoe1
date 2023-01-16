@@ -135,7 +135,7 @@ export default function BasicTable ({ headCells, rows, ...rest }) {
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0
 
   return (
-    <Box sx={{ width: 700 }}>
+    <Box>
         <TableContainer>
           <Table
             { ...rest }

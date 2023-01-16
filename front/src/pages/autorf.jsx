@@ -90,7 +90,7 @@ const AutoRf = () => {
 
   const cliRFPair = (_stepId, _desc) => {
     const cliTextFieldAttr = {
-      placeholder: _desc || '#cli',
+      placeholder: _desc || '#输入cli\n(按Ctrl+Enter 转换)',
       inputProps: { 'data-stepid': _stepId },
       onFocus: onCliTextFieldFocus,
       onChange: onCliTextFieldChange

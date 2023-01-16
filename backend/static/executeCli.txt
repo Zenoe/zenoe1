@@ -1,0 +1,13 @@
+executeCli
+    [Arguments]    ${dut}    @{rest}
+    [Documentation]    在${dut}指定的设备上执行 cli 命令序列
+    ...    executeCli 会在执行命令前自动添加 config
+    ...
+    ...    调用方式：
+    ...    第一个参数为dut，后面跟cli 指令序列
+    ...    executeCli dut1 cli1 cli2 cli3 \ \ \ \ \ \ \ ......
+    @{configList}=    create List
+    append to list    ${configList}    config
+    : FOR    ${v}    IN    @{rest}
+    \    append to list    ${configList}    ${v}
+    dut_write_cmdlist    cmd_list=${configList}    alias=${dut}

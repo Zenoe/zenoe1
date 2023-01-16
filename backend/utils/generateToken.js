@@ -1,9 +1,9 @@
 const jwt = require('jsonwebtoken')
 const { appConfig } = require('config')
 
-const generateToken = (id) => {
+const generateToken = (id, expiresIn = null) => {
   return jwt.sign({ id }, appConfig.JWT_SECRET, {
-    expiresIn: appConfig.JWT_EXPIRE
+    expiresIn: expiresIn || appConfig.JWT_EXPIRE
   })
 }
 

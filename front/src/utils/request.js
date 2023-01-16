@@ -17,6 +17,25 @@ axios.defaults.baseURL = SERVER_URL
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 
+function requestWithAuth (url, data) {
+  return axios({
+    method,
+    url,
+    timeout,
+    data,
+
+    // allow cookie
+    // but in server Access-Control-Allow-Origin cann't be *
+    withCredentials: true,
+    // credentials: "same-origin",
+    headers: {
+      Authorization: `Bearer ${userInfo.token}`,
+      Accept: 'application/json',
+      'Cache-Control': 'no-cache'
+      // Cookie: " _gscu_1878775803=98833870pob5sh24; _gscbrs_1878775803=1; org.springframework.web.servlet.i18n.CookieLocaleResolver.LOCALE=zh_CN; Hm_lvt_608ef9e4b8cd3b7746392c721f2ef555=1598833871,1600831407; Hm_lpvt_608ef9e4b8cd3b7746392c721f2ef555=1600831407; c__utma=1557273461.1229285511.7340176657450576825.1600831405.1602207324.3; c__utmc=1557273461.1086021304; SESSION=1586f20c-c27a-4ff1-ab4b-59db59df2caf; Hm_lvt_908e7bcd23611cb15593312e094a8844=1600843777,1602211218,1602212340,1602213241; Hm_lpvt_908e7bcd23611cb15593312e094a8844=1602213241"
+    }
+  })
+}
 function request (url, data, method = 'POST', timeout = 6000) {
   return axios({
     method,

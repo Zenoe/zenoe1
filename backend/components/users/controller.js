@@ -4,23 +4,29 @@ const User = require('./model.js')
 const generateToken = require('utils/generateToken.js')
 const validateSchema = require('middleware/validate-request')
 
+const { appConfig } = require('config')
 const { ApplicationError } = require('error/appErrors')
+
 // @description     Auth the user
 // @route           POST /api/users/login
 // @access          Public
+const maxAge = appConfig.JWT_EXPIRE * 1000
+
 const userLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body
 
   const user = await User.findOne({ email })
 
   if (user && (await user.matchPassword(password))) {
+    const token = generateToken(user._id, maxAge)
+    res.cookie('jwt', token, { httpOnly: true, maxAge })
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
-      token: generateToken(user._id)
+      token
     })
   } else {
     res.status(401)
@@ -43,8 +49,6 @@ const registerSchemaMware = (req, res, next) => {
 // @access          Public
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, pic } = req.body
-
-  console.log('register:', req.body)
   const userExists = await User.findOne({ email })
 
   if (userExists) {
@@ -59,13 +63,16 @@ const registerUser = asyncHandler(async (req, res) => {
   })
 
   if (user) {
+    const token = generateToken(user._id, maxAge)
+    res.cookie('jwt', token, { httpOnly: true, maxAge })
+
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
-      token: generateToken(user._id)
+      token
     })
   } else {
     res.status(400)
