@@ -138,13 +138,31 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
     let bFoundLastSid = false
     for (; i <= _globSidInfo.rowEnd; i++) {
       if (!bFoundLastSid && gModifyRFtxt[i].search(lastGlobSidRegexp) > 0) {
-        gModifyRFtxt[i] = gModifyRFtxt[i].replace(lastGlobSidRegexp, '$1')
+        const message = `删除第${i}行多余global_result`
+        retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', i))
+
+        // $1 is back reference in js
+        // replace substring from lastGlobSidRegexp to end with result${lastGlobSid}
+        const diffObj = createPatchObj(gModifyRFtxt, i, (textLine) => (textLine.replace(lastGlobSidRegexp, '$1')))
+        patchList.push(diffObj)
         bFoundLastSid = true
+
         continue
       }
       if (bFoundLastSid) {
         // remove extra global sid item
-        gModifyRFtxt[i] = ''
+
+        // fix bug: add to patchList when there is no sid error but extra global result
+        const diffobj = createPatchObj(gModifyRFtxt, i, (textLine) => (''))
+        patchList.push(diffobj)
+        // patchList.push(gModifyRFtxt, i, (textLine) => (''))
+        // const diffObj = {}
+        // diffObj.ori = gModifyRFtxt[i]
+        // gModifyRFtxt[i] = ''
+        const message = `删除第${i}行多余global_result`
+        retList.push(createCheckResult(SYNTAX_RESULT_SID, message, 'error', i))
+        // diffObj.mod = gModifyRFtxt[i]
+        // patchList.push(diffObj)
       }
     }
   }
@@ -153,6 +171,14 @@ const checkResultSidList = (_stepNum, _sidList, _globSidInfo) => {
     logger.debug('>>check ResultSidList ok')
   }
   return retList
+}
+
+const createPatchObj = (ori, row, action) => {
+  const diffObj = {}
+  diffObj.ori = ori[row]
+  diffObj.mod = action(diffObj.ori)
+  ori[row] = diffObj.mod
+  return diffObj
 }
 
 const checkStepContent = (_rfTxtList, _rowStart, _rowEnd) => {
