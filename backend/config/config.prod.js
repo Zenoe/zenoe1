@@ -21,7 +21,7 @@ config.appcfg = {
   hostname: mongoDBHost,
   JWT_SECRET: '123asdjkl',
   cors: ['http://10.110.198.52'],
-  JWT_EXPIRE: '1d',
+  JWT_EXPIRE: 3600,
   loggerLevel: 'info'
 }
 

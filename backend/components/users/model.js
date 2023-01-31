@@ -16,10 +16,10 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true
     },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false
+    roles: {
+      type: [String],
+      enum: ['user', 'admin', 'super_admin'],
+      default: ['user']
     },
     pic: {
       type: String,

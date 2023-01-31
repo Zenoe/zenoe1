@@ -126,6 +126,12 @@ const DCParamConverter = () => {
   const handleShowInfoChange = (e) => {
     setShowInfo(e.target.value)
   }
+
+  const alertJsx = (msg) => {
+    if (msg === '') return null
+    if (msg === 'error') return <Alert severity="error">{msg}</Alert>
+    if (msg === 'ok') return <Alert severity="info">{msg}</Alert>
+  }
   return (
     <Box>
       <Stack direction='row' spacing={2}>
@@ -154,10 +160,7 @@ const DCParamConverter = () => {
           运行
         </LoadingButton>
         <Box>
-          {informMsg === 'error'
-            ? <Alert severity="error">{informMsg}</Alert>
-            : <Alert severity="info">{informMsg}</Alert>
-          }
+          {alertJsx(informMsg)}
         </Box>
         <Box
           sx={{ color: 'blue' }}
