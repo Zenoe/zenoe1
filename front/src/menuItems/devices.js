@@ -16,6 +16,14 @@ const devices = {
       url: '/devices',
       icon: DesktopOutlined,
       breadcrumbs: false
+    },
+    {
+      id: 'updatedevice',
+      title: '设备升级',
+      type: 'item',
+      url: '/updatedevice',
+      icon: DesktopOutlined,
+      breadcrumbs: false
     }
   ]
 }

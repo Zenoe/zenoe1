@@ -1,15 +1,15 @@
-import React from 'react';
-import { Button } from '@mui/material';
-import { useFormikContext } from 'formik';
+import React from 'react'
+import { Button } from '@mui/material'
+import { useFormikContext } from 'formik'
 
 const SubmitButton = ({
   children,
   ...otherProps
 }) => {
-  const { submitForm } = useFormikContext();
+  const { submitForm } = useFormikContext()
 
   const handleSubmit = () => {
-    submitForm();
+    submitForm()
   }
 
   const configButton = {
@@ -22,10 +22,11 @@ const SubmitButton = ({
   return (
     <Button
       {...configButton}
+      {...otherProps}
     >
       {children}
     </Button>
-  );
-};
+  )
+}
 
-export default SubmitButton;
+export default SubmitButton

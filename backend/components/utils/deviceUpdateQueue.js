@@ -1,10 +1,13 @@
 const { Worker } = require('bullmq')
-const path = require('path')
 const { logger } = require('init')
 const { Queue } = require('bullmq')
 
+let queue = null
 const QUEUE_NAME = 'device-update'
-const queue = new Queue(QUEUE_NAME)
+
+function initQueue () {
+  queue = new Queue(QUEUE_NAME)
+}
 
 function convertTime (ms) {
   const hh = Math.floor(ms / 3600000)
@@ -90,42 +93,37 @@ const callExpect = (deviceIp) => {
   })
 }
 
-// function add2queue (_data) {
-//   console.log('add2queue')
-//   // Add a task to the queue
-//   if (Array.isArray(_data)) {
-//     for (const data of _data) {
-//       queue.add('update', {
-//         ip: data
-//       })
-//     }
-//   } else {
-//     queue.add('update', {
-//       ip: _data
-//     })
-//   }
-// }
-
 function add2queue (_data) {
-  console.log('add2queue')
-  queue.add('update', { ip: _data },
-    { repeat: { cron: '0 0 11 * *' }, removeOnComplete: true })
+  if (queue === null) initQueue()
+  const now = new Date()
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+  // miliseconds from now to midnight
+  const msUntilMidnight = midnight - now + 60 * 1000
+  // const msUntilMidnight = 1800 * 1000
+  queue.add('update', { ip: _data }, { delay: msUntilMidnight, removeOnComplete: true, removeOnFail: true })
+
+  // can not delete the job by setting removeOnComplete
+  // queue.add('update', { ip: _data },
+  //   { repeat: { pattern: '* * * * * *' }, removeOnComplete: true, removeOnFail: true }
+  // )
+  processJob()
+
+  // queue.add('update', { ip: _data }, { delay: 5000 })
 }
 
-async function processJob (_data) {
+async function processJob () {
+  console.log('processJob')
   const worker = new Worker(QUEUE_NAME, async job => {
     if (job.name === 'update') {
       for (const _ip of job.data.ip) {
+        console.log('test process......', _ip)
         const res = await callExpectPromisiy(_ip)
         console.log('processing job', _ip, res)
       }
-      // const res = await callExpectPromisiy(job.data.ip)
-
-      // await promiseResult(job.data.ip)
-      // callExpect(job.data.ip)
-      // console.log('processing job', job.data.ip, res)
     }
-  })
+  }
+  // { autorun: false }
+  )
   worker.on('completed', job => {
     console.info(`${job.id} has completed!`)
   })
@@ -133,24 +131,9 @@ async function processJob (_data) {
   worker.on('failed', (job, err) => {
     console.error(`${job.id} has failed with ${err.message}`)
   })
+  // worker.run()
 }
 
-const { QueueEvents } = require('bullmq')
-
-const queueEvents = new QueueEvents(QUEUE_NAME)
-
-queueEvents.on('completed', ({ jobId }) => {
-  console.log('done update')
-})
-
-queueEvents.on(
-  'failed',
-  (failReason) => {
-    console.error('error updating', failReason)
-  }
-)
-
 module.exports = {
-  add2queue,
-  processJob
+  add2queue
 }

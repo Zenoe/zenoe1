@@ -1,27 +1,25 @@
-import {useEffect, useState} from 'react'
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 
-import { Formik, Form } from 'formik';
-import * as Yup from 'yup';
+import { Formik, Form } from 'formik'
+import * as Yup from 'yup'
 import {
   Container,
   Grid,
   Typography
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import Loading from "@/components/Loading";
-import Textfield from '@/components/FormsUI/Textfield';
-import Select from '@/components/FormsUI/Select';
-import DateTimePicker from '@/components/FormsUI/DataTimePicker';
-import Checkbox from '@/components/FormsUI/Checkbox';
-import SubmitButton from '@/components/FormsUI/SubmitButton';
-import countries from '@/../data/countries.json';
+} from '@mui/material'
+import { useNavigate, Link } from 'react-router-dom'
+import Loading from '@/components/Loading'
+import Textfield from '@/components/FormsUI/Textfield'
+import Select from '@/components/FormsUI/Select'
+import DateTimePicker from '@/components/FormsUI/DataTimePicker'
+import Checkbox from '@/components/FormsUI/Checkbox'
+import SubmitButton from '@/components/FormsUI/SubmitButton'
+import countries from '@/../data/countries.json'
 
-import Alert from '@mui/material/Alert';
+import Alert from '@mui/material/Alert'
 
-import { Link } from 'react-router-dom';
-
-import { register } from "@/actions/userActions";
+import { register } from '@/actions/userActions'
 
 const INITIAL_FORM_STATE = {
   name: '',
@@ -30,7 +28,7 @@ const INITIAL_FORM_STATE = {
   password: '',
   confirmpassword: '',
   termsOfService: true
-};
+}
 
 const FORM_VALIDATION = Yup.object().shape({
   name: Yup.string()
@@ -42,30 +40,31 @@ const FORM_VALIDATION = Yup.object().shape({
     .required(),
   termsOfService: Yup.boolean()
     .oneOf([true], 'The terms and conditions must be accepted.')
-    .required('The terms and conditions must be accepted.'),
-});
+    .required('The terms and conditions must be accepted.')
+})
 
 const Register = () => {
-  const navigate = useNavigate();
-  const [message, setMessage] = useState(null);
+  const navigate = useNavigate()
+  const [message, setMessage] = useState(null)
 
-  const userRegister = useSelector((state) => state.userRegister);
-  const { loading, error, userInfo } = userRegister;
-  const dispatch = useDispatch();
+  const userRegister = useSelector((state) => state.userRegister)
+  const { loading, error, userInfo } = userRegister
+  const dispatch = useDispatch()
 
+  // The useNavigate dependency is used with the useEffect hook in React to programmatically navigate between routes.
+  // This allows you to redirect a user to a different page or component after a certain action is taken, such as clicking a button.
+  // The useNavigate hook is useful for creating dynamic and interactive user experiences.
   useEffect(() => {
     if (userInfo) {
-      navigate("/");
+      navigate('/')
     }
-  }, [navigate, userInfo]);
+  }, [navigate, userInfo])
 
   return (
-    <Grid container>
-      <Grid item xs={12}>
         <Container maxWidth="md">
           <div>
             {error && <Alert severity="error">{error}</Alert>}
-            {message &&<Alert severity="error">{message}</Alert>}
+            {message && <Alert severity="error">{message}</Alert>}
             {loading && <Loading />}
 
             <Formik
@@ -76,9 +75,9 @@ const Register = () => {
               onSubmit={values => {
                 const { name, email, password, pic } = values
                 if (values.password !== values.confirmpassword) {
-                  setMessage("Passwords do not match");
+                  setMessage('Passwords do not match')
                 } else {
-                  dispatch(register(name, email, password, pic));
+                  dispatch(register(name, email, password, pic))
                 }
               }}
             >
@@ -170,12 +169,9 @@ const Register = () => {
 
               </Form>
             </Formik>
-
           </div>
         </Container>
-      </Grid>
-    </Grid>
-  );
-};
+  )
+}
 
 export default Register

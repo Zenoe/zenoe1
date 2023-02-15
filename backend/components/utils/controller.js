@@ -10,6 +10,8 @@ const { callPy } = require('tool/dutShow')
 const { ThridPartyError } = require('error/appErrors')
 const { PROJECT_DIR } = require('config')
 
+const { add2queue } = require('./deviceUpdateQueue')
+
 const uploadFile = asyncHandler(async (req, res, next) => {
   if (!req.files || Object.keys(req.files).length === 0) {
     throw new Error('No files were uploaded.')
@@ -118,10 +120,45 @@ const convertParam = asyncHandler(async (req, res, next) => {
   }
 })
 
+const updateDeviceBin = asyncHandler(async (req, res, next) => {
+  const { lstIp } = req.body
+  logger.debug(`updateDeviceBin: ${lstIp}`)
+  add2queue(lstIp)
+
+  try {
+    for (const _ip of lstIp) {
+      // callExpect(_ip)
+    }
+    res.json({
+      status: 1,
+      message: 'submitted'
+    })
+    return
+    // callScript('bash', [scriptPath, deviceIp]).then(res => {
+    //   console.log(res)
+    // })
+    // return
+    // const _result = await callScript('bash', [scriptPath, deviceIp])
+    // console.log('result from bash', _result[1])
+    // // logger.info(`receive from py:${_result[1]}`)
+    // logger.info(`return from updating device : ${deviceIp}`)
+    // _result[0].kill('SIGTERM')
+    // res.json({
+    //   result: _result[1],
+    //   status: 1
+    // })
+  } catch (e) {
+    // console.log('throw e');
+    logger.error(e)
+    throw new ThridPartyError('bash script returns error')
+  }
+})
+
 module.exports = {
   getFileList,
   uploadFile,
   convert2Rf,
   checkRFSyntax,
+  updateDeviceBin,
   convertParam
 }

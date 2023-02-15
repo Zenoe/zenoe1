@@ -15,6 +15,7 @@ const RFKeyGen = Loadable(lazy(() => import('@/pages/rfkeygen')));
 const RFCTool = Loadable(lazy(() => import('@/pages/rfctool')));
 
 const Devices = Loadable(lazy(() => import('@/pages/device')));
+const UpdateDevice = Loadable(lazy(() => import('@/pages/updatedevice')));
 
 const MainRoutes = {
   path: '/',
@@ -63,6 +64,11 @@ const MainRoutes = {
       element: <RequireAuth>
                  <Devices />
                </RequireAuth>
+    },
+    {
+      path: 'updatedevice',
+      element: <UpdateDevice />
+
     }
   ]
 };

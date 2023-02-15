@@ -39,3 +39,4 @@ local-data
 backend/upload
 rfcfiles
 DutGetShow.py
+*.rdb

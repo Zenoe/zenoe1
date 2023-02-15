@@ -1,27 +1,32 @@
 
 // strip extension
-const stripExt = (_filePath) => ( _filePath.substring(0, _filePath.lastIndexOf('.')) )
+const stripExt = (_filePath) => (_filePath.substring(0, _filePath.lastIndexOf('.')))
 
-const mybasename = (_filePath, _stripExt=false) => {
-  let _ret = _filePath.substring(_filePath.lastIndexOf('/')+1)
-  if(_stripExt){
+const mybasename = (_filePath, _stripExt = false) => {
+  const _ret = _filePath.substring(_filePath.lastIndexOf('/') + 1)
+  if (_stripExt) {
     return stripExt(_ret)
   }
   return _ret
 }
 
-const removeFromArray = (arr, ele)=>{
-  const idx = arr.indexOf(ele);
-  if(idx > -1){
+function validateIP (ip) {
+  const regExp = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+  return regExp.test(ip)
+}
+
+const removeFromArray = (arr, ele) => {
+  const idx = arr.indexOf(ele)
+  if (idx > -1) {
     arr.splice(idx, 1)
   }
 }
 
 const toISOStringWithTimezone = date => {
   // 2022-05-11T13:21:13+08:00
-  const tzOffset = -date.getTimezoneOffset();
-  const diff = tzOffset >= 0 ? '+' : '-';
-  const pad = n => `${Math.floor(Math.abs(n))}`.padStart(2, '0');
+  const tzOffset = -date.getTimezoneOffset()
+  const diff = tzOffset >= 0 ? '+' : '-'
+  const pad = n => `${Math.floor(Math.abs(n))}`.padStart(2, '0')
   return date.getFullYear() +
     '-' + pad(date.getMonth() + 1) +
     '-' + pad(date.getDate()) +
@@ -29,11 +34,11 @@ const toISOStringWithTimezone = date => {
     ':' + pad(date.getMinutes()) +
     ':' + pad(date.getSeconds()) +
     diff + pad(tzOffset / 60) +
-    ':' + pad(tzOffset % 60);
-};
+    ':' + pad(tzOffset % 60)
+}
 
 /* control the frequency of function execution */
-const throttleFn  = (fn, delay) =>{
+const throttleFn = (fn, delay) => {
   // set a flag outside the return function to determine if the interval threshold has been reached
   let lastCall = 0
   return function (...args) {
@@ -60,12 +65,12 @@ const throttleFn  = (fn, delay) =>{
 /* wait for a certain amount of time before running */
 const debounceFn = (fn, delay) => {
   let timer
-  return function(...args) {
+  return function (...args) {
     // clear the timer before calling setTimeout(this help in restricing multiple timer instances)
     clearTimeout(timer)
     // copy the 'this' context outside the asynchronous setTimeOut
     const context = this
-    timer = setTimeout(()=>{
+    timer = setTimeout(() => {
       // As it's a asynchronous function, we need to pass the context object
       fn.apply(context, args)
     }, delay)
@@ -77,4 +82,5 @@ module.exports = {
   throttleFn,
   removeFromArray,
   mybasename,
+  validateIP
 }

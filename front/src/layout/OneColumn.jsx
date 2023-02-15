@@ -5,6 +5,7 @@ import {
 } from '@mui/material'
 
 import { renderOrNot } from '@/utils/uiutils'
+import { v4 as uuid } from 'uuid'
 export function OneColumn (props) {
   const { children, spacing } = props
 
@@ -22,15 +23,18 @@ export function OneColumn (props) {
     </Grid>
   )
 }
-
 export function OneColumnFormLabel (props) {
   const { children, spacing, labels } = props
 
   const gridItems = []
   for (const [idx, child] of children.entries()) {
     gridItems.push(
-        <Grid key={labels[idx]} item xs={6}>
-          <Box display="flex" justifyContent="flex-end">
+        <Grid key={uuid()} item xs={6}>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}
+            >
             <label>{labels[idx]}</label>
           </Box>
         </Grid>

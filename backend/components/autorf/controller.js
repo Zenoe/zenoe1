@@ -7,10 +7,19 @@ const { cli2rf } = require('./service')
 const autoRF = asyncHandler(async (req, res) => {
   const { cli } = req.body
   // console.log(cli)
-  // console.log(cli2rf)
   const rfscript = cli2rf(cli)
   // console.log(rfscript)
   res.json(rfscript)
 })
 
-module.exports = { autoRF }
+const addRFType = asyncHandler(async (req, res) => {
+  const { rftype } = req.body
+  console.log('addRFType', rftype)
+  res.json({})
+})
+
+const getRFType = asyncHandler(async (req, res) => {
+  res.json({})
+})
+
+module.exports = { autoRF, addRFType, getRFType }

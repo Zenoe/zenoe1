@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const rfcSchema = mongoose.Schema(
+const rfSchema = mongoose.Schema(
   {
     // _id: {
     //   type: mongoose.Schema.Types.ObjectId
@@ -66,6 +66,24 @@ const rfcSchema = mongoose.Schema(
     versionKey: false
   }
 )
+const rfTypeSchema = mongoose.Schema(
+  {
+    rfTypeName: {
+      type: String,
+      required: true,
+      unique: true
+    }
+  },
+  {
+    timestamps: false,
+    versionKey: false
+  }
+)
 
-const RFScript = mongoose.model('RFScript', rfcSchema)
-module.exports = RFScript
+const RFType = mongoose.model('RFTypeName', rfTypeSchema)
+const RFScript = mongoose.model('RFScript', rfSchema)
+
+module.exports = {
+  RFType,
+  RFScript
+}

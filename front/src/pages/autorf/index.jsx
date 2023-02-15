@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react'
-import { Button, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
+import { Button, Modal, Container, MenuItem, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
-
 import { Link } from 'react-router-dom'
-import { twoColJsx } from '@/utils/uiutils'
+import { twoColJsx, CollapsableLayout, HorizontalDivs } from '@/utils/uiutils'
 import { LoadingButton } from '@mui/lab'
-
 import { request } from '@/utils/request'
+import { makeStyles } from '@mui/styles'
+
+import AddRFTypeModal from './AddRFTypeModal'
+import { OneColumnFormLabel } from '@/layout/OneColumn'
+
+import * as Yup from 'yup'
+
+import UploadFiles from '@/components/UploadFiles'
+import { useForm, Controller } from 'react-hook-form'
 
 const cliTextField = (props = { defaultValue: 'red' }) => {
   return (
@@ -20,6 +27,8 @@ const cliTextField = (props = { defaultValue: 'red' }) => {
     />
   )
 }
+const useStyles = makeStyles({
+})
 
 const expectTextField = (props = { defaultValue: 'red' }) => {
   return (
@@ -45,6 +54,11 @@ const expectTextField = (props = { defaultValue: 'red' }) => {
 }
 
 const AutoRf = () => {
+  const [showAddTypeModal, setShowAddTypeModal] = useState(false)
+  const { handleSubmit, control } = useForm()
+  const onSubmit = data => console.log(data)
+
+  const [fileList, setFileList] = useState([])
   const [loading, setLoading] = useState(false)
   const [convertMsg, setConvertMsg] = useState('')
   const [cli, setCli] = useState('')
@@ -75,6 +89,24 @@ const AutoRf = () => {
     }
   }
 
+  const handleClose = () => {
+    console.log('close')
+    // request('api/autorf/getrftypes').then(res => {
+    //   console.log('receive types of rfscript', res.data)
+    // })
+    setShowAddTypeModal(false)
+  }
+
+  const modalJsxAddType = () => {
+    return (
+      <AddRFTypeModal show={showAddTypeModal} onClose={handleClose}/>
+    )
+  }
+
+  const handleAddType = () => {
+    setShowAddTypeModal(true)
+    // open modal
+  }
   const onCliTextFieldChange = (e) => {
     setCli(e.target.value)
   }
@@ -107,31 +139,86 @@ const AutoRf = () => {
     )
   }
 
-  const expectRFPair = (_stepId, _desc) => {
-    const cliTextFieldAttr = {
-      placeholder: _desc || '#cli',
-      inputProps: { 'data-stepid': _stepId },
-      onFocus: onCliTextFieldFocus,
-      onChange: onCliTextFieldChange
-    }
-    return (
-      twoColJsx(
-        { text: '', comp: expectTextField, compAttr: cliTextFieldAttr },
-        { text: '', comp: cliTextField }
-      )
-    )
-  }
+  const labels = [
+    '拓扑名称',
+    '类型',
+    '描述',
+    '配置Cli',
+    ''
+  ]
+  return (
+    <Container maxWidth="md">
+      {modalJsxAddType()}
+      <form key={1} onSubmit={handleSubmit(onSubmit)}>
+        <OneColumnFormLabel labels={labels}>
+          <Controller
+            render={({ field }) => <TextField {...field} />}
+            name="topName"
+            rules={{ required: true }}
+            control={control}
+            defaultValue=""
+            className="materialUIInput"
+          />
 
+          <Controller
+            render={({ field }) => (
+              <Box>
+              <Select {...field} value={10}>
+                <MenuItem value={10}>Ten</MenuItem>
+                <MenuItem value={20}>Twenty</MenuItem>
+                <MenuItem value={30}>Thirty</MenuItem>
+              </Select>
+                <Button onClick={ handleAddType }>Add</Button>
+              </Box>
+            )}
+            name="type"
+            control={control}
+          />
+          <Controller
+            render={({ field }) => <TextField multiline {...field} />}
+            name="desc"
+            rules={{ required: false }}
+            control={control}
+            defaultValue=""
+          />
+
+          <Controller
+            render={({ field }) => <TextField multiline {...field} />}
+            name="cli"
+            rules={{ required: false }}
+            control={control}
+            defaultValue=""
+          />
+
+          <input type="submit" />
+
+        </OneColumnFormLabel>
+      </form>
+    </Container>
+  )
   return (
     <>
-      <Box
-        sx={{ fontWeight: '700', color: '#5EA85D' }}
-      >
-        Step:
-      </Box>
-      { cliRFPair(1) }
+      <Stack spacing={2}>
+        <Box>上传配置文件转换</Box>
+        <UploadFiles title={'选择配置文件'} id={'selTestCaseId'} setFileList={setFileList} />
+      </Stack>
+      <Divider sx={{ m: 2 }}/>
 
-      <a href={`${SERVER_URL}/static/executeCli.txt` } download="" >{'execute key下载'}</a>
+      <CollapsableLayout
+        description='输入cli转换'
+      >
+        <Box
+          sx={{ fontWeight: '700', color: '#5EA85D' }}
+        >
+          Step:
+        </Box>
+
+        { cliRFPair(1) }
+        <a href={`${SERVER_URL}/static/executeCli.txt` } download="" >{'execute key下载'}</a>
+      </CollapsableLayout>
+
+      <Box>
+      </Box>
       {/* <Box */}
       {/*   sx={{ fontWeight: '700', color: '#5EA85D' }} */}
       {/* > */}

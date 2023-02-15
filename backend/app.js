@@ -69,7 +69,6 @@ const port = process.env.NODE_ENV === 'pro'
   ? (process.env.PORT || 80)
   : appConfig.port
 
-console.log('.........', process.env.NODE_ENV)
 // (add an extra ;) unexpected newline between function and ( of function call
 ;(async () => {
   await initDB()

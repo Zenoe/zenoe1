@@ -1,26 +1,25 @@
-import React, { useState, useEffect, Component } from "react";
-import { LinearProgress, Box, Typography, Button, ListItem } from '@mui/material';
+import React, { useState, useEffect, Component } from 'react'
+import { LinearProgress, Box, Typography, Button, ListItem } from '@mui/material'
 // import {withStyles} from '@mui/styles'
-import { makeStyles  } from '@mui/styles';
-
+import { makeStyles } from '@mui/styles'
 import { requestUpload, requestGet } from '@/utils/request'
 
 const useStyles = makeStyles({
-    root: {
-      height: 15,
-      borderRadius: 5,
-    },
-    colorPrimary: {
-      backgroundColor: "#EEEEEE",
-    },
-    bar: {
-      borderRadius: 5,
-      backgroundColor: '#1a90ff',
-    },
-  });
+  root: {
+    height: 15,
+    borderRadius: 5
+  },
+  colorPrimary: {
+    backgroundColor: '#EEEEEE'
+  },
+  bar: {
+    borderRadius: 5,
+    backgroundColor: '#1a90ff'
+  }
+})
 
-const UploadFiles = ({title, id, setFileList })=> {
-  const classes = useStyles();
+const UploadFiles = ({ title, id, setFileList }) => {
+  const classes = useStyles()
 
   const [selectedFiles, setSelectedFiles] = useState(undefined)
   const [currentFile, setCurrentFile] = useState(undefined)
@@ -32,7 +31,7 @@ const UploadFiles = ({title, id, setFileList })=> {
   }
 
   const upload = () => {
-    let _currentFile = selectedFiles[0];
+    const _currentFile = selectedFiles[0]
     // console.log(_currentFile);
 
     setCurrentFile(_currentFile)
@@ -52,10 +51,10 @@ const UploadFiles = ({title, id, setFileList })=> {
       .catch((e) => {
         setProgress(0)
         setMessage('could not upload the file')
-        console.log(e);
+        console.log(e)
         setCurrentFile(undefined)
         setIsError(true)
-      });
+      })
 
     setSelectedFiles(undefined)
   }
@@ -101,10 +100,10 @@ const UploadFiles = ({title, id, setFileList })=> {
         Upload
       </Button>
 
-      <Typography variant="subtitle2" className={`upload-message ${isError ? "error" : ""}`}>
+      <Typography variant="subtitle2" className={`upload-message ${isError ? 'error' : ''}`}>
         {message}
       </Typography>
     </div >
-  );
+  )
 }
 export default UploadFiles

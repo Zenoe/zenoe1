@@ -1,5 +1,8 @@
 import Grid from '@mui/material/Grid'
 
+import { useState, useEffect } from 'react'
+import { Box } from '@mui/material'
+
 export function renderOrNot (v, jsx) {
   if (!v) { return null }
   return jsx
@@ -32,7 +35,13 @@ export function LeftRight (props) {
     return null
   }
   return (
-    <Grid container columnSpacing={{ xs: 0, sm: 1, lg: 2 }} >
+    <Grid container
+          columnSpacing={{ xs: 0, sm: 1, lg: 2 }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center'
+          }}
+    >
       <Grid item xs={12} md={6}>
         {children[0]}
       </Grid>
@@ -40,5 +49,48 @@ export function LeftRight (props) {
         {children[1]}
       </Grid>
     </Grid>
+  )
+}
+
+export function CollapsableLayout (props) {
+  const { children, description } = props
+  if (!children || children.length === 0) {
+    console.log('CollapsableLayour should contain a child')
+    return null
+  }
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  return (
+    <div>
+      <span style={{ marginRight: '4px' }}>{description}</span>
+      <button onClick={() => setIsCollapsed(!isCollapsed)}>
+        >>
+      </button>
+
+      <div
+        style={{
+          height: isCollapsed ? 0 : 'auto',
+          overflow: 'hidden',
+          transition: 'all 0.3s ease-in-out'
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+export function HorizontalDivs (props) {
+  const { children } = props
+  if (!children || children.length === 0) {
+    console.log('CollapsableLayour should contain a child')
+    return null
+  }
+  return (
+    <div style={{
+      display: 'flex'
+    }}>
+        {children}
+    </div>
   )
 }

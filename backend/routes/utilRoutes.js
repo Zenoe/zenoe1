@@ -6,6 +6,7 @@ const {
   uploadFile,
   convert2Rf,
   convertParam,
+  updateDeviceBin,
   checkRFSyntax
 } = require('components/utils/controller.js')
 
@@ -16,5 +17,6 @@ router.get('/filelist', getFileList)
 router.get('/convert2rf', convert2Rf)
 router.get('/convertparam', convertParam)
 router.post('/checkrfsyntax', checkRFSyntax)
+router.post('/updatedevicebin', updateDeviceBin)
 
 module.exports = router
