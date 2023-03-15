@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Modal, Container, MenuItem, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
+import { Button, Container, MenuItem, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
 import { Link } from 'react-router-dom'
 import { twoColJsx, CollapsableLayout, HorizontalDivs } from '@/utils/uiutils'
@@ -27,8 +27,6 @@ const cliTextField = (props = { defaultValue: 'red' }) => {
     />
   )
 }
-const useStyles = makeStyles({
-})
 
 const expectTextField = (props = { defaultValue: 'red' }) => {
   return (
@@ -56,14 +54,33 @@ const expectTextField = (props = { defaultValue: 'red' }) => {
 const AutoRf = () => {
   const [showAddTypeModal, setShowAddTypeModal] = useState(false)
   const { handleSubmit, control } = useForm()
-  const onSubmit = data => console.log(data)
+  const onSubmit = data => {
+    request('api/autorf/addrfscript', data).then(res => {
+      console.log(res)
+    }).catch(rej => {
+      console.log('addrfscript failed:', rej)
+    })
+  }
 
   const [fileList, setFileList] = useState([])
   const [loading, setLoading] = useState(false)
   const [convertMsg, setConvertMsg] = useState('')
   const [cli, setCli] = useState('')
   const [rfScript, setRFScript] = useState('')
+  const [RFType, setRFType] = useState([])
+  const [curRFType, setCurRFType] = useState('')
 
+  useEffect(() => {
+    request('api/autorf/getrftype')
+      .then(res => {
+        setRFType(res.data.result.map(i => i.RFTypeName))
+        if (res.data.result.length > 0) { setCurRFType(res.data.result[0].RFTypeName) }
+      })
+  }, [])
+
+  const addtoRFType = (_RFType) => {
+    setRFType([...RFType, _RFType])
+  }
   const cli2Rf = () => {
     setLoading(true)
     setConvertMsg('')
@@ -99,7 +116,7 @@ const AutoRf = () => {
 
   const modalJsxAddType = () => {
     return (
-      <AddRFTypeModal show={showAddTypeModal} onClose={handleClose}/>
+      <AddRFTypeModal show={showAddTypeModal} onClose={handleClose} addtoRFType={addtoRFType}/>
     )
   }
 
@@ -146,6 +163,17 @@ const AutoRf = () => {
     '配置Cli',
     ''
   ]
+
+  const handleSelectRFTypeChange = (e) => {
+    setCurRFType(e.target.value)
+  }
+  const RFTypeSelectMenuitemJsx = () => {
+    if (RFType) {
+      return RFType.map((el, i) => (<MenuItem key={i} value={el}>{ el }</MenuItem>
+      ))
+    }
+    return null
+  }
   return (
     <Container maxWidth="md">
       {modalJsxAddType()}
@@ -163,15 +191,13 @@ const AutoRf = () => {
           <Controller
             render={({ field }) => (
               <Box>
-              <Select {...field} value={10}>
-                <MenuItem value={10}>Ten</MenuItem>
-                <MenuItem value={20}>Twenty</MenuItem>
-                <MenuItem value={30}>Thirty</MenuItem>
+                <Select {...field} value={curRFType} onChange={handleSelectRFTypeChange}>
+                {RFTypeSelectMenuitemJsx()}
               </Select>
                 <Button onClick={ handleAddType }>Add</Button>
               </Box>
             )}
-            name="type"
+            name="RFType"
             control={control}
           />
           <Controller

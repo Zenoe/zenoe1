@@ -29,7 +29,7 @@ export function OneColumnFormLabel (props) {
   const gridItems = []
   for (const [idx, child] of children.entries()) {
     gridItems.push(
-        <Grid key={uuid()} item xs={6}>
+        <Grid key={uuid()} item xs={4}>
           <Box sx={{
             display: 'flex',
             justifyContent: 'flex-end'
@@ -40,7 +40,7 @@ export function OneColumnFormLabel (props) {
         </Grid>
     )
     gridItems.push(
-      <Grid key={idx} item xs={6}>
+      <Grid key={idx} item xs={8}>
         {child}
       </Grid>
 

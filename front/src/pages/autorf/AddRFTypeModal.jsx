@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Modal, Container, MenuItem, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
+import { Alert, Modal, Container, MenuItem, TextField, Box, Divider, Grid, ListItem, Stack, Typography } from '@mui/material'
 import { request } from '@/utils/request'
 
 import { OneColumnFormLabel } from '@/layout/OneColumn'
@@ -7,6 +7,8 @@ import { OneColumnFormLabel } from '@/layout/OneColumn'
 import * as Yup from 'yup'
 
 import { useForm, Controller } from 'react-hook-form'
+
+import { LeftRight, renderOrNot } from '@/utils/uiutils'
 
 const style = {
   position: 'absolute',
@@ -22,8 +24,8 @@ const style = {
   p: 4
 }
 
-export default function AddRFTypeModal ({ show, onClose }) {
-  // const { handleSubmit, control } = useForm()
+export default function AddRFTypeModal ({ show, onClose, addtoRFType }) {
+  const [informMsg, setInformMsg] = useState('')
   const {
     control: control2,
     register: register2,
@@ -33,19 +35,20 @@ export default function AddRFTypeModal ({ show, onClose }) {
     mode: 'onBlur'
   })
   const handleClose = () => {
-    console.log('close')
+    setInformMsg('')
     onClose()
-    return
-    request('api/autorf/getrftypes').then(res => {
-      console.log('receive types of rfscript', res.data)
-    })
-    setShowAddTypeModal(false)
   }
 
   const onSubmit = (data) => {
-    console.log(data)
-    request('api/autorf/addtype').then(res => {
-      console.log(res)
+    console.log(data.addedType)
+    setInformMsg('')
+    request('api/autorf/addrftype', { rftype: data.addedType }).then(res => {
+      console.log(res.data)
+      if (res.data.status === 1) {
+        addtoRFType(data.addedType)
+      } else {
+        setInformMsg(res.data.message)
+      }
     })
   }
   const labels = ['新增类型']
@@ -54,7 +57,7 @@ export default function AddRFTypeModal ({ show, onClose }) {
       open={show}
       onClose={handleClose}
     >
-      <Box sx={{ ...style, width: '320px', height: '160px' }}>
+      <Box sx={{ ...style, width: '560px', height: '320px' }}>
         <form key={2} onSubmit={handleSubmit2(onSubmit)}>
           <OneColumnFormLabel labels={labels}>
             <Controller
@@ -64,6 +67,9 @@ export default function AddRFTypeModal ({ show, onClose }) {
               control={control2}
               defaultValue=""
             />
+            <Box>
+              {renderOrNot(informMsg, <Alert severity="error">{ informMsg }</Alert>)}
+            </Box>
             <input type="submit" />
 
           </OneColumnFormLabel>

@@ -4,7 +4,7 @@ const { logger } = require('init')
 /**
  * return all data if _filters is null, limit by _max
  * */
-const getData = async (_filters, _model, _skip = 0, _max = 100) => {
+const getData = async (_model, _filters, _skip = 0, _max = 100) => {
   logger.debug(`get from mongodb, ${_model.modelName}`)
 
   let retData
@@ -16,12 +16,12 @@ const getData = async (_filters, _model, _skip = 0, _max = 100) => {
       // { createdAt: 0, updatedAt: 0 }
     )
   } else {
-    retData = await _model.find({}, { createdAt: 0, updatedAt: 0 }).skip(_skip).limit(100)
+    retData = await _model.find({}, { _id: 0, createdAt: 0, updatedAt: 0 }).skip(_skip).limit(100)
   }
   return retData
 }
 
-const addData = async (_dataObj, _model) => {
+const addData = async (_model, _dataObj) => {
   logger.debug(`add data for ${_model.modelName}`)
 
   // create() method returns a Promise that resolves with the newly created document.

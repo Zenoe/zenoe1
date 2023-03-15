@@ -5,18 +5,30 @@ const { generateRoutes } = require('utils/nodeUtil')
 const {
   autoRF,
   addRFType,
-  getRFType
+  getRFType,
+  addRFScript,
+  getRFScript
 } = require('components/autorf/controller.js')
 
 const routetbl = [
   {
     method: router.post,
-    endpoint: '/addtype',
+    endpoint: '/addrfscript',
+    controller: addRFScript
+  },
+  {
+    method: router.post,
+    endpoint: '/getrfscript',
+    controller: getRFScript
+  },
+  {
+    method: router.post,
+    endpoint: '/addrftype',
     controller: addRFType
   },
   {
     method: router.post,
-    endpoint: '/gettype',
+    endpoint: '/getrftype',
     controller: getRFType
   },
   {

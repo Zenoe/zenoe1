@@ -1,4 +1,5 @@
 // todo multer
+const path = require('path')
 const asyncHandler = require('express-async-handler')
 const { findFileRecursivelySync } = require('utils/fs')
 const { AsyncError } = require('error/appErrors')
@@ -6,7 +7,7 @@ const { logger } = require('init')
 const { generateRf } = require('tool/testCaseParse/xlsReader')
 const { checkRFSyntaxTool } = require('tool/rf/checkRFSyntax')
 const { callPy } = require('tool/dutShow')
-
+const { callPy3 } = require('utils/utils')
 const { ThridPartyError } = require('error/appErrors')
 const { PROJECT_DIR } = require('config')
 
@@ -120,6 +121,28 @@ const convertParam = asyncHandler(async (req, res, next) => {
   }
 })
 
+const executeCli = asyncHandler(async (req, res, next) => {
+  const { lstServer, command } = req.body
+  logger.debug(`${lstServer}, ${command}`)
+
+  try {
+    const scriptPath = path.join(__dirname, 'executeCmd.py')
+    const _result = await callPy3([lstServer, command], scriptPath)
+    console.log(_result[1])
+    // logger is async, it won't get _result here
+    // logger.info(`receive from py:${_result[1]}`)
+    _result[0].kill('SIGTERM')
+    res.json({
+      result: _result[1],
+      status: 1
+    })
+  } catch (e) {
+    // console.log('throw e');
+    logger.error(e)
+    throw new ThridPartyError('python script returns error')
+  }
+})
+
 const updateDeviceBin = asyncHandler(async (req, res, next) => {
   const { lstIp } = req.body
   logger.debug(`updateDeviceBin: ${lstIp}`)
@@ -159,6 +182,7 @@ module.exports = {
   uploadFile,
   convert2Rf,
   checkRFSyntax,
+  executeCli,
   updateDeviceBin,
   convertParam
 }

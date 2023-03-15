@@ -1,5 +1,36 @@
 const mongoose = require('mongoose')
-const rfSchema = mongoose.Schema(
+const RFScriptSchema = mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User'
+    },
+    topName: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    RFType: {
+      type: String,
+      required: true
+    },
+    cli: {
+      type: String,
+      required: true,
+      default: ''
+    },
+    desc: {
+      type: String,
+      require: false
+    }
+  },
+  {
+    timestamps: true,
+    versionKey: false
+  }
+)
+const RFCaseSchema = mongoose.Schema(
   {
     // _id: {
     //   type: mongoose.Schema.Types.ObjectId
@@ -66,11 +97,12 @@ const rfSchema = mongoose.Schema(
     versionKey: false
   }
 )
-const rfTypeSchema = mongoose.Schema(
+const RFTypeSchema = mongoose.Schema(
   {
-    rfTypeName: {
+    RFTypeName: {
       type: String,
       required: true,
+      index: true,
       unique: true
     }
   },
@@ -80,8 +112,11 @@ const rfTypeSchema = mongoose.Schema(
   }
 )
 
-const RFType = mongoose.model('RFTypeName', rfTypeSchema)
-const RFScript = mongoose.model('RFScript', rfSchema)
+const RFType = mongoose.model('RFTypeName', RFTypeSchema)
+// create index explicitly, 'cause the 'uinque' property alone does not work
+// for there's old column was removed, replacing with RFTypeName
+RFType.createIndexes()
+const RFScript = mongoose.model('RFScript', RFScriptSchema)
 
 module.exports = {
   RFType,
