@@ -18,6 +18,14 @@ const devices = {
       breadcrumbs: false
     },
     {
+      id: 'executecmd',
+      title: '运行命令',
+      type: 'item',
+      url: '/executecmd',
+      icon: DesktopOutlined,
+      breadcrumbs: false
+    },
+    {
       id: 'updatedevice',
       title: '设备升级',
       type: 'item',

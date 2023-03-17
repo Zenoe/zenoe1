@@ -121,13 +121,13 @@ const convertParam = asyncHandler(async (req, res, next) => {
   }
 })
 
-const executeCli = asyncHandler(async (req, res, next) => {
-  const { lstServer, command } = req.body
-  logger.debug(`${lstServer}, ${command}`)
+const executeCmd = asyncHandler(async (req, res, next) => {
+  const { lstIp, lstcommand } = req.body
+  logger.debug(`executeCmd: ${lstIp}, ${lstcommand}`)
 
   try {
     const scriptPath = path.join(__dirname, 'executeCmd.py')
-    const _result = await callPy3([lstServer, command], scriptPath)
+    const _result = await callPy3([lstIp, lstcommand], scriptPath)
     console.log(_result[1])
     // logger is async, it won't get _result here
     // logger.info(`receive from py:${_result[1]}`)
@@ -182,7 +182,7 @@ module.exports = {
   uploadFile,
   convert2Rf,
   checkRFSyntax,
-  executeCli,
+  executeCmd,
   updateDeviceBin,
   convertParam
 }

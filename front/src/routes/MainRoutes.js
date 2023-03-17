@@ -16,6 +16,7 @@ const RFCTool = Loadable(lazy(() => import('@/pages/rfctool')));
 
 const Devices = Loadable(lazy(() => import('@/pages/device')));
 const UpdateDevice = Loadable(lazy(() => import('@/pages/updatedevice')));
+const ExecuteCmd = Loadable(lazy(() => import('@/pages/executecmd')));
 
 const MainRoutes = {
   path: '/',
@@ -64,6 +65,11 @@ const MainRoutes = {
       element: <RequireAuth>
                  <Devices />
                </RequireAuth>
+    },
+    {
+      path: 'executecmd',
+      element: <ExecuteCmd />
+
     },
     {
       path: 'updatedevice',

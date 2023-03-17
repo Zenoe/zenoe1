@@ -7,7 +7,7 @@ const {
   convert2Rf,
   convertParam,
   updateDeviceBin,
-  executeCli,
+  executeCmd,
   checkRFSyntax
 } = require('components/utils/controller.js')
 
@@ -19,6 +19,6 @@ router.get('/convert2rf', convert2Rf)
 router.get('/convertparam', convertParam)
 router.post('/checkrfsyntax', checkRFSyntax)
 router.post('/updatedevicebin', updateDeviceBin)
-router.post('/executeCli', executeCli)
+router.post('/executecmd', executeCmd)
 
 module.exports = router
