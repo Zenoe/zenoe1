@@ -1,6 +1,3 @@
-const express = require('express');
-const router = express.Router();
-const validateSchema = require('middleware/validate-request');
 const _service = require('./service');
 
 function getAll(req, res, next) {

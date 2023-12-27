@@ -33,13 +33,6 @@ const utilities = {
       icon: icons.SnippetsOutlined
     },
     {
-      id: 'utilAutoRf',
-      title: 'cli转RF',
-      type: 'item',
-      url: '/autorf',
-      icon: icons.SnippetsOutlined
-    },
-    {
       id: 'utilDeviceParameterConverter',
       title: '设备传参工具',
       type: 'item',

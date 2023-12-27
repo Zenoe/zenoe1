@@ -21,7 +21,6 @@
     "@babel/preset-react": "^7.16.7",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "axios": "^0.27.2",
-    "babel": "^6.23.0",
     "babel-loader": "^8.2.5",
     "css-loader": "^5.2.7",
     "eslint": "^8.24.0",
@@ -41,6 +40,7 @@
     "webpack-dev-server": "^4.8.1"
   },
   "dependencies": {
+    "@ant-design/colors": "^7.0.0",
     "@ant-design/icons": "^4.0.0-rc.0",
     "@babel/runtime": "^7.17.9",
     "@emotion/react": "^11.9.0",
@@ -50,6 +50,7 @@
     "@mui/lab": "^5.0.0-alpha.99",
     "@mui/material": "^5.8.5",
     "@mui/styles": "^5.10.3",
+    "@mui/utils": "^5.15.2",
     "@redux-devtools/extension": "^3.2.3",
     "@reduxjs/toolkit": "^1.7.1",
     "d3": "^7.4.4",
@@ -58,7 +59,9 @@
     "formik-mui": "^5.0.0-alpha.0",
     "formik-mui-x-date-pickers": "^0.0.1",
     "framer-motion": "^4.1.17",
+    "lodash": "^4.17.21",
     "moment": "^2.29.3",
+    "prop-types": "^15.8.1",
     "proptypes": "^1.1.0",
     "react": "^18.1.0",
     "react-copy-to-clipboard": "^5.0.4",
@@ -73,6 +76,7 @@
     "redux": "^4.2.0",
     "redux-thunk": "^2.4.1",
     "simplebar-react": "^2.4.1",
+    "uuid": "^9.0.1",
     "yup": "^0.32.11"
   }
 }

@@ -7,7 +7,7 @@ const devServer = require('./devServer')
 const webpack = require('webpack')
 
 const globalVar = {
-  SERVER_URL: 'http://10.110.198.50:7007'
+  SERVER_URL: 'http://10.110.198.52:7007'
 }
 
 const config = {

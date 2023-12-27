@@ -1,6 +1,6 @@
 // Override the defaults
 const config = require('./config.global')
-const mongoDBHost = '10.110.198.50'
+const mongoDBHost = '10.110.198.52'
 // db config
 config.db = {
   // mongo

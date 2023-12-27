@@ -10,7 +10,6 @@ import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 
 import Textfield from '@/components/FormsUI/Textfield'
-import Select from '@/components/FormsUI/Select'
 import DateTimePicker from '@/components/FormsUI/DataTimePicker'
 import Checkbox from '@/components/FormsUI/Checkbox'
 import SubmitButton from '@/components/FormsUI/SubmitButton'

@@ -41,10 +41,6 @@ const MainRoutes = {
       element: <TestCase2RF />
     },
     {
-      path: 'autorf',
-      element: <AutoRF />
-    },
-    {
       path: 'deviceparamconverter',
       element: <DeviceParamConverter />
     },

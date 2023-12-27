@@ -9,7 +9,7 @@ const { logger } = require('init')
 // need to add next parameter
 // or visit http://10.110.198.50:7007/ from browser cause: typeerror res.status is not a function express
 function errorHandler (err, req, res, next) {
-  logger.error(`errorHandler: ${err.stack}`)
+  logger.error(`errorHandler: ${err.stack || err}`)
   switch (true) {
     case typeof err === 'string':
     {

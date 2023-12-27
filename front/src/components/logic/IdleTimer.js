@@ -1,5 +1,6 @@
 import { throttleFn} from '@/utils/jsutils';
-import {DEFAULT_EVENTS} from '@/constants/data'
+import { DEFAULT_EVENTS } from '@/constants/data'
+
 class IdleTimer {
   constructor({ timeout, onTimeout }) {
     this.timeout = timeout;

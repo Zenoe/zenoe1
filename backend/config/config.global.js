@@ -12,7 +12,7 @@ const config = {
     port : 5000,
     logdir : '/var/log/zenoe',
     env : 'dev',
-    hostname : '10.110.198.50',
+    hostname : '10.110.198.52',
   }
 }
 

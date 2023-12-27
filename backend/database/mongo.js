@@ -16,6 +16,7 @@ const connectMongo = async (_dbconfig) => {
   } catch (err) {
     // throw or not throw, expcetion will always be caught by asyncErrorHandler
     // might add more info to err and then throw
+    console.log(`MongoDB Connected failed`)
     throw err
   }
 }
